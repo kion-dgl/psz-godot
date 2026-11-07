@@ -465,13 +465,16 @@ func _load_weapon_animations() -> void:
 			_anim_prefix = "pwbn" if _is_female else "pmbn"
 
 	if SaberPrototype.enabled(self):
-		anim_glb = SaberPrototype.LIBRARY
-		_anim_prefix = "pso_sa"
+		anim_glb = str(SaberPrototype.profile(self).library)
+		_anim_prefix = str(SaberPrototype.profile(self).prefix)
 
 	print("[Player] Loading animations: glb=%s, prefix=%s, female=%s" % [anim_glb, _anim_prefix, _is_female])
 
 	# Load animation GLB (fall back to male if female GLB missing)
 	if not ResourceLoader.exists(anim_glb):
+		if SaberPrototype.enabled(self):
+			push_error("Saber prototype requires imported profile library: " + anim_glb)
+			return
 		push_warning("[Player] Animation GLB not found: %s, falling back to male" % anim_glb)
 		anim_glb = DEFAULT_ANIM_GLB_M
 		_anim_prefix = DEFAULT_ANIM_PREFIX_M
@@ -500,8 +503,8 @@ func _load_weapon_animations() -> void:
 		_walk_anim = "pmsa_walk"
 		_run_anim = "pmsa_run_pso"
 	if SaberPrototype.enabled(self):
-		_walk_anim = "pmsa_walk"
-		_run_anim = "pso_sa_run"
+		_walk_anim = str(SaberPrototype.profile(self).walk)
+		_run_anim = _anim_prefix + "_run"
 	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
 
 	# Replace existing library
@@ -511,11 +514,12 @@ func _load_weapon_animations() -> void:
 	if SaberPrototype.enabled(self):
 		# Ease into the authored stance and out into swing/idle instead of
 		# flashing a single unrelated pose between native animations.
+		var ready_clip := SaberPrototype.ready_clip(self)
 		for clip in lib.get_animation_list():
-			if clip != "pso_sa_wait":
-				animation_player.set_blend_time(clip, "pso_sa_wait", SaberPrototype.READY_BLEND)
-		animation_player.set_blend_time("pso_sa_wait", "pmsa_atk1", SaberPrototype.READY_BLEND)
-		animation_player.set_blend_time("pso_sa_wait", "pmsa_wait", SaberPrototype.READY_BLEND)
+			if clip != ready_clip:
+				animation_player.set_blend_time(clip, ready_clip, SaberPrototype.READY_BLEND)
+		animation_player.set_blend_time(ready_clip, SaberPrototype.native_clip(self, "atk1"), SaberPrototype.READY_BLEND)
+		animation_player.set_blend_time(ready_clip, SaberPrototype.native_clip(self, "wait"), SaberPrototype.READY_BLEND)
 
 	var anim_list := animation_player.get_animation_list()
 	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
@@ -564,6 +568,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 
 		lib.add_animation(anim_name, new_anim)
 
+	var prototype_profile := SaberPrototype.profile_for_library(anim_glb)
 	# Also load shared PSO locomotion from the scene-baked Animations node
 	var scene_anims_node := $PlayerModel/Animations
 	if scene_anims_node:
@@ -572,6 +577,8 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			var shared_clips := ["pmsa_walk", "pmsa_run_pso"]
 			if anim_glb == SaberPrototype.LIBRARY:
 				shared_clips.append_array(["pmsa_esc_f", "pmsa_dam_d_lp"])
+			elif anim_glb == SaberPrototype.FEMALE_LIBRARY:
+				shared_clips = [] # Female roles come from saver_w, not the male scene.
 			for anim_name in shared_clips:
 				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
 					var source_anim := scene_player.get_animation(anim_name)
@@ -584,18 +591,22 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 
 	# Keep native PSZ poses for the low-bone-count avatar; PSO supplies
 	# locomotion/readiness/reactions, not the three saber swings.
-	if anim_glb == SaberPrototype.LIBRARY:
-		var native := _build_animation_library(DEFAULT_ANIM_GLB_M)
+	if not prototype_profile.is_empty():
+		var native := _build_animation_library(str(prototype_profile.native_library))
 		if native == null:
 			anim_scene.queue_free()
 			return null
-		for clip in ["pmsa_wait", "pmsa_atk1", "pmsa_atk2", "pmsa_atk3"]:
+		var native_roles := ["wait", "atk1", "atk2", "atk3"]
+		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
+			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
+		for role in native_roles:
+			var clip := str(prototype_profile.native_prefix) + "_" + str(role)
 			if not native.has_animation(clip):
 				push_error("Saber prototype requires native clip: " + clip)
 				anim_scene.queue_free()
 				return null
 			var native_clip := native.get_animation(clip).duplicate() as Animation
-			if clip.begins_with("pmsa_atk"):
+			if str(role).begins_with("atk"):
 				var step := int(clip.right(1)) - 1
 				native_clip.length += SaberPrototype.RECOVERY[step]
 			lib.add_animation(clip, native_clip)
@@ -1701,7 +1712,7 @@ func _attack_step_finished() -> void:
 		_saber_phase_left = SaberPrototype.FINISHER_GUARD if completed else SaberPrototype.BROKEN_RECOVERY
 		_attack_step_ended = true
 		_attack_anim_length = 0.0
-		if completed: play_animation("pso_sa_wait", true)
+		if completed: play_animation(SaberPrototype.ready_clip(self), true)
 		return
 	if combo_state < max_combo:
 		_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Chain broken mid-combo
@@ -2442,7 +2453,7 @@ func _set_weapon_hold(mode: String) -> void:
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
 
 func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
-	var attack_prefix := "pmsa" if SaberPrototype.enabled(self) else _anim_prefix
+	var attack_prefix: String = str(SaberPrototype.profile(self).native_prefix) if SaberPrototype.enabled(self) else _anim_prefix
 	var anim_name := attack_prefix + "_atk" + str(attack_num)
 	_attack_step_ended = false
 	_attack_anim_elapsed = 0.0
@@ -2454,7 +2465,7 @@ func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
 			_saber_phase = "prepare"
 			_saber_phase_left = SaberPrototype.READY_PREP
 			_attack_step_ended = true
-			play_animation("pso_sa_wait", true)
+			play_animation(SaberPrototype.ready_clip(self), true)
 			return
 		# Both inputs share the same timeline. Strong's tell occupies the
 		# existing windup instead of adding a second, delayed attack clock.
@@ -2832,6 +2843,10 @@ func transition_to(new_state: PlayerState) -> void:
 
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:
+	if SaberPrototype.enabled(self):
+		for role in ["esc_f", "dam_d_lp"]:
+			if anim_name == _anim_prefix + "_" + role:
+				anim_name = SaberPrototype.native_clip(self, role)
 	if not animation_player:
 		return
 	if animation_player.has_animation(anim_name):

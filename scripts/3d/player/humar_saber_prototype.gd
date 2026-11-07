@@ -1,6 +1,24 @@
 extends RefCounted
 ## Opt-in #790 rules; shared player/enemy resources remain unchanged.
 const LIBRARY := "res://assets/player/animations/pso_humar_saber.glb"
+const FEMALE_LIBRARY := "res://assets/player/animations/pso_female_saber.glb"
+const MALE_PROFILE := {"library": LIBRARY, "native_library": "res://assets/player/animations/saver_m.glb", "prefix": "pso_sa", "native_prefix": "pmsa", "walk": "pmsa_walk", "source_count": 15, "class_id": "humar"}
+const FEMALE_PROFILE := {"library": FEMALE_LIBRARY, "native_library": "res://assets/player/animations/saver_w.glb", "prefix": "pso_f_sa", "native_prefix": "pwsa", "walk": "pwsa_walk", "source_count": 16, "class_id": "humarl"}
+
+static func profile(player) -> Dictionary:
+	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
+
+static func profile_for_library(path: String) -> Dictionary:
+	if path == LIBRARY: return MALE_PROFILE
+	if path == FEMALE_LIBRARY: return FEMALE_PROFILE
+	return {}
+
+static func ready_clip(player) -> String:
+	return str(profile(player).prefix) + "_wait"
+
+static func native_clip(player, role: String) -> String:
+	return str(profile(player).native_prefix) + "_" + role
+
 const CHARGE_SOUND := "res://assets/sfx/common/common_060.wav" # SE_PL_BIGCHARGE
 const LOCK_SOUND := "res://assets/sfx/common/common_017.wav" # SE_PL_LOCKCURSOR
 const RETREAT_CAUTION_TIME := 0.5
@@ -16,7 +34,7 @@ const CHAIN: Array[float] = [0.55, 0.95]
 static func enabled(player) -> bool:
 	if OS.get_environment("PSZ_HUMAR_SABER") != "1": return false
 	var character = CharacterManager.get_active_character()
-	return SessionManager.get_location() == "field" and character != null and character.get("class_id", "") == "humar" \
+	return SessionManager.get_location() == "field" and character != null and character.get("class_id", "") in ["humar", "humarl"] \
 		and SessionManager.get_session().get("quest_id", "") == "debug_coliseum" \
 		and not player._is_barehanded() and player._get_equipped_weapon_type() == WeaponData.WeaponType.SABER
 
@@ -45,8 +63,8 @@ static func update_caution(player, movement_yaw: float, delta: float) -> bool:
 			player.walk_timer = player.WALK_TO_RUN_DELAY
 	return player._saber_caution_active
 
-static func idle_clip(_player) -> String:
-	return "pmsa_wait"
+static func idle_clip(player) -> String:
+	return native_clip(player, "wait")
 
 static func facing_guard(facing: float, offset: Vector3) -> bool:
 	var planar := Vector3(offset.x, 0, offset.z)
@@ -59,19 +77,19 @@ static func try_guard(player, source: Node3D) -> bool:
 	var ready_recovery: bool = player.current_state == player.PlayerState.ATTACKING and player._saber_phase == "guard_recovery"
 	if not ready_recovery and player.current_state not in [player.PlayerState.IDLE, player.PlayerState.WALKING]: return false
 	if not facing_guard(player.player_rotation, source.global_position - player.global_position): return false
-	if not player.animation_player or not player.animation_player.has_animation("pso_sa_block"): return false
+	if not player.animation_player or not player.animation_player.has_animation(str(profile(player).prefix) + "_block"): return false
 	player.transition_to(player.PlayerState.DAMAGED)
-	player.play_animation("pso_sa_block", false)
+	player.play_animation(str(profile(player).prefix) + "_block", false)
 	player.velocity.x = 0.0
 	player.velocity.z = 0.0
 	return true
 
 static func guarding(player) -> bool:
 	return enabled(player) and player.current_state == player.PlayerState.DAMAGED \
-		and player.animation_player != null and player.animation_player.current_animation == "pso_sa_block"
+		and player.animation_player != null and player.animation_player.current_animation == str(profile(player).prefix) + "_block"
 
 static func select_walk(player, cautious: bool) -> void:
-	var clip := "pso_sa_walk_ready" if cautious else "pmsa_walk"
+	var clip: String = str(profile(player).prefix) + "_walk_ready" if cautious else str(profile(player).walk)
 	if player._walk_anim == clip: return
 	player._walk_anim = clip
 	if player.current_state == player.PlayerState.WALKING: player.play_animation(clip, true)

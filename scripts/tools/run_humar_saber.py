@@ -14,13 +14,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--group', action='store_true')
+    parser.add_argument('--gender', choices=['male', 'female'], default='male', help='HUmar or HUmarl saber reference')
     parser.add_argument('--rendered', action='store_true', help='Render automated checks for visual capture')
     parser.add_argument('--godot', default=os.environ.get('GODOT') or shutil.which('godot'))
     args = parser.parse_args()
     if not args.godot:
         parser.error('Godot is required')
-    if not (ROOT / 'assets/player/animations/pso_humar_saber.glb').exists():
-        parser.error('Bake first: cd web && node scripts/bake-retarget.mjs --humar-saber')
+    library = 'pso_female_saber.glb' if args.gender == 'female' else 'pso_humar_saber.glb'
+    bake_flag = '--female-saber' if args.gender == 'female' else '--humar-saber'
+    if not (ROOT / 'assets/player/animations' / library).exists():
+        parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:
         project = Path(temporary)
         for item in ROOT.iterdir():
@@ -30,7 +33,7 @@ def main():
             'config/name="PSZ Godot"',
             'config/name="PSZ Saber Prototype"\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="psz-saber-prototype"')
         (project / 'project.godot').write_text(settings)
-        env = dict(os.environ, PSZ_HUMAR_SABER='1', PSZ_SABER_CHECK='1' if args.check else '0',
+        env = dict(os.environ, PSZ_HUMAR_SABER='1', PSZ_SABER_GENDER=args.gender, PSZ_SABER_CHECK='1' if args.check else '0',
                    PSZ_SABER_GROUP='1' if args.group else '0', XDG_DATA_HOME=str(project / 'save'))
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:

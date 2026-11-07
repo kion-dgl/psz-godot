@@ -1,6 +1,6 @@
 # All-weapon adaptation: checkpoint and test handoff
 
-Status: planning only for all weapons. The approved HUmar/saber prototype remains opt-in; broader campaign behavior has not been enabled. See PR #791 for the persistent checklist and the current **Resume here** record.
+Status: adapting one gender–weapon pair at a time. The approved HUmar/saber prototype remains opt-in; broader campaign behavior has not been enabled. See PR #791 for the persistent checklist and the current **Resume here** record.
 
 ## Spec pages
 
@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Only male HUmar/saber is implemented. The current launcher does **not** accept weapon, gender or class selection. Other profile checkboxes stay unchecked/blocked until the inspection fixture and corresponding adaptation exist.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female owner playtest is pending; all other pairs remain unimplemented. The launcher accepts `--gender male|female`, but no weapon or arbitrary class selection.
 
 From this worktree on this Mac:
 
@@ -25,6 +25,8 @@ python3 scripts/tools/run_humar_saber.py
 Variants:
 
 ```sh
+python3 scripts/tools/run_humar_saber.py --gender female
+python3 scripts/tools/run_humar_saber.py --gender female --check --group
 python3 scripts/tools/run_humar_saber.py --group
 python3 scripts/tools/run_humar_saber.py --check
 python3 scripts/tools/run_humar_saber.py --check --group
@@ -89,3 +91,9 @@ Check a profile/gender row only after W01–W10 and its family-specific acceptan
 5. Publish matching animation/audio assets; validate a clean checkout and exported build.
 6. Run campaign, status, boss, equipment-swap and input regressions. Original PR broad-regression failures remain open until independently resolved or classified.
 7. Enable only reviewed profiles. Keep an explicit rollout/rollback gate; do not remove the prototype restriction as a shortcut to “all weapons supported.”
+
+## Female saber asset provenance
+
+Rebuild with `cd web && node scripts/bake-retarget.mjs --female-saber`, then import with Godot. The recipe targets `pc_010_000.glb` and selects only `pso_f_sa_*` from `data/retarget/Humar_body.glb`, producing `assets/player/animations/pso_female_saber.glb`. This local binary still needs asset-pack publication. The female profile fails visibly if its imported library is absent; it does not substitute the male profile.
+
+Female saber local artifact SHA-256: `8452245239a43caa569d84dd214b6c6c9e8e209c6b20f1d464064329a1f5a54e`. Focused solo, three-Booma and rendered checks passed on Godot 4.5.1; male solo regression passed. Existing exit resource-leak warnings remain. Next action: owner playtest Female — Saber; do not check it off from automated results alone.

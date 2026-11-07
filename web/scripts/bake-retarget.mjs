@@ -353,8 +353,12 @@ function buildRetargetedClip(clip, psoRest, pszRest, boneMap, posScale, outputNa
 // ── Main ──────────────────────────────────────────────────────────
 
 async function main() {
+  const femaleSaber = process.argv.includes('--female-saber');
+  const maleSaber = process.argv.includes('--humar-saber');
+  if (femaleSaber && maleSaber) throw new Error('Choose one saber gender per bake');
   const psoPath = path.resolve('../data/retarget/Humar_body.glb');
-  const pszPath = path.resolve('../assets/player/pc_000/pc_000_000.glb');
+  // The source archive includes both motion sets on its common PSO skeleton.
+  const pszPath = path.resolve(femaleSaber ? '../assets/player/pc_010/pc_010_000.glb' : '../assets/player/pc_000/pc_000_000.glb');
 
   console.log('Loading PSO and PSZ models...');
   const [psoGltf, pszGltf] = await Promise.all([
@@ -382,15 +386,15 @@ async function main() {
   const pszRest = captureRestPose(pszModel);
 
   // Isolated complete saber library for the Coliseum prototype (#790).
-  const saberPrototype = process.argv.includes('--humar-saber');
+  const saberPrototype = maleSaber || femaleSaber;
   const mapping = JSON.parse(fs.readFileSync('../data/retarget/pso_animation_map.json')).mappings;
   const targets = saberPrototype ? [{
-    targetGlb: '../assets/player/animations/pso_humar_saber.glb',
-    anims: Object.entries(mapping).filter(([, name]) => name.startsWith('pso_sa_'))
+    targetGlb: femaleSaber ? '../assets/player/animations/pso_female_saber.glb' : '../assets/player/animations/pso_humar_saber.glb',
+    anims: Object.entries(mapping).filter(([, name]) => name.startsWith(femaleSaber ? 'pso_f_sa_' : 'pso_sa_'))
       .map(([index, name]) => ({ index: Number(index), name,
-        offsets: name.endsWith('_run') ? RUN_OFFSETS : WALK_OFFSETS })),
+        offsets: name.endsWith('_run') ? (femaleSaber ? F_RUN_OFFSETS : RUN_OFFSETS) : (femaleSaber ? F_WALK_OFFSETS : WALK_OFFSETS) })),
   }] : BAKE_TARGETS;
-  if (saberPrototype && targets[0].anims.length !== 15) throw new Error('Expected all 15 saber clips');
+  if (saberPrototype && targets[0].anims.length !== (femaleSaber ? 16 : 15)) throw new Error('Incomplete saber source inventory');
   for (const { targetGlb, anims } of targets) {
     const targetPath = path.resolve(targetGlb);
     console.log(`\n── Baking into: ${targetGlb} ──`);

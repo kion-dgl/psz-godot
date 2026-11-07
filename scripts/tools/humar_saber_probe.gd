@@ -2,6 +2,9 @@ extends "res://scripts/tools/probe_checks.gd"
 ## #790 fixture. Launch through run_humar_saber.py; scene changes preserve this observer.
 const Rules := preload("res://scripts/3d/player/humar_saber_prototype.gd")
 
+var _native_prefix := "pmsa"
+var _pso_prefix := "pso_sa"
+
 func _run() -> void:
 	probe_label = "humar-saber"
 	if ProjectSettings.get_setting("application/config/name") != "PSZ Saber Prototype":
@@ -14,7 +17,10 @@ func _run() -> void:
 func _launch() -> void:
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
-	CharacterManager.create_character(0, "humar", "Saber Test")
+	var female := OS.get_environment("PSZ_SABER_GENDER") == "female"
+	_native_prefix = "pwsa" if female else "pmsa"
+	_pso_prefix = "pso_f_sa" if female else "pso_sa"
+	CharacterManager.create_character(0, "humarl" if female else "humar", "Saber Test")
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -32,8 +38,10 @@ func _launch() -> void:
 	if player == null:
 		get_tree().quit(1)
 		return
-	_check(Rules.enabled(player), "prototype is scoped to HUmar saber in Coliseum")
-	if not player.animation_player or not player.animation_player.has_animation("pso_sa_wait"):
+	_check(Rules.enabled(player), "prototype is scoped to selected saber profile in Coliseum")
+	_check(player._is_female == female, "avatar gender matches selected profile")
+	_check(Rules.profile(player).class_id == ("humarl" if female else "humar"), "explicit class profile selected")
+	if not player.animation_player or not player.animation_player.has_animation((_pso_prefix + "_wait")):
 		push_error("Import the baked saber library before launching")
 		get_tree().quit(1)
 		return
@@ -62,6 +70,9 @@ func _verify(player) -> void:
 	_check(enemy.enemy_level == 1, "fixed enemy level")
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
 	_check(player.weapon_node != null, "saber attached")
+	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
+	for clip in player.animation_player.get_animation_list():
+		_check(not str(clip).begins_with(wrong_prefix), "no opposite-gender native clip: " + str(clip))
 	var mapping: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/retarget/pso_animation_map.json"))
 	if DisplayServer.get_name() != "headless":
 		var camera := Camera3D.new()
@@ -71,7 +82,7 @@ func _verify(player) -> void:
 		camera.current = true
 	var count := 0
 	for clip in mapping.mappings.values():
-		if not str(clip).begins_with("pso_sa_"): continue
+		if not str(clip).begins_with((_pso_prefix + "_")): continue
 		count += 1
 		_check(player.animation_player.has_animation(clip), "clip " + clip)
 		if player.animation_player.has_animation(clip):
@@ -79,11 +90,11 @@ func _verify(player) -> void:
 			player.play_animation(clip, false)
 			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
 			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot(clip)
-	_check(count == 15, "complete saber inventory")
-	_check(player.animation_player.has_animation("pmsa_esc_f"), "native dodge remains available")
-	_check(player.animation_player.has_animation("pmsa_dam_d_lp"), "native defeated hold remains available")
+	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
+	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
+	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
 	for step in range(1, 4):
-		var clip := "pmsa_atk" + str(step)
+		var clip := (_native_prefix + "_atk") + str(step)
 		var animation: Animation = player.animation_player.get_animation(clip)
 		var last_key := 0.0
 		for track in animation.get_track_count():
@@ -120,7 +131,7 @@ func _verify_exchange(player, enemy) -> void:
 	player.transition_to(player.PlayerState.IDLE)
 	var hp := GameState.hp
 	enemy._deal_damage_for({"kind":"melee_arc", "damage_mult":1.0})
-	_check(GameState.hp == hp and player.animation_player.current_animation == "pso_sa_block", "real frontal melee is blocked")
+	_check(GameState.hp == hp and player.animation_player.current_animation == (_pso_prefix + "_block"), "real frontal melee is blocked")
 	player._start_attack()
 	_check(Rules.guarding(player), "block commits recovery and refuses attack cancel")
 	player._hit_invulnerability_left = 0
@@ -134,17 +145,17 @@ func _verify_exchange(player, enemy) -> void:
 	enemy.global_position = player.global_position + Vector3(0,0,2)
 	player._start_attack()
 	player._handle_attack_state(Rules.READY_PREP)
-	_check(player.animation_player.current_animation == "pmsa_atk1", "real attack uses native PSZ clip")
+	_check(player.animation_player.current_animation == (_native_prefix + "_atk1"), "real attack uses native PSZ clip")
 	_check(not player.try_prototype_guard(enemy), "guard cannot cancel attack")
 	player._attack_anim_elapsed = player._attack_anim_length * 0.65
 	player._try_queue_combo(false)
 	_check(player._queued_combo != player.ComboQueue.NONE, "prototype chain window accepts deliberate input")
 	player._attack_step_finished()
-	_check(player.combo_state == 2 and player.animation_player.current_animation == "pmsa_atk2", "queued second native swing starts")
+	_check(player.combo_state == 2 and player.animation_player.current_animation == (_native_prefix + "_atk2"), "queued second native swing starts")
 	player._attack_anim_elapsed = player._attack_anim_length * 0.65
 	player._try_queue_combo(false)
 	player._attack_step_finished()
-	_check(player.combo_state == 3 and player.animation_player.current_animation == "pmsa_atk3", "queued third native swing starts")
+	_check(player.combo_state == 3 and player.animation_player.current_animation == (_native_prefix + "_atk3"), "queued third native swing starts")
 	player._hit_invulnerability_left = 0
 	player.take_damage(5)
 	_check(GameState.hp == hp - 5 and player.current_state == player.PlayerState.DAMAGED, "committed attack takes damage and interrupts")
@@ -168,7 +179,7 @@ func _verify_enemy_swing(player, enemy) -> void:
 	for frame in range(180):
 		enemy._process_attacking(1.0 / 60.0)
 		await get_tree().physics_frame
-		blocked = blocked or player.animation_player.current_animation == "pso_sa_block"
+		blocked = blocked or player.animation_player.current_animation == (_pso_prefix + "_block")
 		if enemy._attack_hit_resolved: break
 	_check(enemy._attack_hit_resolved and blocked and GameState.hp == before, "actual Booma animation/contact reaches guard")
 
@@ -214,20 +225,20 @@ func _verify_movement(player, enemies: Array) -> void:
 	player._update_combat_targets()
 	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
 	player._handle_movement(0.1)
-	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == "pmsa_walk", "proximity without cursor does not trigger caution")
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == (_native_prefix + "_walk"), "proximity without cursor does not trigger caution")
 	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
 	player._update_combat_targets()
 	_check(not player._targeted_enemies.is_empty(), "close enemy acquires cursor")
 	player._handle_movement(0.1)
-	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == "pso_sa_walk_ready", "cursor acquisition engages caution")
+	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == (_pso_prefix + "_walk_ready"), "cursor acquisition engages caution")
 	for enemy in enemies: enemy.global_position = player.global_position - direction * 1.2
 	player._update_combat_targets()
 	_check(player._targeted_enemies.is_empty(), "retreat loses cursor")
 	player._handle_movement(0.25)
 	player._handle_movement(0.24)
-	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == "pso_sa_walk_ready", "retreat keeps caution for first 490 ms despite cursor loss")
+	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == (_pso_prefix + "_walk_ready"), "retreat keeps caution for first 490 ms despite cursor loss")
 	player._handle_movement(0.02)
-	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == "pmsa_walk", "500 ms caution hold transitions directly to run")
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == (_native_prefix + "_walk"), "500 ms caution hold transitions directly to run")
 	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
 	player._update_combat_targets()
 	player._handle_movement(0.1)
@@ -241,7 +252,7 @@ func _verify_movement(player, enemies: Array) -> void:
 	_check(is_zero_approx(player._saber_retreat_elapsed), "reacquiring target cancels pending retreat")
 	Input.action_release("move_forward")
 	player._handle_movement(0.1)
-	_check(player.animation_player.current_animation == "pmsa_wait", "stopping remains relaxed even with cursor")
+	_check(player.animation_player.current_animation == (_native_prefix + "_wait"), "stopping remains relaxed even with cursor")
 	for i in enemies.size(): enemies[i].global_position = positions[i]
 	player._targeted_enemies.clear()
 	player._saber_caution_active = false
@@ -255,10 +266,10 @@ func _verify_mixed_combos(player) -> void:
 		player.transition_to(player.PlayerState.IDLE)
 		if pattern & 1: player._start_strong_attack()
 		else: player._start_attack()
-		_check(player._saber_phase == "prepare" and player.animation_player.current_animation == "pso_sa_wait", "fresh combo briefly readies weapon")
+		_check(player._saber_phase == "prepare" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "fresh combo briefly readies weapon")
 		player._handle_attack_state(Rules.READY_PREP)
 		for step in range(1, 4):
-			var clip := "pmsa_atk" + str(step)
+			var clip := (_native_prefix + "_atk") + str(step)
 			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
 			_check(is_equal_approx(player._attack_anim_length, player.animation_player.get_animation(clip).length), "normal and strong use identical step duration")
 			if step < 3:
@@ -267,7 +278,7 @@ func _verify_mixed_combos(player) -> void:
 				else: player._start_attack()
 				_check(player._queued_combo != player.ComboQueue.NONE, "same timing accepts normal or strong continuation")
 			player._attack_step_finished()
-		_check(player._saber_phase == "guard_recovery" and player.animation_player.current_animation == "pso_sa_wait", "completed combo enters ready recovery")
+		_check(player._saber_phase == "guard_recovery" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "completed combo enters ready recovery")
 		player._handle_attack_state(Rules.FINISHER_GUARD)
 		_check(player.current_state == player.PlayerState.IDLE and not player._charge_active, "mixed combo finishes cleanly")
 	# Interrupt strong windup: no delayed callback may restart the swing.
@@ -358,9 +369,9 @@ func _verify_ready_recovery(player, enemy) -> void:
 	player._start_attack()
 	_check(not player.try_prototype_guard(enemy), "first-attack preparation is vulnerable")
 	player._handle_attack_state(0.05)
-	_check(player._saber_phase == "prepare" and player.animation_player.current_animation == "pso_sa_wait", "ready stance persists beyond 50 ms")
-	_check(is_equal_approx(player.animation_player.get_blend_time("pmsa_wait", "pso_sa_wait"), Rules.READY_BLEND), "idle blends into ready stance")
-	_check(is_equal_approx(player.animation_player.get_blend_time("pso_sa_wait", "pmsa_atk1"), Rules.READY_BLEND), "ready blends into first swing")
+	_check(player._saber_phase == "prepare" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "ready stance persists beyond 50 ms")
+	_check(is_equal_approx(player.animation_player.get_blend_time((_native_prefix + "_wait"), (_pso_prefix + "_wait")), Rules.READY_BLEND), "idle blends into ready stance")
+	_check(is_equal_approx(player.animation_player.get_blend_time((_pso_prefix + "_wait"), (_native_prefix + "_atk1")), Rules.READY_BLEND), "ready blends into first swing")
 	player._handle_attack_state(Rules.READY_PREP)
 	player._attack_anim_elapsed = player._attack_anim_length * 0.1
 	player._try_queue_combo(false)
