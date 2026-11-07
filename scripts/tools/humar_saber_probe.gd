@@ -105,13 +105,17 @@ func _verify_exchange(player, enemy) -> void:
 	_check(not player.try_prototype_guard(enemy), "rear attack cannot guard")
 	enemy.global_position = player.global_position + Vector3(0,0,2)
 	player._start_attack()
-	_check(player.animation_player.current_animation == "pso_sa_atk1", "real attack uses PSO clip")
+	_check(player.animation_player.current_animation == "pmsa_atk1", "real attack uses native PSZ clip")
 	_check(not player.try_prototype_guard(enemy), "guard cannot cancel attack")
 	player._attack_anim_elapsed = player._attack_anim_length * 0.65
 	player._try_queue_combo(false)
 	_check(player._queued_combo != player.ComboQueue.NONE, "prototype chain window accepts deliberate input")
 	player._attack_step_finished()
-	_check(player.combo_state == 2 and player.animation_player.current_animation == "pso_sa_atk2", "queued second swing starts")
+	_check(player.combo_state == 2 and player.animation_player.current_animation == "pmsa_atk2", "queued second native swing starts")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.65
+	player._try_queue_combo(false)
+	player._attack_step_finished()
+	_check(player.combo_state == 3 and player.animation_player.current_animation == "pmsa_atk3", "queued third native swing starts")
 	player._hit_invulnerability_left = 0
 	player.take_damage(5)
 	_check(GameState.hp == hp - 5 and player.current_state == player.PlayerState.DAMAGED, "committed attack takes damage and interrupts")
@@ -152,7 +156,7 @@ func _verify_player_swing(player, enemy) -> void:
 		if player.current_state != player.PlayerState.ATTACKING: break
 		player._handle_attack_state(1.0 / 60.0)
 		await get_tree().physics_frame
-	_check(enemy.current_hp < before, "PSO swing delivers real saber damage")
+	_check(enemy.current_hp < before, "PSZ swing delivers real saber damage")
 	_check(player.current_state == player.PlayerState.IDLE, "unchained swing completes recovery")
 
 func _verify_root(animation: Animation, clip: String) -> void:
@@ -170,6 +174,8 @@ func _verify_movement(player, enemies: Array) -> void:
 	for enemy in enemies:
 		positions.append(enemy.global_position)
 		enemy.global_position = player.global_position + Vector3(0, 0, 2)
+	player.transition_to(player.PlayerState.IDLE)
+	_check(player.animation_player.current_animation == "pso_sa_wait", "near enemy selects weapon ready")
 	player.transition_to(player.PlayerState.RUNNING)
 	Input.action_press("move_forward")
 	player._handle_movement(0.1)
@@ -178,5 +184,13 @@ func _verify_movement(player, enemies: Array) -> void:
 	player._handle_movement(1.3)
 	Input.action_release("move_forward")
 	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == "pso_sa_walk", "leaving threats restores normal locomotion")
+	player._handle_movement(0.1)
+	_check(player.animation_player.current_animation == "pmsa_wait", "stopping clear of enemies selects PSZ relaxed idle")
+	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 2)
+	player._handle_movement(0.1)
+	_check(player.animation_player.current_animation == "pso_sa_wait", "approaching enemy readies stationary player")
+	for enemy in enemies: enemy.global_position += Vector3(0, 0, 30)
+	player._handle_movement(0.1)
+	_check(player.animation_player.current_animation == "pmsa_wait", "departing enemy relaxes stationary player")
 	for i in enemies.size(): enemies[i].global_position = positions[i]
 	player.transition_to(player.PlayerState.IDLE)

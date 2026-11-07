@@ -566,6 +566,20 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 						_strip_root_translation_track(new_anim, skeleton.name)
 					lib.add_animation(anim_name, new_anim)
 
+	# Keep native PSZ poses for the low-bone-count avatar; PSO supplies
+	# locomotion/readiness/reactions, not the three saber swings.
+	if anim_glb == SaberPrototype.LIBRARY:
+		var native := _build_animation_library(DEFAULT_ANIM_GLB_M)
+		if native == null:
+			anim_scene.queue_free()
+			return null
+		for clip in ["pmsa_wait", "pmsa_atk1", "pmsa_atk2", "pmsa_atk3"]:
+			if not native.has_animation(clip):
+				push_error("Saber prototype requires native clip: " + clip)
+				anim_scene.queue_free()
+				return null
+			lib.add_animation(clip, native.get_animation(clip))
+
 	anim_scene.queue_free()
 	return lib
 
@@ -1345,6 +1359,11 @@ func _handle_movement(delta: float) -> void:
 		if current_state in [PlayerState.WALKING, PlayerState.RUNNING]:
 			walk_timer = 0.0
 			transition_to(PlayerState.IDLE)
+
+		if current_state == PlayerState.IDLE and SaberPrototype.enabled(self):
+			var idle_clip := SaberPrototype.idle_clip(self)
+			if animation_player and animation_player.current_animation != idle_clip:
+				play_animation(idle_clip, true)
 
 
 func _can_move_to(move_dir: Vector3) -> bool:
@@ -2361,7 +2380,8 @@ func _set_weapon_hold(mode: String) -> void:
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
 
 func _play_attack_animation(attack_num: int) -> void:
-	var anim_name := _anim_prefix + "_atk" + str(attack_num)
+	var attack_prefix := "pmsa" if SaberPrototype.enabled(self) else _anim_prefix
+	var anim_name := attack_prefix + "_atk" + str(attack_num)
 	_attack_step_ended = false
 	_attack_anim_elapsed = 0.0
 	_attack_anim_length = 0.0
@@ -2700,7 +2720,7 @@ func transition_to(new_state: PlayerState) -> void:
 			# gravity / falling continues to read correctly.
 			velocity.x = 0
 			velocity.z = 0
-			play_animation(_anim_prefix + "_wait", true)
+			play_animation(SaberPrototype.idle_clip(self) if SaberPrototype.enabled(self) else _anim_prefix + "_wait", true)
 		PlayerState.WALKING:
 			play_animation(_walk_anim, true)
 		PlayerState.RUNNING:

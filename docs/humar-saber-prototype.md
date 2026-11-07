@@ -1,6 +1,6 @@
 # HUmar saber combat prototype (#790)
 
-This opt-in Coliseum experiment uses PSO saber motion on the current PSZ HUmar VRM. It tests approach, commitment, defense and recovery at fixed starting stats. It does not change campaign balance or status effects (#789).
+This opt-in Coliseum experiment combines PSZ idle and saber attacks with PSO locomotion, readiness and reactions on the current PSZ HUmar VRM. It tests approach, commitment, defense and recovery at fixed starting stats. It does not change campaign balance or status effects (#789).
 
 ## Run
 
@@ -19,7 +19,7 @@ python3 scripts/tools/run_humar_saber.py
 python3 scripts/tools/run_humar_saber.py --group
 ```
 
-The launcher invokes `res://scripts/tools/humar_saber_probe.tscn` inside an isolated temporary project. Launch through the wrapper, which supplies the required save-isolation settings. Restart it to reset the encounter. The fixture uses a level-one HUmar with starter saber and level-one PSO Booma, or three Boomas with `--group`. Fixture opponents award no EXP, keeping player stats fixed during group fights. Movement, attack and dodge use the existing controls. Within six metres of a living enemy, walking remains cautious. Outside that range, the normal walk-to-run transition returns.
+The launcher invokes `res://scripts/tools/humar_saber_probe.tscn` inside an isolated temporary project. Launch through the wrapper, which supplies the required save-isolation settings. Restart it to reset the encounter. The fixture uses a level-one HUmar with starter saber and level-one PSO Booma, or three Boomas with `--group`. Fixture opponents award no EXP, keeping player stats fixed during group fights. Movement, attack and dodge use the existing controls. Within six metres of a living enemy, walking remains cautious. Outside that range, the normal walk-to-run transition returns. Standing uses native `pmsa_wait` away from enemies and PSO `pso_sa_wait` within the same six-metre range, updating even when the player stays still. All three attacks use native `pmsa_atk1`–`pmsa_atk3`; the PSO swings remain in the library for inspection only.
 
 Automatic frontal guard is a provisional rule for review: while idle or walking, a melee hit from within a 60-degree half-angle plays block and is absorbed. Attacking, running, rolling and recovering do not guard. Guard commits for the block animation. This is not a claim about PSO's original stat-based guard algorithm. Existing PSZ dodge remains unchanged; its native clip and the defeated hold are retained as fallbacks alongside the 15 PSO clips.
 
@@ -47,7 +47,7 @@ The baker reuses the existing PSO→PSZ retarget pipeline and writes only `asset
 
 ## Review
 
-The first two swings use their source durations; the third is substantially longer. Contact fractions (40%, 40%, 45%) and the chain window (55–95%) are explicit provisional tuning, not recovered PSO timings. A timing ring uses the same chain window as input. Check saber contact alignment, foot planting, attack recovery, blocking commitment and whether avoiding retaliation feels understandable. Record failures before expanding to other weapons or classes.
+The three PSZ swings use their native durations. Contact fractions (40%, 40%, 45%) are retained as an initial playtest baseline for the native swings, not visually calibrated contact markers. These fractions and the chain window (55–95%) are explicit provisional tuning, not recovered PSO timings. A timing ring uses the same chain window as input. Check saber contact alignment, foot planting, attack recovery, blocking commitment and whether avoiding retaliation feels understandable. Record failures before expanding to other weapons or classes.
 
 ```sh
 python3 scripts/tools/run_humar_saber.py --check

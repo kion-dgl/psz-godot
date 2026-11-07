@@ -18,6 +18,9 @@ static func caution(player) -> bool:
 			return true
 	return false
 
+static func idle_clip(player) -> String:
+	return "pso_sa_wait" if caution(player) else "pmsa_wait"
+
 static func facing_guard(facing: float, offset: Vector3) -> bool:
 	var planar := Vector3(offset.x, 0, offset.z)
 	return planar.length_squared() > 0.0001 and Vector3(sin(facing), 0, cos(facing)).dot(planar.normalized()) >= 0.5
