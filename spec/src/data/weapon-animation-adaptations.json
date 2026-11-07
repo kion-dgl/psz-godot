@@ -462,7 +462,7 @@
           "pwda_tec"
         ]
       },
-      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
+      "status": "Owner-approved HUmarl reference and guard flash at be66d48f"
     },
     {
       "id": "A04-M",
@@ -471,9 +471,10 @@
       "path": "assets/player/animations/claw_m.glb",
       "prefix": "pmcl",
       "donors": [
-        "cl"
+        "cl",
+        "sa"
       ],
-      "note": "Preserve multi-hit contacts; female stance donor requires discovery.",
+      "note": "Dedicated caution170/ready174; explicit saber run111, block103 and reaction donors. Native 1/1/2 contacts, native Ein Claw right-hand attachment. Mislabeled pwcl_dam_h excluded.",
       "sha256": "dca212706317ae50f7c66d0f9bd073c179216bd6562175bfae39d90230d1c9c6",
       "clips": [
         "dummy1",
@@ -539,7 +540,7 @@
           "pmcl_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
     },
     {
       "id": "A04-F",

@@ -36,7 +36,7 @@
       "Throttle impact sound/particles and stagger to avoid noise or permanent enemy stun."
     ],
     "acceptance": "Every intended contact fires once; fast input still distinguishes all three combo outcomes.",
-    "status": "Male owner-approved; female implemented and awaiting owner playtest"
+    "status": "Male and female reference pairs owner-approved"
   },
   {
     "id": "A04",
@@ -49,7 +49,7 @@
       "Check short reach against small enemies and moving targets; review flinch frequency."
     ],
     "acceptance": "No phantom long-range hit or duplicated impact; explicit M/F locomotion fallback.",
-    "status": "Not started: planning only"
+    "status": "Male implemented and awaiting owner playtest; female not started"
   },
   {
     "id": "A05",

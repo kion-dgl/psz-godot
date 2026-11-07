@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are owner-approved at `e0ec8124`; female daggers are implemented and await playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers`; both genders are supported for saber, sword and daggers.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are owner-approved at `e0ec8124`; female daggers and the guard flash are owner-approved at `be66d48f`. Male claw is implemented and awaits playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers|claw`; both genders are supported for saber, sword and daggers; claw is currently male only.
 
 From this worktree on this Mac:
 
@@ -186,3 +186,25 @@ Local female dagger library SHA-256: `bfa43ab82232ff75c1a4122ddb84b01c787f614ef7
 Shared successful-block feedback: a 300 ms blue-white particle burst plus a 320 ms camera-facing cyan guard flash at chest height toward the attacker, emitted only after guard acceptance. Rear/rejected blocks emit nothing. All adapted weapon profiles share it; focused checks verify emission and cleanup.
 
 Guard flash v2 is visible through overlapping enemy geometry at chest height. The fixture window title identifies this revision; the grip panel includes Preview block to demonstrate the effect without requiring a gameplay block. Rendered checks verify emission and cleanup.
+
+## Male — Claw playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon claw` (HUmar with native PSZ Ein Claw). Add `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-claw`, then import with Godot. Female claw remains unavailable until its adaptation.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks 1–3 | Native `pmcl_wait`, `pmcl_atk1/2/3` |
+| Normal walk | General male walk 200, existing `pmsa_walk` |
+| Caution / ready | Dedicated PSO claw 170 / 174 |
+| Run / block | Explicit male saber donors 111 / 103, baked as `pso_cl_run/block` |
+| Light / heavy / fall / get up | Explicit male saber donors 107 / 105 / 108 / 106 |
+| Casting / photon blast inventory | Explicit male saber donors 98 / 110 |
+| Dodge / defeated hold | Native `pmcl_esc_f`, `pmcl_dam_d_lp` |
+
+The source claw block has only five dedicated clips; missing roles are explicitly named donors, not suffix fallbacks. Native attacks are authoritative. The mislabeled native `pwcl_dam_h` is not imported into the profile. Claw uses its existing right-hand-only attachment and -4 degree local-Y grip with the native Ein Claw model.
+
+Decoded contacts are 1/1/2 at [0.2368] / [0.2632] / [0.2245, 0.6735] of the original motion, overriding the old generic 2/2/2 defaults. Holds are 100/120/180 ms. Every contact of a strong swing has strong damage/feedback. Preserve single-target cap, claw damage/knockback and 120-degree turns. Prototype reach is 2.4, horizontal cone 36 degrees, height tolerance 0.9 and vertical cone 45 degrees; targeting and damage agree. The shared guard flash remains enabled.
+
+Group and rendered solo checks pass, including both finisher contacts, no duplicates, strong feedback per contact, practical reach/cursor agreement, and guard flash cleanup. Female-dagger group regression passes. Owner playtest and asset-pack publication remain pending.
+
+Local male claw library SHA-256: `5ec0acf5ad0625a8a037b757fd2f3991423a938a7e2e8c17929ea19cbd51315d`.

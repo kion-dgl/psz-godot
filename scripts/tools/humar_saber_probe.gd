@@ -30,6 +30,10 @@ func _launch() -> void:
 		_native_prefix = "pwda" if female else "pmda"
 		_pso_prefix = "pso_f_da" if female else "pso_da"
 		CharacterManager._characters[0].equipment.weapon = "dagger"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "claw":
+		_native_prefix = "pmcl"
+		_pso_prefix = "pso_cl"
+		CharacterManager._characters[0].equipment.weapon = "ein_claw"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -129,7 +133,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_dagger_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -511,36 +515,43 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 		enemies[i].global_position = saved[i].position
 		enemies[i].current_hp = saved[i].hp
 
-func _verify_dagger_contacts(player, enemies: Array) -> void:
+func _verify_multi_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
-	_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "daggers attach to both hands")
-	var expected_left := Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0))
-	_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger uses owner-saved grip; right grip unchanged")
-	var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
-	_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
-	_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
-	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "daggers use gender-matched PSO saber run donor")
-	_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "dagger run")
+	var claw := _native_prefix == "pmcl"
+	var weapon_type: int = WeaponData.WeaponType.CLAW if claw else WeaponData.WeaponType.DAGGERS
+	if claw:
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")
+		_check(is_equal_approx(player.weapon_node.rotation_degrees.y, -4.0), "claw retains native grip")
+	else:
+		_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "multi-hit weapon attach to both hands")
+		var expected_left := Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0))
+		_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger uses owner-saved grip; right grip unchanged")
+		var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
+		_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
+		_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
+	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "multi-hit weapon uses explicit PSO run donor")
+	_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "multi-hit weapon run")
 	for role in ["run", "walk_ready", "wait", "block", "dam_h", "dam_d_wa", "dam_n", "dam_d", "pb"]:
 		var clip: String = _pso_prefix + "_" + str(role)
+		_check(player.animation_player.has_animation(clip), "explicit donor role exists: " + clip)
 		player.animation_player.stop()
 		player.play_animation(clip, true)
 		player.animation_player.seek(0.3, true)
 		player.animation_player.pause()
-		await _snapshot(clip)
+		if not claw or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
 
-	var geometry: Dictionary = player._weapon_combat_config(WeaponData.WeaponType.DAGGERS)
+	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
 	player.player_rotation = 0
 	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 10)
 	enemies[0].global_position = player.global_position + Vector3(0.8, 0, 2.2)
-	_check(player._enemies_in_hit_cone(geometry).has(enemies[0]), "daggers reach an offset enemy at practical melee distance")
+	_check(player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon reach an offset enemy at practical melee distance")
 	player._update_combat_targets()
-	_check(player._targeted_enemies.has(enemies[0]), "dagger cursor agrees with widened contact geometry")
+	_check(player._targeted_enemies.has(enemies[0]), "multi-hit cursor agrees with widened contact geometry")
 	enemies[0].global_position = player.global_position + Vector3(0, 0, 4)
-	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "daggers cannot hit distant enemies")
+	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon cannot hit distant enemies")
 	enemies[0].global_position = player.global_position + Vector3(0, 0, -1.5)
-	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "daggers cannot hit behind the player")
+	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon cannot hit behind the player")
 	player.combo_state = 3
 	player._is_special_attack = false
 	seed(791)
@@ -548,9 +559,9 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 	player._is_special_attack = true
 	seed(791)
 	var strong: Dictionary = player._get_attack_damage()
-	_check(is_equal_approx(float(strong.power_multiplier), float(normal.power_multiplier) * 1.5), "third dagger swing snapshots strong power for all three contacts")
-	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.DAGGERS)
-	_check(config.max_targets == 1 and config.turn_limit_deg == [120, 120], "dagger target cap and turn limits preserved")
+	_check(is_equal_approx(float(strong.power_multiplier), float(normal.power_multiplier) * 1.5), "finisher snapshots strong power for every contact")
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	_check(config.max_targets == 1 and config.turn_limit_deg == [120, 120], "multi-hit target cap and turn limits preserved")
 	for step in range(3):
 		for i in enemies.size():
 			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.1 + i * 0.2)
@@ -571,16 +582,16 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 			var hp: int = enemies[0].current_hp
 			player._attack_anim_elapsed = contact - 0.001
 			player._update_attack_contact(0)
-			_check(enemies[0].current_hp == hp, "dagger contact never fires early")
+			_check(enemies[0].current_hp == hp, "multi-hit contact never fires early")
 			player._attack_anim_elapsed = contact + 0.001
 			player._update_attack_contact(contact - 0.001)
-			_check(enemies[0].current_hp < hp, "dagger authored contact lands on step %d" % (step + 1))
-			_check(enemies[0].hurt_timer >= 0.45, "every strong dagger contact gets extended strong flinch")
+			_check(enemies[0].current_hp < hp, "multi-hit authored contact lands on step %d" % (step + 1))
+			_check(enemies[0].hurt_timer >= 0.45, "every strong contact gets extended strong flinch")
 			hp = enemies[0].current_hp
 			player._update_attack_contact(contact)
-			_check(enemies[0].current_hp == hp, "dagger contact never repeats next frame")
-		_check(player._attack_hit_step == [2, 1, 3][step] and player._attack_hit_done, "dagger preserves decoded 2/1/3 contacts")
-		for i in range(1, enemies.size()): _check(enemies[i].current_hp == 10000, "dagger respects single target per impact")
+			_check(enemies[0].current_hp == hp, "multi-hit contact never repeats next frame")
+		_check(player._attack_hit_step == ([1, 1, 2][step] if claw else [2, 1, 3][step]) and player._attack_hit_done, "multi-hit weapon preserves decoded contact count")
+		for i in range(1, enemies.size()): _check(enemies[i].current_hp == 10000, "multi-hit respects single target per impact")
 	player.transition_to(player.PlayerState.IDLE)
 	for i in enemies.size():
 		enemies[i].global_position = saved[i].position
