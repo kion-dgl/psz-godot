@@ -720,6 +720,18 @@ func _setup_weapon() -> void:
 		weapon_data.id, weapon_data.name, weapon_data.weapon_type,
 		weapon_data.glb_path, weapon_data.glb_scale, weapon_data.tint_color])
 
+	# Use the native PSZ dagger geometry for this fixture. Keep equipped
+	# combat stats unchanged; only the attachment's visual resource is copied.
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS:
+		var native_dagger: WeaponData = WeaponRegistry.get_weapon("ein_dagger")
+		if native_dagger == null:
+			push_error("Dagger prototype requires the PSZ Ein Dagger model")
+			return
+		weapon_data = weapon_data.duplicate() as WeaponData
+		weapon_data.glb_path = native_dagger.glb_path
+		weapon_data.glb_scale = native_dagger.glb_scale
+		weapon_data.tint_color = native_dagger.tint_color
+
 	# Attach to right hand
 	weapon_node = _attach_weapon_to_bone(WEAPON_BONE_NAME, weapon_data)
 

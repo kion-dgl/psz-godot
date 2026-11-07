@@ -154,3 +154,5 @@ Preserve the decoded native hit schedule from `original_attack_timing.json`: 2/1
 Focused checks verify both hand attachments, authored contact onset, no repeat contact, single-target cap, first-impact-only extended flinch, all mixed combos and recovery outcomes. Group and rendered solo checks pass; female sword regression passes. Owner playtest and asset publication are pending.
 
 Local male dagger library SHA-256: `a94743d033da4ab10f893857c7e64541b0e8809e7511921fffef52e382f5b30c`.
+
+Male dagger visual: the fixture uses the native PSZ Ein Dagger (`wdac01_1_r`) mesh, native scale and tint in both hands. The equipped `dagger` resource and all combat stats remain unchanged. The shared registry resources are not mutated.

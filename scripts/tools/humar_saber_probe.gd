@@ -500,6 +500,9 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
 	_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "daggers attach to both hands")
+	var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
+	_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
+	_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
 	_check(player._run_anim == "pso_da_run" and player.animation_player.has_animation("pso_da_run"), "daggers use explicit PSO run donor 111")
 	_verify_root(player.animation_player.get_animation("pso_da_run"), "dagger run")
 	for clip in ["pso_da_run", "pso_da_walk_ready", "pso_da_wait"]:
