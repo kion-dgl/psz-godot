@@ -107,7 +107,7 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon sword` (add `--group` for
 | Relaxed idle / attacks 1–3 | PSZ `pmsw_wait`, `pmsw_atk1/2/3` |
 | Normal walk | Existing general male PSO walk 200, `pmsa_walk` |
 | Caution / ready / block | PSO 112 / 117 / 118, `pso_sw_walk_ready/wait/block` |
-| Run | Native PSZ `pmsw_run`; no mapped PSO sword run |
+| Run | PSO general male run 207, `pmsa_run_pso`; explicit donor because no dedicated sword run is mapped |
 | Light / heavy / fall / get up | PSO 122 / 120 / 123 / 121 |
 | Dodge / defeated hold | Native PSZ `pmsw_esc_f`, `pmsw_dam_d_lp` |
 

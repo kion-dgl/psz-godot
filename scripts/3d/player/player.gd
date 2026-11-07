@@ -600,7 +600,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
 		if anim_glb == SaberPrototype.MALE_SWORD_PROFILE.library:
-			native_roles.append_array(["run", "esc_f", "dam_d_lp"])
+			native_roles.append_array(["esc_f", "dam_d_lp"])
 		for role in native_roles:
 			var clip := str(prototype_profile.native_prefix) + "_" + str(role)
 			if not native.has_animation(clip):

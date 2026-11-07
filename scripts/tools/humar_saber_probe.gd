@@ -441,7 +441,7 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies:
 		saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
-	_check(player._run_anim == "pmsw_run", "sword explicitly retains native run")
+	_check(player._run_anim == "pmsa_run_pso" and player.animation_player.has_animation("pmsa_run_pso"), "sword explicitly uses PSO general male run 207")
 	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.SWORD)
 	_check(config.max_targets == 3 and config.turn_limit_deg == [60, 60], "sword keeps three-target cap and 60 degree chain turns")
 	for step in range(3):
