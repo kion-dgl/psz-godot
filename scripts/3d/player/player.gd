@@ -808,6 +808,9 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	# Mirror left-hand weapon on X axis
 	if mirror:
 		node.scale.x = -s
+		if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS:
+			# PSZ right-hand mesh needs the opposite blade direction in the left grip.
+			node.rotation_degrees.y -= 180.0
 
 	# Apply tint and additive blending to blade materials
 	_apply_weapon_materials(node, weapon_data)
