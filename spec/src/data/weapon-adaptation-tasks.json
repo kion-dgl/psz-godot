@@ -10,7 +10,7 @@
       "Keep rejected source 104 out of normal walk; explicitly retain source 200 general male walk and source 111 saber run."
     ],
     "acceptance": "All shared tests pass for M/F; owner comparison finds no male regression.",
-    "status": "Not started: planning only"
+    "status": "Male and female reference pairs owner-approved; broader class and release gates remain"
   },
   {
     "id": "A02",
@@ -23,7 +23,7 @@
       "Validate two-handed grip, floor clearance and heavy-hit feedback on both bodies."
     ],
     "acceptance": "No body drift; correct multi-target count; identical normal/strong continuation timing.",
-    "status": "Not started: planning only"
+    "status": "Male implemented, awaiting owner playtest; female not started"
   },
   {
     "id": "A03",

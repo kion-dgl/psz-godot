@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female owner playtest is pending; all other pairs remain unimplemented. The launcher accepts `--gender male|female`, but no weapon or arbitrary class selection.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is the next implemented pair, awaiting playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword`; female sword is explicitly rejected until adapted.
 
 From this worktree on this Mac:
 
@@ -96,4 +96,23 @@ Check a profile/gender row only after W01–W10 and its family-specific acceptan
 
 Rebuild with `cd web && node scripts/bake-retarget.mjs --female-saber`, then import with Godot. The recipe targets `pc_010_000.glb` and selects only `pso_f_sa_*` from `data/retarget/Humar_body.glb`, producing `assets/player/animations/pso_female_saber.glb`. This local binary still needs asset-pack publication. The female profile fails visibly if its imported library is absent; it does not substitute the male profile.
 
-Female saber local artifact SHA-256: `8452245239a43caa569d84dd214b6c6c9e8e209c6b20f1d464064329a1f5a54e`. Focused solo, three-Booma and rendered checks passed on Godot 4.5.1; male solo regression passed. Existing exit resource-leak warnings remain. Next action: owner playtest Female — Saber; do not check it off from automated results alone.
+Female saber local artifact SHA-256: `8452245239a43caa569d84dd214b6c6c9e8e209c6b20f1d464064329a1f5a54e`. Focused solo, three-Booma and rendered checks passed on Godot 4.5.1; male solo regression passed. Existing exit resource-leak warnings remain. Owner approved Female — Saber at `cd946912`.
+
+## Male — Sword playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon sword` (add `--group` for four Boomas, allowing the three-target cap to be tested). Rebuild the local library with `cd web && node scripts/bake-retarget.mjs --male-sword`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks 1–3 | PSZ `pmsw_wait`, `pmsw_atk1/2/3` |
+| Normal walk | Existing general male PSO walk 200, `pmsa_walk` |
+| Caution / ready / block | PSO 112 / 117 / 118, `pso_sw_walk_ready/wait/block` |
+| Run | Native PSZ `pmsw_run`; no mapped PSO sword run |
+| Light / heavy / fall / get up | PSO 122 / 120 / 123 / 121 |
+| Dodge / defeated hold | Native PSZ `pmsw_esc_f`, `pmsw_dam_d_lp` |
+
+Sword contacts use the decoded PSZ fractions 0.3191 / 0.3261 / 0.44 of the original swing, with held recoveries 180 / 200 / 280 ms. Normal and strong share the approved 55–95% continuation window. Range, three-target cap, damage, knockback and 60-degree chain turn limits remain sword-specific. Strong contact plays the sword swing cue. The shared short contact spark/sound and flinch remain as in the approved saber reference.
+
+Focused checks cover all eight mixed combos, recovery outcomes, cursor caution, guard/reactions, exact contact onset, once-only delivery and a four-enemy test of the three-target limit. Female saber regression passed. Owner playtest and asset publication remain pending.
+
+Local sword library SHA-256: `c78db939f40e9c35cad9e183c97e746e8db3ec38bbd9b10c9a1ab1df245c8fe6`.

@@ -21,6 +21,10 @@ func _launch() -> void:
 	_native_prefix = "pwsa" if female else "pmsa"
 	_pso_prefix = "pso_f_sa" if female else "pso_sa"
 	CharacterManager.create_character(0, "humarl" if female else "humar", "Saber Test")
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "sword":
+		_native_prefix = "pmsw"
+		_pso_prefix = "pso_sw"
+		CharacterManager._characters[0].equipment.weapon = "sword"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -30,6 +34,8 @@ func _launch() -> void:
 	if OS.get_environment("PSZ_SABER_GROUP") == "1":
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[-3.0,0.0,5.0]})
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[3.0,0.0,5.0]})
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "sword" and OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[0.0,0.0,7.0]})
 	SessionManager.set_field_sections(sections)
 	ColiseumRoster.apply_level_override()
 	await SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", ColiseumRoster.warp_data())
@@ -87,6 +93,7 @@ func _verify(player) -> void:
 		_check(player.animation_player.has_animation(clip), "clip " + clip)
 		if player.animation_player.has_animation(clip):
 			_verify_root(player.animation_player.get_animation(clip), clip)
+			player.animation_player.stop()
 			player.play_animation(clip, false)
 			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
 			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot(clip)
@@ -96,16 +103,21 @@ func _verify(player) -> void:
 	for step in range(1, 4):
 		var clip := (_native_prefix + "_atk") + str(step)
 		var animation: Animation = player.animation_player.get_animation(clip)
+		player.animation_player.stop()
+		player.play_animation(clip, false)
+		player.animation_player.seek(animation.length * 0.35, true)
+		await _snapshot(clip)
 		var last_key := 0.0
 		for track in animation.get_track_count():
 			for key in animation.track_get_key_count(track):
 				last_key = maxf(last_key, animation.track_get_key_time(track, key))
-		_check(animation.length - last_key >= float(Rules.RECOVERY[step - 1]) - 0.002, "native swing holds recovery pose " + str(step))
+		_check(animation.length - last_key >= float(Rules.profile(player).get("recovery", Rules.RECOVERY)[step - 1]) - 0.002, "native swing holds recovery pose " + str(step))
 	for evasion in [0, 50, 200]:
 		for attempt in range(30):
 			var result := CombatManager.apply_damage_to_enemy(30, 5, evasion, Rules.contact_accuracy(evasion))
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
+	if _native_prefix == "pmsw": _verify_sword_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -225,7 +237,7 @@ func _verify_movement(player, enemies: Array) -> void:
 	player._update_combat_targets()
 	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
 	player._handle_movement(0.1)
-	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == (_native_prefix + "_walk"), "proximity without cursor does not trigger caution")
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == str(Rules.profile(player).walk), "proximity without cursor does not trigger caution")
 	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
 	player._update_combat_targets()
 	_check(not player._targeted_enemies.is_empty(), "close enemy acquires cursor")
@@ -238,7 +250,7 @@ func _verify_movement(player, enemies: Array) -> void:
 	player._handle_movement(0.24)
 	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == (_pso_prefix + "_walk_ready"), "retreat keeps caution for first 490 ms despite cursor loss")
 	player._handle_movement(0.02)
-	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == (_native_prefix + "_walk"), "500 ms caution hold transitions directly to run")
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == str(Rules.profile(player).walk), "500 ms caution hold transitions directly to run")
 	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
 	player._update_combat_targets()
 	player._handle_movement(0.1)
@@ -424,3 +436,40 @@ func _verify_combo_outcomes(player, enemy) -> void:
 	_check(player._saber_phase == "open_recovery", "failed combo cannot dodge out of exposure")
 	player._handle_attack_state(Rules.BROKEN_RECOVERY)
 	_check(player.current_state == player.PlayerState.IDLE, "failed recovery releases player after its delay")
+
+func _verify_sword_contacts(player, enemies: Array) -> void:
+	var saved: Array = []
+	for enemy in enemies:
+		saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
+	_check(player._run_anim == "pmsw_run", "sword explicitly retains native run")
+	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.SWORD)
+	_check(config.max_targets == 3 and config.turn_limit_deg == [60, 60], "sword keeps three-target cap and 60 degree chain turns")
+	for step in range(3):
+		for i in enemies.size():
+			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.2 + i * 0.25)
+			enemies[i].current_hp = 10000
+		player._recovery_left = 0
+		player._saber_attack_cooldown = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		player._start_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		player.combo_state = step + 1
+		player._play_attack_animation(step + 1, true)
+		var contact: float = Rules.profile(player).contact[step] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(enemies[0].current_hp == 10000, "sword step %d has no early contact" % (step + 1))
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		var hit_count := 0
+		for enemy in enemies:
+			if enemy.current_hp < 10000: hit_count += 1
+		_check(hit_count == mini(3, enemies.size()), "sword step %d hits exactly its target budget" % (step + 1))
+		var hp: int = enemies[0].current_hp
+		player._update_attack_contact(contact)
+		_check(enemies[0].current_hp == hp, "sword contact cannot repeat next frame")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i].position
+		enemies[i].current_hp = saved[i].hp

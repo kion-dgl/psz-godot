@@ -504,7 +504,7 @@ func _load_weapon_animations() -> void:
 		_run_anim = "pmsa_run_pso"
 	if SaberPrototype.enabled(self):
 		_walk_anim = str(SaberPrototype.profile(self).walk)
-		_run_anim = _anim_prefix + "_run"
+		_run_anim = str(SaberPrototype.profile(self).get("run", _anim_prefix + "_run"))
 	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
 
 	# Replace existing library
@@ -599,6 +599,8 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
+		if anim_glb == SaberPrototype.MALE_SWORD_PROFILE.library:
+			native_roles.append_array(["run", "esc_f", "dam_d_lp"])
 		for role in native_roles:
 			var clip := str(prototype_profile.native_prefix) + "_" + str(role)
 			if not native.has_animation(clip):
@@ -608,7 +610,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			var native_clip := native.get_animation(clip).duplicate() as Animation
 			if str(role).begins_with("atk"):
 				var step := int(clip.right(1)) - 1
-				native_clip.length += SaberPrototype.RECOVERY[step]
+				native_clip.length += prototype_profile.get("recovery", SaberPrototype.RECOVERY)[step]
 			lib.add_animation(clip, native_clip)
 
 	anim_scene.queue_free()
@@ -2395,11 +2397,11 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 	var config := CombatManager.get_weapon_type_config(weapon_type)
 	if SaberPrototype.enabled(self):
 		var step := clampi(combo_state - 1, 0, 2)
-		var motion_length := _attack_anim_length - float(SaberPrototype.RECOVERY[step])
-		if _attack_anim_elapsed >= SaberPrototype.CONTACT[step] * motion_length:
+		var motion_length := _attack_anim_length - float(SaberPrototype.profile(self).get("recovery", SaberPrototype.RECOVERY)[step])
+		if _attack_anim_elapsed >= float(SaberPrototype.profile(self).get("contact", SaberPrototype.CONTACT)[step]) * motion_length:
 			if _is_special_attack:
 				_end_charge_visual()
-				SfxManager.play_at(WEAPON_SFX[WeaponData.WeaponType.SABER], global_position)
+				SfxManager.play_at(WEAPON_SFX[weapon_type], global_position)
 			_execute_attack_hit(true)
 			_attack_hit_done = true
 		return
