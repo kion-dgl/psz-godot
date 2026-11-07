@@ -158,3 +158,5 @@ Local male dagger library SHA-256: `a94743d033da4ab10f893857c7e64541b0e8809e7511
 Male dagger visual: the fixture uses the native PSZ Ein Dagger (`wdac01_1_r`) mesh, native scale and tint in both hands. The equipped `dagger` resource and all combat stats remain unchanged. The shared registry resources are not mutated.
 
 The interactive male dagger fixture includes a left-grip adjustment panel: local X/Y/Z rotations in 180°, 90° and 5° increments, Reset, Copy angles, and Save. Enemies start frozen while adjusting; toggle to resume combat. Save persists the exact basis in the ignored local `.godot/dagger-left-grip.json`; automated checks ignore this personal override. Once accepted, promote the saved basis into the attachment defaults.
+
+Owner-saved left dagger grip promoted into the default: basis columns `(0,0,-1)`, `(0,-1,0)`, `(1,0,0)`, retaining native scale. Reset in the live panel now returns to this calibrated default.

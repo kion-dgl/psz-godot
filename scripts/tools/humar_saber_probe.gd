@@ -506,8 +506,8 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
 	_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "daggers attach to both hands")
-	var expected_left := Basis(Vector3.UP, -PI / 2.0) * Basis(Vector3.BACK, PI) * Basis.from_scale(Vector3(-1, 1, 1))
-	_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger face flips while tip direction and right grip remain unchanged")
+	var expected_left := Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0))
+	_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger uses owner-saved grip; right grip unchanged")
 	var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
 	_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
 	_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
