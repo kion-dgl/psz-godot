@@ -26,8 +26,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_sw" if female else "pso_sw"
 		CharacterManager._characters[0].equipment.weapon = "sword"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "daggers":
-		_native_prefix = "pmda"
-		_pso_prefix = "pso_da"
+		_native_prefix = "pwda" if female else "pmda"
+		_pso_prefix = "pso_f_da" if female else "pso_da"
 		CharacterManager._characters[0].equipment.weapon = "dagger"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -66,7 +66,7 @@ func _launch() -> void:
 		print("[humar-saber] DONE " + ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 	else:
-		if _native_prefix == "pmda":
+		if _native_prefix in ["pmda", "pwda"]:
 			var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -128,7 +128,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix == "pmda": await _verify_dagger_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda"]: await _verify_dagger_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -511,9 +511,10 @@ func _verify_dagger_contacts(player, enemies: Array) -> void:
 	var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
 	_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
 	_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
-	_check(player._run_anim == "pso_da_run" and player.animation_player.has_animation("pso_da_run"), "daggers use explicit PSO run donor 111")
-	_verify_root(player.animation_player.get_animation("pso_da_run"), "dagger run")
-	for clip in ["pso_da_run", "pso_da_walk_ready", "pso_da_wait"]:
+	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "daggers use gender-matched PSO saber run donor")
+	_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "dagger run")
+	for role in ["run", "walk_ready", "wait", "block", "dam_h", "dam_d_wa", "dam_n", "dam_d", "pb"]:
+		var clip: String = _pso_prefix + "_" + str(role)
 		player.animation_player.stop()
 		player.play_animation(clip, true)
 		player.animation_player.seek(0.3, true)

@@ -9,14 +9,16 @@ const MALE_SWORD_PROFILE := {"library": "res://assets/player/animations/pso_male
 const FEMALE_SWORD_PROFILE := {"library": "res://assets/player/animations/pso_female_sword.glb", "native_library": "res://assets/player/animations/sword_w.glb", "prefix": "pso_f_sw", "native_prefix": "pwsw", "walk": "pwsa_walk", "run": "pso_f_sw_run", "source_count": 13, "class_id": "humarl", "contact": [0.3191, 0.3261, 0.44], "recovery": [0.18, 0.20, 0.28]}
 
 const MALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_male_dagger.glb", "native_library": "res://assets/player/animations/dagger_m.glb", "prefix": "pso_da", "native_prefix": "pmda", "walk": "pmsa_walk", "run": "pso_da_run", "source_count": 13, "class_id": "humar", "hit_fracs": [[0.1556, 0.3333], [0.2895], [0.2075, 0.4151, 0.5849]], "recovery": [0.10, 0.12, 0.18]}
+const FEMALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_female_dagger.glb", "native_library": "res://assets/player/animations/dagger_w.glb", "prefix": "pso_f_da", "native_prefix": "pwda", "walk": "pwsa_walk", "run": "pso_f_da_run", "source_count": 8, "class_id": "humarl", "hit_fracs": [[0.1556, 0.3333], [0.2895], [0.2075, 0.4151, 0.5849]], "recovery": [0.10, 0.12, 0.18]}
 
 static func profile(player) -> Dictionary:
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS and not player._is_female: return MALE_DAGGER_PROFILE
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS: return FEMALE_DAGGER_PROFILE if player._is_female else MALE_DAGGER_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD:
 		return FEMALE_SWORD_PROFILE if player._is_female else MALE_SWORD_PROFILE
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == FEMALE_DAGGER_PROFILE.library: return FEMALE_DAGGER_PROFILE
 	if path == MALE_DAGGER_PROFILE.library: return MALE_DAGGER_PROFILE
 	if path == FEMALE_SWORD_PROFILE.library: return FEMALE_SWORD_PROFILE
 	if path == MALE_SWORD_PROFILE.library: return MALE_SWORD_PROFILE
@@ -49,7 +51,7 @@ static func enabled(player) -> bool:
 		and SessionManager.get_session().get("quest_id", "") == "debug_coliseum" \
 		and not player._is_barehanded() and (player._get_equipped_weapon_type() == WeaponData.WeaponType.SABER \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD \
-		 or (character.get("class_id", "") == "humar" and player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS))
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS)
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:

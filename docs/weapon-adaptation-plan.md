@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are implemented and await playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers`; both genders are supported for saber and sword, male only for daggers.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are owner-approved at `e0ec8124`; female daggers are implemented and await playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers`; both genders are supported for saber, sword and daggers.
 
 From this worktree on this Mac:
 
@@ -138,7 +138,7 @@ Local female sword library SHA-256: `21c6262b40766800e8fd16b1678a621c279bdaf5abd
 
 ## Male — Daggers playtest
 
-Run `python3 scripts/tools/run_humar_saber.py --weapon daggers` (HUmar), with optional `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-daggers`, then import with Godot. Female daggers remain unavailable until their adaptation.
+Run `python3 scripts/tools/run_humar_saber.py --weapon daggers` (HUmar), with optional `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-daggers`, then import with Godot. Female daggers are now available with `--gender female`.
 
 | Role | Explicit source |
 | --- | --- |
@@ -162,3 +162,23 @@ The interactive male dagger fixture includes a left-grip adjustment panel: local
 Owner-saved left dagger grip promoted into the default: basis columns `(0,0,-1)`, `(0,-1,0)`, `(1,0,0)`, retaining native scale. Reset in the live panel now returns to this calibrated default.
 
 Dagger reach checks cover an offset target at (0.8, 0, 2.2), agreement with the lock cursor, and rejection of targets behind or at distance 4. Strong third-swing power is verified against normal with identical damage variance.
+
+## Female — Daggers playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon daggers --gender female` (HUmarl). Add `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --female-daggers`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks 1–3 | Native `pwda_wait`, `pwda_atk1/2/3` |
+| Normal walk | General female walk 412, existing `pwsa_walk` |
+| Caution / ready / block | PSO 356 / 357 / 358 |
+| Run | Shared female saber run 342, baked as `pso_f_da_run` |
+| Light / heavy / fall / get up | PSO 361 / 359 / 362 / 360 |
+| Photon blast inventory | PSO 363 |
+| Dodge / defeated hold / casting | Native `pwda_esc_f`, `pwda_dam_d_lp`, `pwda_tec` |
+
+The shorter female source sequence 356–363 was rendered and inspected before labeling; it is not a fixed offset of the male dagger block. Missing female PSO attacks/casting are not invented: attacks and casting explicitly use native clips. Female contacts use the approved dagger profile's 2/1/3 normalized timing schedule, holds and continuation window against the female native motion lengths. Reach, targeting, strong feedback on every contact and the PSZ Ein Dagger models retain the approved male settings. Both attachment grips use the owner-calibrated defaults.
+
+Group, rendered solo and male-dagger regression checks passed. Owner playtest and asset-pack publication remain pending. The grip panel is available; uncheck Freeze enemies for combat. Female adjustments save separately to `.godot/dagger-female-left-grip.json`, leaving the male override untouched.
+
+Local female dagger library SHA-256: `bfa43ab82232ff75c1a4122ddb84b01c787f614ef7990a3535af76acb707387b`.

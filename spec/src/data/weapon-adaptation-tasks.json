@@ -36,7 +36,7 @@
       "Throttle impact sound/particles and stagger to avoid noise or permanent enemy stun."
     ],
     "acceptance": "Every intended contact fires once; fast input still distinguishes all three combo outcomes.",
-    "status": "Male implemented, awaiting owner playtest; female not started"
+    "status": "Male owner-approved; female implemented and awaiting owner playtest"
   },
   {
     "id": "A04",

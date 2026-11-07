@@ -387,7 +387,7 @@
           "pmda_tec"
         ]
       },
-      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
+      "status": "Owner-approved HUmar reference at e0ec8124"
     },
     {
       "id": "A03-F",
@@ -398,7 +398,7 @@
       "donors": [
         "da"
       ],
-      "note": "Preserve multiple contacts per swing; female donor requires discovery.",
+      "note": "PSO 356\u2013363 stance/reactions rendered and inspected; explicit shared run 342 and general walk 412. Native pwda attacks/casting; approved 2/1/3 contact profile and dagger grips.",
       "sha256": "1567222501c45bd8526f5011d8690e5b807d3bcafe1dac33b2f2882500f94a4a",
       "clips": [
         "dummy1",
@@ -462,7 +462,7 @@
           "pwda_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
     },
     {
       "id": "A04-M",
