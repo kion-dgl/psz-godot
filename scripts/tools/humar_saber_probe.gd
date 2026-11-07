@@ -66,6 +66,12 @@ func _launch() -> void:
 		print("[humar-saber] DONE " + ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 	else:
+		if _native_prefix == "pmda":
+			var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
+			add_child(controls)
+			controls.setup(player)
+			await get_tree().process_frame
+			await _snapshot("dagger_grip_controls")
 		print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
 
 func _verify(player) -> void:
