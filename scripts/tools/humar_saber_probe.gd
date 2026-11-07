@@ -441,7 +441,9 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies:
 		saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
-	_check(player._run_anim == "pmsa_run_pso" and player.animation_player.has_animation("pmsa_run_pso"), "sword explicitly uses PSO general male run 207")
+	_check(player._run_anim == "pso_sw_run" and player.animation_player.has_animation("pso_sw_run"), "sword explicitly shares PSO saber run 111")
+	if player.animation_player.has_animation("pso_sw_run"):
+		_verify_root(player.animation_player.get_animation("pso_sw_run"), "shared sword run 111")
 	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.SWORD)
 	_check(config.max_targets == 3 and config.turn_limit_deg == [60, 60], "sword keeps three-target cap and 60 degree chain turns")
 	for step in range(3):

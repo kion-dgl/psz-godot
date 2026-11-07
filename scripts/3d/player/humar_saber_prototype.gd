@@ -5,7 +5,7 @@ const FEMALE_LIBRARY := "res://assets/player/animations/pso_female_saber.glb"
 const MALE_PROFILE := {"library": LIBRARY, "native_library": "res://assets/player/animations/saver_m.glb", "prefix": "pso_sa", "native_prefix": "pmsa", "walk": "pmsa_walk", "source_count": 15, "class_id": "humar"}
 const FEMALE_PROFILE := {"library": FEMALE_LIBRARY, "native_library": "res://assets/player/animations/saver_w.glb", "prefix": "pso_f_sa", "native_prefix": "pwsa", "walk": "pwsa_walk", "source_count": 16, "class_id": "humarl"}
 
-const MALE_SWORD_PROFILE := {"library": "res://assets/player/animations/pso_male_sword.glb", "native_library": "res://assets/player/animations/sword_m.glb", "prefix": "pso_sw", "native_prefix": "pmsw", "walk": "pmsa_walk", "run": "pmsa_run_pso", "source_count": 13, "class_id": "humar", "contact": [0.3191, 0.3261, 0.44], "recovery": [0.18, 0.20, 0.28]}
+const MALE_SWORD_PROFILE := {"library": "res://assets/player/animations/pso_male_sword.glb", "native_library": "res://assets/player/animations/sword_m.glb", "prefix": "pso_sw", "native_prefix": "pmsw", "walk": "pmsa_walk", "run": "pso_sw_run", "source_count": 13, "class_id": "humar", "contact": [0.3191, 0.3261, 0.44], "recovery": [0.18, 0.20, 0.28]}
 
 static func profile(player) -> Dictionary:
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD and not player._is_female:

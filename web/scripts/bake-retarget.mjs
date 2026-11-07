@@ -396,6 +396,8 @@ async function main() {
         offsets: name.endsWith('_run') ? (femaleSaber ? F_RUN_OFFSETS : RUN_OFFSETS) : (femaleSaber ? F_WALK_OFFSETS : WALK_OFFSETS) })),
   }] : BAKE_TARGETS;
   if (saberPrototype && targets[0].anims.length !== (maleSword ? 13 : femaleSaber ? 16 : 15)) throw new Error('Incomplete saber source inventory');
+  // Sword shares the saber run; keep the donor ID explicit.
+  if (maleSword) targets[0].anims.push({ index: 111, name: 'pso_sw_run', offsets: RUN_OFFSETS });
   for (const { targetGlb, anims } of targets) {
     const targetPath = path.resolve(targetGlb);
     console.log(`\n── Baking into: ${targetGlb} ──`);
