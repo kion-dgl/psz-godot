@@ -23,7 +23,7 @@
       "Validate two-handed grip, floor clearance and heavy-hit feedback on both bodies."
     ],
     "acceptance": "No body drift; correct multi-target count; identical normal/strong continuation timing.",
-    "status": "Male owner-approved; female implemented and awaiting owner playtest"
+    "status": "Male and female reference pairs owner-approved"
   },
   {
     "id": "A03",
@@ -36,7 +36,7 @@
       "Throttle impact sound/particles and stagger to avoid noise or permanent enemy stun."
     ],
     "acceptance": "Every intended contact fires once; fast input still distinguishes all three combo outcomes.",
-    "status": "Not started: planning only"
+    "status": "Male implemented, awaiting owner playtest; female not started"
   },
   {
     "id": "A04",

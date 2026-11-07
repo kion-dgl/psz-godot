@@ -8,12 +8,16 @@ const FEMALE_PROFILE := {"library": FEMALE_LIBRARY, "native_library": "res://ass
 const MALE_SWORD_PROFILE := {"library": "res://assets/player/animations/pso_male_sword.glb", "native_library": "res://assets/player/animations/sword_m.glb", "prefix": "pso_sw", "native_prefix": "pmsw", "walk": "pmsa_walk", "run": "pso_sw_run", "source_count": 13, "class_id": "humar", "contact": [0.3191, 0.3261, 0.44], "recovery": [0.18, 0.20, 0.28]}
 const FEMALE_SWORD_PROFILE := {"library": "res://assets/player/animations/pso_female_sword.glb", "native_library": "res://assets/player/animations/sword_w.glb", "prefix": "pso_f_sw", "native_prefix": "pwsw", "walk": "pwsa_walk", "run": "pso_f_sw_run", "source_count": 13, "class_id": "humarl", "contact": [0.3191, 0.3261, 0.44], "recovery": [0.18, 0.20, 0.28]}
 
+const MALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_male_dagger.glb", "native_library": "res://assets/player/animations/dagger_m.glb", "prefix": "pso_da", "native_prefix": "pmda", "walk": "pmsa_walk", "run": "pso_da_run", "source_count": 13, "class_id": "humar", "hit_fracs": [[0.1556, 0.3333], [0.2895], [0.2075, 0.4151, 0.5849]], "recovery": [0.10, 0.12, 0.18]}
+
 static func profile(player) -> Dictionary:
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS and not player._is_female: return MALE_DAGGER_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD:
 		return FEMALE_SWORD_PROFILE if player._is_female else MALE_SWORD_PROFILE
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == MALE_DAGGER_PROFILE.library: return MALE_DAGGER_PROFILE
 	if path == FEMALE_SWORD_PROFILE.library: return FEMALE_SWORD_PROFILE
 	if path == MALE_SWORD_PROFILE.library: return MALE_SWORD_PROFILE
 	if path == LIBRARY: return MALE_PROFILE
@@ -44,7 +48,8 @@ static func enabled(player) -> bool:
 	return SessionManager.get_location() == "field" and character != null and character.get("class_id", "") in ["humar", "humarl"] \
 		and SessionManager.get_session().get("quest_id", "") == "debug_coliseum" \
 		and not player._is_barehanded() and (player._get_equipped_weapon_type() == WeaponData.WeaponType.SABER \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD)
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD \
+		 or (character.get("class_id", "") == "humar" and player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS))
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
@@ -116,6 +121,10 @@ static func palette_cue(player) -> Dictionary:
 	return {"progress": progress, "ready": progress >= CHAIN[0], "queued": player._queued_combo != player.ComboQueue.NONE}
 
 static func contact_feedback(enemy, source, strong: bool) -> void:
+	if source._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS:
+		var now := Time.get_ticks_msec()
+		if now - int(enemy.get_meta("dagger_feedback_ms", -1000)) < 80: return
+		enemy.set_meta("dagger_feedback_ms", now)
 	# The caller verifies actual HP loss; no spark or sound on a whiff/immune hit.
 	SfxManager.play_at("res://assets/sfx/weapons/saber_hit.wav", enemy.global_position, 0.0 if strong else -7.0)
 	if strong and enemy.is_alive and enemy.current_state == enemy.EnemyState.HURT:

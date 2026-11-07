@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--group', action='store_true')
-    parser.add_argument('--weapon', choices=['saber', 'sword'], default='saber')
+    parser.add_argument('--weapon', choices=['saber', 'sword', 'daggers'], default='saber')
     parser.add_argument('--gender', choices=['male', 'female'], default='male', help='HUmar or HUmarl saber reference')
     parser.add_argument('--rendered', action='store_true', help='Render automated checks for visual capture')
     parser.add_argument('--godot', default=os.environ.get('GODOT') or shutil.which('godot'))
@@ -23,6 +23,10 @@ def main():
         parser.error('Godot is required')
     library = ('pso_female_sword.glb' if args.gender == 'female' else 'pso_male_sword.glb') if args.weapon == 'sword' else 'pso_female_saber.glb' if args.gender == 'female' else 'pso_humar_saber.glb'
     bake_flag = ('--female-sword' if args.gender == 'female' else '--male-sword') if args.weapon == 'sword' else '--female-saber' if args.gender == 'female' else '--humar-saber'
+    if args.weapon == 'daggers':
+        if args.gender == 'female':
+            parser.error('Female daggers are not adapted yet')
+        library, bake_flag = 'pso_male_dagger.glb', '--male-daggers'
     if not (ROOT / 'assets/player/animations' / library).exists():
         parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:

@@ -25,6 +25,10 @@ func _launch() -> void:
 		_native_prefix = "pwsw" if female else "pmsw"
 		_pso_prefix = "pso_f_sw" if female else "pso_sw"
 		CharacterManager._characters[0].equipment.weapon = "sword"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "daggers":
+		_native_prefix = "pmda"
+		_pso_prefix = "pso_da"
+		CharacterManager._characters[0].equipment.weapon = "dagger"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -118,6 +122,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
+	if _native_prefix == "pmda": await _verify_dagger_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -486,6 +491,58 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 		var hp: int = enemies[0].current_hp
 		player._update_attack_contact(contact)
 		_check(enemies[0].current_hp == hp, "sword contact cannot repeat next frame")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i].position
+		enemies[i].current_hp = saved[i].hp
+
+func _verify_dagger_contacts(player, enemies: Array) -> void:
+	var saved: Array = []
+	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
+	_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "daggers attach to both hands")
+	_check(player._run_anim == "pso_da_run" and player.animation_player.has_animation("pso_da_run"), "daggers use explicit PSO run donor 111")
+	_verify_root(player.animation_player.get_animation("pso_da_run"), "dagger run")
+	for clip in ["pso_da_run", "pso_da_walk_ready", "pso_da_wait"]:
+		player.animation_player.stop()
+		player.play_animation(clip, true)
+		player.animation_player.seek(0.3, true)
+		player.animation_player.pause()
+		await _snapshot(clip)
+
+	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.DAGGERS)
+	_check(config.max_targets == 1 and config.turn_limit_deg == [120, 120], "dagger target cap and turn limits preserved")
+	for step in range(3):
+		for i in enemies.size():
+			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.1 + i * 0.2)
+			enemies[i].current_hp = 10000
+		player._recovery_left = 0
+		player._saber_attack_cooldown = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		player._start_strong_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		player.combo_state = step + 1
+		player._play_attack_animation(step + 1, true)
+		var hits: Array = Rules.profile(player).hit_fracs[step]
+		var motion_length: float = player._attack_anim_length - Rules.profile(player).recovery[step]
+		var impact_index := 0
+		for fraction in hits:
+			var contact: float = float(fraction) * motion_length
+			enemies[0].remove_meta("dagger_feedback_ms")
+			var hp: int = enemies[0].current_hp
+			player._attack_anim_elapsed = contact - 0.001
+			player._update_attack_contact(0)
+			_check(enemies[0].current_hp == hp, "dagger contact never fires early")
+			player._attack_anim_elapsed = contact + 0.001
+			player._update_attack_contact(contact - 0.001)
+			_check(enemies[0].current_hp < hp, "dagger authored contact lands on step %d" % (step + 1))
+			_check(enemies[0].hurt_timer >= 0.45 if impact_index == 0 else enemies[0].hurt_timer < 0.45, "only first dagger contact gets extended strong flinch")
+			impact_index += 1
+			hp = enemies[0].current_hp
+			player._update_attack_contact(contact)
+			_check(enemies[0].current_hp == hp, "dagger contact never repeats next frame")
+		_check(player._attack_hit_step == [2, 1, 3][step] and player._attack_hit_done, "dagger preserves decoded 2/1/3 contacts")
+		for i in range(1, enemies.size()): _check(enemies[i].current_hp == 10000, "dagger respects single target per impact")
 	player.transition_to(player.PlayerState.IDLE)
 	for i in enemies.size():
 		enemies[i].global_position = saved[i].position

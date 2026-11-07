@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is implemented and awaits playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword`; both genders are supported for saber and sword.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are implemented and await playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers`; both genders are supported for saber and sword, male only for daggers.
 
 From this worktree on this Mac:
 
@@ -135,3 +135,22 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon sword --gender female` (H
 Previously unlabeled clips 348/349/350/353/355 were rendered and inspected as ready/block/walk/light damage/photon-blast poses before adding labels. Native attacks remain authoritative; source 350 is inventoried but normal walk retains the approved general female walk. The female body has its own calibrated carry grips rather than reusing male angles. Sword contact fractions, recovery holds, target cap and turn limits match the approved male reference. Solo rendered, four-enemy group and male-sword regression checks pass. Owner playtest and asset-pack publication remain pending.
 
 Local female sword library SHA-256: `21c6262b40766800e8fd16b1678a621c279bdaf5abd1b2191b362d8dbf8d6251`.
+
+## Male — Daggers playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon daggers` (HUmar), with optional `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-daggers`, then import with Godot. Female daggers remain unavailable until their adaptation.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks | Native `pmda_wait`, `pmda_atk1/2/3` |
+| Normal walk | General male walk 200, existing `pmsa_walk` |
+| Caution / ready / block | PSO 125 / 130 / 131 |
+| Run | Shared male saber run 111, baked as `pso_da_run` (explicit donor; no mapped dedicated dagger run) |
+| Light / heavy / fall / get up | PSO 135 / 133 / 136 / 134 |
+| Dodge / defeated hold | Native `pmda_esc_f`, `pmda_dam_d_lp` |
+
+Preserve the decoded native hit schedule from `original_attack_timing.json`: 2/1/3 contacts, at [0.1556, 0.3333] / [0.2895] / [0.2075, 0.4151, 0.5849] of the original motion. These records take precedence over the old generic 2/2/3 hit-count defaults. Recovery holds are 100/120/180 ms; the approved normal/strong continuation window remains shared. Each impact consumes one target, with the native short reach and 120-degree chain turn limit. The strong cue and extended flinch occur on the first impact only; subsequent hits keep normal impact feedback. An 80 ms per-enemy feedback throttle prevents sound/particle bursts when a slow frame catches up multiple contacts. Damage contacts are never throttled.
+
+Focused checks verify both hand attachments, authored contact onset, no repeat contact, single-target cap, first-impact-only extended flinch, all mixed combos and recovery outcomes. Group and rendered solo checks pass; female sword regression passes. Owner playtest and asset publication are pending.
+
+Local male dagger library SHA-256: `a94743d033da4ab10f893857c7e64541b0e8809e7511921fffef52e382f5b30c`.

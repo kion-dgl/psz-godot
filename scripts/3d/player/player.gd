@@ -601,7 +601,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
 		if anim_glb == SaberPrototype.FEMALE_SWORD_PROFILE.library:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
@@ -2407,6 +2407,17 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 	if SaberPrototype.enabled(self):
 		var step := clampi(combo_state - 1, 0, 2)
 		var motion_length := _attack_anim_length - float(SaberPrototype.profile(self).get("recovery", SaberPrototype.RECOVERY)[step])
+		var authored_hits: Array = SaberPrototype.profile(self).get("hit_fracs", [])
+		if not authored_hits.is_empty():
+			var hits: Array = authored_hits[step]
+			while _attack_hit_step < hits.size() and _attack_anim_elapsed >= float(hits[_attack_hit_step]) * motion_length:
+				if _is_special_attack and _attack_hit_step == 0:
+					_end_charge_visual()
+					SfxManager.play_at(WEAPON_SFX[weapon_type], global_position)
+				_execute_attack_hit(true)
+				_attack_hit_step += 1
+			_attack_hit_done = _attack_hit_step >= hits.size()
+			return
 		if _attack_anim_elapsed >= float(SaberPrototype.profile(self).get("contact", SaberPrototype.CONTACT)[step]) * motion_length:
 			if _is_special_attack:
 				_end_charge_visual()
@@ -3138,7 +3149,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		for _h in range(int(atk.get("hits", 1))):
 			if hb is Hurtbox:
 				var packet := atk.duplicate(true)
-				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
+				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack and (weapon_type != WeaponData.WeaponType.DAGGERS or _attack_hit_step == 0)
 				packet["element"] = element
 				packet["element_level"] = element_level
 				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)), self)
