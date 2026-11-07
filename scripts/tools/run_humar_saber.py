@@ -27,9 +27,8 @@ def main():
         library = 'pso_female_dagger.glb' if args.gender == 'female' else 'pso_male_dagger.glb'
         bake_flag = '--female-daggers' if args.gender == 'female' else '--male-daggers'
     if args.weapon == 'claw':
-        if args.gender == 'female':
-            parser.error('Female claw is not adapted yet')
-        library, bake_flag = 'pso_male_claw.glb', '--male-claw'
+        library = 'pso_female_claw.glb' if args.gender == 'female' else 'pso_male_claw.glb'
+        bake_flag = '--female-claw' if args.gender == 'female' else '--male-claw'
     if not (ROOT / 'assets/player/animations' / library).exists():
         parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:

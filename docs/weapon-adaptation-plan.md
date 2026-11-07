@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are owner-approved at `e0ec8124`; female daggers and the guard flash are owner-approved at `be66d48f`. Male claw is implemented and awaits playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers|claw`; both genders are supported for saber, sword and daggers; claw is currently male only.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are owner-approved at `e0ec8124`; female daggers and the guard flash are owner-approved at `be66d48f`. Male claw is owner-approved at `6a49ab9a`; female claw is implemented and awaits playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers|claw`; both genders are supported for saber, sword and daggers; both genders are also supported for claw.
 
 From this worktree on this Mac:
 
@@ -189,7 +189,7 @@ Guard flash v2 is visible through overlapping enemy geometry at chest height. Th
 
 ## Male — Claw playtest
 
-Run `python3 scripts/tools/run_humar_saber.py --weapon claw` (HUmar with native PSZ Ein Claw). Add `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-claw`, then import with Godot. Female claw remains unavailable until its adaptation.
+Run `python3 scripts/tools/run_humar_saber.py --weapon claw` (HUmar with native PSZ Ein Claw). Add `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-claw`, then import with Godot. Female claw is available with `--gender female`.
 
 | Role | Explicit source |
 | --- | --- |
@@ -208,3 +208,22 @@ Decoded contacts are 1/1/2 at [0.2368] / [0.2632] / [0.2245, 0.6735] of the orig
 Group and rendered solo checks pass, including both finisher contacts, no duplicates, strong feedback per contact, practical reach/cursor agreement, and guard flash cleanup. Female-dagger group regression passes. Owner playtest and asset-pack publication remain pending.
 
 Local male claw library SHA-256: `5ec0acf5ad0625a8a037b757fd2f3991423a938a7e2e8c17929ea19cbd51315d`.
+
+## Female — Claw playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon claw --gender female` (HUmarl with native PSZ Ein Claw). Add `--group` for three Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --female-claw`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks 1–3 | Native `pwcl_wait`, `pwcl_atk1/2/3` |
+| Normal walk | General female walk 412, existing `pwsa_walk` |
+| Caution / ready | PSO female claw 381 / 385 |
+| Source attack inventory (unused in combat) | PSO 382 / 383 / 384 |
+| Run / block | Explicit female saber donors 342 / 333 |
+| Light / heavy / fall / get up | Explicit female saber donors 338 / 336 / 339 / 337 |
+| Casting / photon blast | Explicit female saber donors 328 / 341 |
+| Dodge / defeated hold | Native `pwcl_esc_f`, `pwcl_dam_d_lp` |
+
+Source clips 381–385 were rendered and inspected before labeling. Female native attacks use the approved claw 1/1/2 normalized contact schedule and holds against their own motion lengths. Reach, single-target cap, strong feedback on every contact, guard flash, and native right-hand grip retain the approved male settings. Group, rendered solo and male-claw regression checks passed; owner playtest and asset publication remain pending.
+
+Local female claw library SHA-256: `702bebfd11ca6a29803629f7179f32ea5d2efda78263fdce93de946bf4b45f21`.

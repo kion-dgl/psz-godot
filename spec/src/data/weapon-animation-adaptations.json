@@ -540,7 +540,7 @@
           "pmcl_tec"
         ]
       },
-      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
+      "status": "Owner-approved HUmar reference at 6a49ab9a"
     },
     {
       "id": "A04-F",
@@ -549,9 +549,10 @@
       "path": "assets/player/animations/claw_w.glb",
       "prefix": "pwcl",
       "donors": [
-        "cl"
+        "cl",
+        "sa"
       ],
-      "note": "Preserve multi-hit contacts; female stance donor requires discovery.",
+      "note": "Source381\u2013385 rendered and inspected; caution381/ready385. Explicit female saber run342/block333/reaction donors. Native pwcl attacks with approved 1/1/2 timing and right-hand Ein Claw grip.",
       "sha256": "a745753dcede04e9ae4bd2b7eab5187f6a43740a03630d4ba38e5e41cb98bebb",
       "clips": [
         "dummy1",
@@ -619,7 +620,7 @@
           "pwcl_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
     },
     {
       "id": "A05-M",

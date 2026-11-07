@@ -31,8 +31,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_da" if female else "pso_da"
 		CharacterManager._characters[0].equipment.weapon = "dagger"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "claw":
-		_native_prefix = "pmcl"
-		_pso_prefix = "pso_cl"
+		_native_prefix = "pwcl" if female else "pmcl"
+		_pso_prefix = "pso_f_cl" if female else "pso_cl"
 		CharacterManager._characters[0].equipment.weapon = "ein_claw"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -111,7 +111,7 @@ func _verify(player) -> void:
 			player.animation_player.stop()
 			player.play_animation(clip, false)
 			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
-			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
+			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or str(clip).begins_with("pso_f_cl_") or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
 	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
 	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
 	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
@@ -133,7 +133,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda", "pmcl"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -518,7 +518,7 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 func _verify_multi_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
-	var claw := _native_prefix == "pmcl"
+	var claw := _native_prefix in ["pmcl", "pwcl"]
 	var weapon_type: int = WeaponData.WeaponType.CLAW if claw else WeaponData.WeaponType.DAGGERS
 	if claw:
 		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")

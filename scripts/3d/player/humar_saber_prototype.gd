@@ -12,15 +12,17 @@ const MALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_mal
 const FEMALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_female_dagger.glb", "native_library": "res://assets/player/animations/dagger_w.glb", "prefix": "pso_f_da", "native_prefix": "pwda", "walk": "pwsa_walk", "run": "pso_f_da_run", "source_count": 8, "class_id": "humarl", "hit_fracs": [[0.1556, 0.3333], [0.2895], [0.2075, 0.4151, 0.5849]], "recovery": [0.10, 0.12, 0.18]}
 
 const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_claw.glb", "native_library": "res://assets/player/animations/claw_m.glb", "prefix": "pso_cl", "native_prefix": "pmcl", "walk": "pmsa_walk", "run": "pso_cl_run", "source_count": 5, "class_id": "humar", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
+const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
 static func profile(player) -> Dictionary:
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW and not player._is_female: return MALE_CLAW_PROFILE
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW: return FEMALE_CLAW_PROFILE if player._is_female else MALE_CLAW_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS: return FEMALE_DAGGER_PROFILE if player._is_female else MALE_DAGGER_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD:
 		return FEMALE_SWORD_PROFILE if player._is_female else MALE_SWORD_PROFILE
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == FEMALE_CLAW_PROFILE.library: return FEMALE_CLAW_PROFILE
 	if path == MALE_CLAW_PROFILE.library: return MALE_CLAW_PROFILE
 	if path == FEMALE_DAGGER_PROFILE.library: return FEMALE_DAGGER_PROFILE
 	if path == MALE_DAGGER_PROFILE.library: return MALE_DAGGER_PROFILE
@@ -56,7 +58,7 @@ static func enabled(player) -> bool:
 		and not player._is_barehanded() and (player._get_equipped_weapon_type() == WeaponData.WeaponType.SABER \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS \
-		 or (character.get("class_id", "") == "humar" and player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW))
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW)
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
