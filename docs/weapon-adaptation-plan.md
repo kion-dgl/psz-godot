@@ -116,3 +116,5 @@ Sword contacts use the decoded PSZ fractions 0.3191 / 0.3261 / 0.44 of the origi
 Focused checks cover all eight mixed combos, recovery outcomes, cursor caution, guard/reactions, exact contact onset, once-only delivery and a four-enemy test of the three-target limit. Female saber regression passed. Owner playtest and asset publication remain pending.
 
 Local sword library SHA-256: `28e4347ddb314de8fa44e6284ffbc6a18930ee2a4d90c345a72ba11350fd6c60`.
+
+Male sword carry grip: PSO run, caution and ready now use fixed per-pose forearm-space corrections that point the tip upward at the calibration pose while retaining animation sway. Grip changes blend over 80 ms; native PSZ attack/reaction/idle grips remain unchanged. Headless group and rendered checks verify upward carry direction and restoration of all three native attack grips.

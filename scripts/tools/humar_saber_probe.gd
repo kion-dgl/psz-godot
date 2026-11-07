@@ -117,7 +117,7 @@ func _verify(player) -> void:
 			var result := CombatManager.apply_damage_to_enemy(30, 5, evasion, Rules.contact_accuracy(evasion))
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
-	if _native_prefix == "pmsw": _verify_sword_contacts(player, enemies)
+	if _native_prefix == "pmsw": await _verify_sword_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -444,6 +444,18 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 	_check(player._run_anim == "pso_sw_run" and player.animation_player.has_animation("pso_sw_run"), "sword explicitly shares PSO saber run 111")
 	if player.animation_player.has_animation("pso_sw_run"):
 		_verify_root(player.animation_player.get_animation("pso_sw_run"), "shared sword run 111")
+	for clip in ["pso_sw_run", "pso_sw_walk_ready", "pso_sw_wait"]:
+		player.animation_player.stop()
+		player.play_animation(clip, true)
+		player.animation_player.seek(0.3, true)
+		player.skeleton.force_update_all_bone_transforms()
+		var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
+		player._weapon_grip_tween.custom_step(1.0)
+		var blade_direction: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3.BACK).normalized()
+		_check(blade_direction.dot(Vector3.UP) > 0.99, clip + " carries sword tip vertically upward")
+		player.animation_player.pause()
+		await _snapshot(clip + "_grip")
+
 	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.SWORD)
 	_check(config.max_targets == 3 and config.turn_limit_deg == [60, 60], "sword keeps three-target cap and 60 degree chain turns")
 	for step in range(3):
@@ -458,6 +470,8 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 		player._handle_attack_state(Rules.READY_PREP)
 		player.combo_state = step + 1
 		player._play_attack_animation(step + 1, true)
+		player._weapon_grip_tween.custom_step(1.0)
+		_check(player.weapon_node.quaternion.is_equal_approx(Quaternion(Vector3.UP, PI / 2.0)), "sword swing restores native grip")
 		var contact: float = Rules.profile(player).contact[step] * (player._attack_anim_length - Rules.profile(player).recovery[step])
 		player._attack_anim_elapsed = contact - 0.001
 		player._update_attack_contact(0)

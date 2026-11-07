@@ -123,6 +123,8 @@ const STEP_UP_MAX_HEIGHT: float = 0.5
 var animation_player: AnimationPlayer
 var skeleton: Skeleton3D
 var weapon_node: Node3D  # Attached weapon model
+var _weapon_grip_tween: Tween
+var _sword_grip_clip := ""
 
 # Weapon attachment config
 const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
@@ -2445,11 +2447,36 @@ func _handle_damaged(_delta: float) -> void:
 func _set_weapon_hold(mode: String) -> void:
 	if not weapon_node or not is_instance_valid(weapon_node):
 		return
+	if _weapon_grip_tween: _weapon_grip_tween.kill()
+	_sword_grip_clip = ""
 	var wtype: int = _get_equipped_weapon_type()
 	var hold: Dictionary = WEAPON_HOLD.get(wtype, WEAPON_HOLD_DEFAULT)
 	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
 	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
 	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
+
+
+# Local forearm-space blade directions calibrated against the retargeted
+# carry poses at 0.3 s. Sword.glb points along +Z; keep a fixed hand grip
+# within each animation so the blade retains the authored gait sway.
+const SWORD_CARRY_DIRECTIONS := {
+	"pso_sw_run": Vector3(-0.677222, -0.422584, 0.602323),
+	"pso_sw_walk_ready": Vector3(-0.728611, 0.080743, 0.680152),
+	"pso_sw_wait": Vector3(0.031778, -0.316038, 0.948214),
+}
+
+func _set_sword_pose_hold(clip: String) -> void:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() != WeaponData.WeaponType.SWORD:
+		return
+	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
+	_sword_grip_clip = clip
+	if _weapon_grip_tween: _weapon_grip_tween.kill()
+	var native := Quaternion(Vector3.UP, PI / 2.0)
+	var target := native
+	if SWORD_CARRY_DIRECTIONS.has(clip):
+		target = Quaternion(Vector3.RIGHT, SWORD_CARRY_DIRECTIONS[clip].normalized()) * native
+	_weapon_grip_tween = create_tween()
+	_weapon_grip_tween.tween_property(weapon_node, "quaternion", target, SaberPrototype.READY_BLEND)
 
 
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
@@ -2852,6 +2879,7 @@ func play_animation(anim_name: String, _loop: bool = true) -> void:
 	if not animation_player:
 		return
 	if animation_player.has_animation(anim_name):
+		_set_sword_pose_hold(anim_name)
 		animation_player.play(anim_name)
 		return
 	# Try with 's' suffix variant (e.g. pwros_wait for pwro prefix)
