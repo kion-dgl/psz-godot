@@ -116,7 +116,7 @@ func _verify(player) -> void:
 		player.animation_player.stop()
 		player.play_animation(clip, false)
 		player.animation_player.seek(animation.length * 0.35, true)
-		await _snapshot(clip)
+		if OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _snapshot(clip)
 		var last_key := 0.0
 		for track in animation.get_track_count():
 			for key in animation.track_get_key_count(track):
@@ -128,7 +128,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda"]: await _verify_dagger_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_dagger_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -153,8 +153,14 @@ func _verify_exchange(player, enemy) -> void:
 	enemy.global_position = player.global_position + Vector3(0,0,2)
 	player.transition_to(player.PlayerState.IDLE)
 	var hp := GameState.hp
+	var block_bursts := get_tree().get_nodes_in_group("prototype_block_feedback").size()
 	enemy._deal_damage_for({"kind":"melee_arc", "damage_mult":1.0})
 	_check(GameState.hp == hp and player.animation_player.current_animation == (_pso_prefix + "_block"), "real frontal melee is blocked")
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").size() == block_bursts + 1, "successful block emits guard spark")
+	await get_tree().create_timer(0.08).timeout
+	await _snapshot("successful_block")
+	await get_tree().create_timer(0.3).timeout
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").is_empty(), "guard sparks clean themselves up")
 	player._start_attack()
 	_check(Rules.guarding(player), "block commits recovery and refuses attack cancel")
 	player._hit_invulnerability_left = 0
@@ -165,6 +171,7 @@ func _verify_exchange(player, enemy) -> void:
 	player.transition_to(player.PlayerState.IDLE)
 	enemy.global_position = player.global_position - Vector3(0,0,2)
 	_check(not player.try_prototype_guard(enemy), "rear attack cannot guard")
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").is_empty(), "rejected block emits no guard spark")
 	enemy.global_position = player.global_position + Vector3(0,0,2)
 	player._start_attack()
 	player._handle_attack_state(Rules.READY_PREP)

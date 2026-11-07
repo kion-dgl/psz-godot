@@ -97,6 +97,7 @@ static func try_guard(player, source: Node3D) -> bool:
 	player.play_animation(str(profile(player).prefix) + "_block", false)
 	player.velocity.x = 0.0
 	player.velocity.z = 0.0
+	block_feedback(player, source)
 	return true
 
 static func guarding(player) -> bool:
@@ -156,5 +157,44 @@ static func contact_feedback(enemy, source, strong: bool) -> void:
 	source.get_tree().current_scene.add_child(burst)
 	var toward: Vector3 = (source.global_position - enemy.global_position).normalized()
 	burst.global_position = enemy.global_position + Vector3.UP + toward * 0.35
+	burst.emitting = true
+	burst.finished.connect(burst.queue_free)
+
+static func block_feedback(player, source: Node3D) -> void:
+	# A distinct blue-white flash at the guard, only after a hit is blocked.
+	var burst := CPUParticles3D.new()
+	burst.name = "GuardSpark"
+	burst.add_to_group("prototype_block_feedback")
+	burst.one_shot = true
+	burst.amount = 12
+	burst.lifetime = 0.22
+	burst.explosiveness = 1.0
+	burst.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	burst.emission_sphere_radius = 0.06
+	burst.direction = Vector3.UP
+	burst.spread = 160.0
+	burst.initial_velocity_min = 0.8
+	burst.initial_velocity_max = 1.8
+	burst.gravity = Vector3(0, -1.0, 0)
+	burst.scale_amount_min = 0.6
+	burst.scale_amount_max = 1.0
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.035
+	mesh.height = 0.07
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.vertex_color_use_as_albedo = true
+	material.albedo_color = Color(0.55, 0.85, 1.0)
+	mesh.material = material
+	burst.mesh = mesh
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 1))
+	fade.set_color(1, Color(0.5, 0.8, 1, 0))
+	burst.color_ramp = fade
+	player.get_tree().current_scene.add_child(burst)
+	var toward: Vector3 = source.global_position - player.global_position
+	toward.y = 0
+	burst.global_position = player.global_position + Vector3.UP * 1.1 + toward.normalized() * 0.45
 	burst.emitting = true
 	burst.finished.connect(burst.queue_free)
