@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is the next implemented pair, awaiting playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword`; female sword is explicitly rejected until adapted.
+Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is implemented and awaits playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword`; both genders are supported for saber and sword.
 
 From this worktree on this Mac:
 
@@ -118,3 +118,20 @@ Focused checks cover all eight mixed combos, recovery outcomes, cursor caution, 
 Local sword library SHA-256: `28e4347ddb314de8fa44e6284ffbc6a18930ee2a4d90c345a72ba11350fd6c60`.
 
 Male sword carry grip: PSO run, caution and ready now use fixed per-pose forearm-space corrections that point the tip upward at the calibration pose while retaining animation sway. Grip changes blend over 80 ms; native PSZ attack/reaction/idle grips remain unchanged. Headless group and rendered checks verify upward carry direction and restoration of all three native attack grips.
+
+## Female — Sword playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon sword --gender female` (HUmarl). Add `--group` for four Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --female-sword`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / three attacks | Native `pwsw_wait`, `pwsw_atk1/2/3` |
+| Normal walk | Female general walk 412, existing `pwsa_walk` |
+| Caution / ready / block | PSO 343 / 348 / 349 |
+| Run | Shared female saber run 342, baked as `pso_f_sw_run` |
+| Light / heavy / fall / get up | PSO 353 / 351 / 354 / 352 |
+| Dodge / defeated hold | Native `pwsw_esc_f`, `pwsw_dam_d_lp` |
+
+Previously unlabeled clips 348/349/350/353/355 were rendered and inspected as ready/block/walk/light damage/photon-blast poses before adding labels. Native attacks remain authoritative; source 350 is inventoried but normal walk retains the approved general female walk. The female body has its own calibrated carry grips rather than reusing male angles. Sword contact fractions, recovery holds, target cap and turn limits match the approved male reference. Solo rendered, four-enemy group and male-sword regression checks pass. Owner playtest and asset-pack publication remain pending.
+
+Local female sword library SHA-256: `21c6262b40766800e8fd16b1678a621c279bdaf5abd1b2191b362d8dbf8d6251`.

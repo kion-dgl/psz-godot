@@ -22,8 +22,8 @@ func _launch() -> void:
 	_pso_prefix = "pso_f_sa" if female else "pso_sa"
 	CharacterManager.create_character(0, "humarl" if female else "humar", "Saber Test")
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "sword":
-		_native_prefix = "pmsw"
-		_pso_prefix = "pso_sw"
+		_native_prefix = "pwsw" if female else "pmsw"
+		_pso_prefix = "pso_f_sw" if female else "pso_sw"
 		CharacterManager._characters[0].equipment.weapon = "sword"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -96,7 +96,7 @@ func _verify(player) -> void:
 			player.animation_player.stop()
 			player.play_animation(clip, false)
 			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
-			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot(clip)
+			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
 	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
 	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
 	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
@@ -117,7 +117,7 @@ func _verify(player) -> void:
 			var result := CombatManager.apply_damage_to_enemy(30, 5, evasion, Rules.contact_accuracy(evasion))
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
-	if _native_prefix == "pmsw": await _verify_sword_contacts(player, enemies)
+	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -441,10 +441,11 @@ func _verify_sword_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies:
 		saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
-	_check(player._run_anim == "pso_sw_run" and player.animation_player.has_animation("pso_sw_run"), "sword explicitly shares PSO saber run 111")
-	if player.animation_player.has_animation("pso_sw_run"):
-		_verify_root(player.animation_player.get_animation("pso_sw_run"), "shared sword run 111")
-	for clip in ["pso_sw_run", "pso_sw_walk_ready", "pso_sw_wait"]:
+	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "sword explicitly shares gender-matched PSO saber run")
+	if player.animation_player.has_animation(_pso_prefix + "_run"):
+		_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "shared sword run")
+	for role in ["run", "walk_ready", "wait"]:
+		var clip: String = _pso_prefix + "_" + str(role)
 		player.animation_player.stop()
 		player.play_animation(clip, true)
 		player.animation_player.seek(0.3, true)

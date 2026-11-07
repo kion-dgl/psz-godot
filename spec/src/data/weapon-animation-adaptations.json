@@ -235,7 +235,7 @@
           "pmsw_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Owner-approved HUmar reference at 87fcf2bf; minor grip tuning may follow"
     },
     {
       "id": "A02-F",
@@ -246,7 +246,7 @@
       "donors": [
         "sw"
       ],
-      "note": "Female PSO map is incomplete; do not infer missing source indices.",
+      "note": "PSO 348/349/350/353/355 labeled after rendered inspection. Shared female saber run 342; general walk 412; native attacks. Separate female upright carry grips.",
       "sha256": "03aeb314094b27c1a64c95c7eb236089482a40fa854788ca869d8f4eec208fe3",
       "clips": [
         "dummy1",
@@ -312,7 +312,7 @@
           "pwsw_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
     },
     {
       "id": "A03-M",

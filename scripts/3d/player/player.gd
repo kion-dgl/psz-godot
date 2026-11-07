@@ -579,7 +579,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			var shared_clips := ["pmsa_walk", "pmsa_run_pso"]
 			if anim_glb == SaberPrototype.LIBRARY:
 				shared_clips.append_array(["pmsa_esc_f", "pmsa_dam_d_lp"])
-			elif anim_glb == SaberPrototype.FEMALE_LIBRARY:
+			elif anim_glb in [SaberPrototype.FEMALE_LIBRARY, SaberPrototype.FEMALE_SWORD_PROFILE.library]:
 				shared_clips = [] # Female roles come from saver_w, not the male scene.
 			for anim_name in shared_clips:
 				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
@@ -601,8 +601,15 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb == SaberPrototype.MALE_SWORD_PROFILE.library:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
+		if anim_glb == SaberPrototype.FEMALE_SWORD_PROFILE.library:
+			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
+			if female_walk == null or not female_walk.has_animation("pwsa_walk"):
+				push_error("Female sword requires general female walk")
+				anim_scene.queue_free()
+				return null
+			lib.add_animation("pwsa_walk", female_walk.get_animation("pwsa_walk").duplicate())
 		for role in native_roles:
 			var clip := str(prototype_profile.native_prefix) + "_" + str(role)
 			if not native.has_animation(clip):
@@ -2460,6 +2467,9 @@ func _set_weapon_hold(mode: String) -> void:
 # carry poses at 0.3 s. Sword.glb points along +Z; keep a fixed hand grip
 # within each animation so the blade retains the authored gait sway.
 const SWORD_CARRY_DIRECTIONS := {
+	"pso_f_sw_run": Vector3(-0.50594, -0.428426, 0.748649),
+	"pso_f_sw_walk_ready": Vector3(-0.404062, -0.682927, 0.60856),
+	"pso_f_sw_wait": Vector3(-0.348917, -0.1503, 0.925023),
 	"pso_sw_run": Vector3(-0.677222, -0.422584, 0.602323),
 	"pso_sw_walk_ready": Vector3(-0.728611, 0.080743, 0.680152),
 	"pso_sw_wait": Vector3(0.031778, -0.316038, 0.948214),

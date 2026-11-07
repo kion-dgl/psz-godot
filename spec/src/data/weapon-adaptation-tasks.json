@@ -23,7 +23,7 @@
       "Validate two-handed grip, floor clearance and heavy-hit feedback on both bodies."
     ],
     "acceptance": "No body drift; correct multi-target count; identical normal/strong continuation timing.",
-    "status": "Male implemented, awaiting owner playtest; female not started"
+    "status": "Male owner-approved; female implemented and awaiting owner playtest"
   },
   {
     "id": "A03",

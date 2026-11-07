@@ -21,10 +21,8 @@ def main():
     args = parser.parse_args()
     if not args.godot:
         parser.error('Godot is required')
-    if args.weapon == 'sword' and args.gender == 'female':
-        parser.error('Female sword is not adapted yet')
-    library = 'pso_male_sword.glb' if args.weapon == 'sword' else 'pso_female_saber.glb' if args.gender == 'female' else 'pso_humar_saber.glb'
-    bake_flag = '--male-sword' if args.weapon == 'sword' else '--female-saber' if args.gender == 'female' else '--humar-saber'
+    library = ('pso_female_sword.glb' if args.gender == 'female' else 'pso_male_sword.glb') if args.weapon == 'sword' else 'pso_female_saber.glb' if args.gender == 'female' else 'pso_humar_saber.glb'
+    bake_flag = ('--female-sword' if args.gender == 'female' else '--male-sword') if args.weapon == 'sword' else '--female-saber' if args.gender == 'female' else '--humar-saber'
     if not (ROOT / 'assets/player/animations' / library).exists():
         parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:
