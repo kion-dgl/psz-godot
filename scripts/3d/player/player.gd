@@ -2,6 +2,8 @@ extends CharacterBody3D
 ## Player controller - handles movement, rotation, and animation states
 ## Ported from psz-sketch PlayerMovementDemo.tsx
 
+const SaberPrototype := preload("res://scripts/3d/player/humar_saber_prototype.gd")
+
 # Movement settings
 const MOVE_SPEED: float = 6.0
 const WALK_SPEED: float = 2.5
@@ -454,6 +456,10 @@ func _load_weapon_animations() -> void:
 			anim_glb = "res://assets/player/animations/common_w.glb" if _is_female else "res://assets/player/animations/common_m.glb"
 			_anim_prefix = "pwbn" if _is_female else "pmbn"
 
+	if SaberPrototype.enabled(self):
+		anim_glb = SaberPrototype.LIBRARY
+		_anim_prefix = "pso_sa"
+
 	print("[Player] Loading animations: glb=%s, prefix=%s, female=%s" % [anim_glb, _anim_prefix, _is_female])
 
 	# Load animation GLB (fall back to male if female GLB missing)
@@ -485,6 +491,9 @@ func _load_weapon_animations() -> void:
 	else:
 		_walk_anim = "pmsa_walk"
 		_run_anim = "pmsa_run_pso"
+	if SaberPrototype.enabled(self):
+		_walk_anim = "pso_sa_walk"
+		_run_anim = "pso_sa_run"
 	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
 
 	# Replace existing library
@@ -514,7 +523,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		return null
 
 	# Looping animations: weapon-specific idle/wait + shared locomotion
-	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr"]
+	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr", "_walk_ready"]
 
 	# Build new library from the weapon animation GLB
 	var lib := AnimationLibrary.new()
@@ -544,11 +553,17 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 	if scene_anims_node:
 		var scene_player: AnimationPlayer = NodeUtils.first_of_type(scene_anims_node, "AnimationPlayer") as AnimationPlayer
 		if scene_player:
-			for anim_name in ["pmsa_walk", "pmsa_run_pso"]:
+			var shared_clips := ["pmsa_walk", "pmsa_run_pso"]
+			if anim_glb == SaberPrototype.LIBRARY:
+				shared_clips.append_array(["pmsa_esc_f", "pmsa_dam_d_lp"])
+			for anim_name in shared_clips:
 				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
 					var source_anim := scene_player.get_animation(anim_name)
 					var new_anim := _remap_animation(source_anim, skeleton.name)
 					new_anim.loop_mode = Animation.LOOP_LINEAR
+					if anim_name.ends_with("_esc_f"):
+						new_anim.loop_mode = Animation.LOOP_NONE
+						_strip_root_translation_track(new_anim, skeleton.name)
 					lib.add_animation(anim_name, new_anim)
 
 	anim_scene.queue_free()
@@ -1271,13 +1286,17 @@ func _handle_movement(delta: float) -> void:
 			rot_diff += TAU
 		player_rotation += rot_diff * ROTATE_SPEED * delta
 
+		var cautious := SaberPrototype.enabled(self) and SaberPrototype.caution(self)
+		if SaberPrototype.enabled(self): SaberPrototype.select_walk(self, cautious)
+		if cautious and current_state == PlayerState.RUNNING:
+			transition_to(PlayerState.WALKING)
 		# State transitions: IDLE → WALKING → RUNNING
 		if current_state == PlayerState.IDLE:
 			walk_timer = 0.0
 			transition_to(PlayerState.WALKING)
 		elif current_state == PlayerState.WALKING:
 			walk_timer += delta
-			if walk_timer >= WALK_TO_RUN_DELAY:
+			if walk_timer >= WALK_TO_RUN_DELAY and not cautious:
 				transition_to(PlayerState.RUNNING)
 
 		# Speed based on current state
@@ -1443,6 +1462,7 @@ func _apply_step_up() -> void:
 
 
 func _start_dodge() -> void:
+	if SaberPrototype.guarding(self): return
 	if _freeze.remaining > 0.0 or _ailments.blocks_movement() or _is_defeated or _recovery_left > 0.0:
 		return
 	# Action commitment (spec /states/player-state, #377): a swing must fully
@@ -1532,6 +1552,7 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 
 
 func _start_attack() -> void:
+	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
@@ -1702,6 +1723,7 @@ func _execute_palette_action(slot: int) -> void:
 
 
 func _cast_technique(technique_id: String) -> void:
+	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
 	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
@@ -2175,6 +2197,7 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
+	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
@@ -2283,6 +2306,11 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 		return
 	var weapon_type := _get_equipped_weapon_type()
 	var config := CombatManager.get_weapon_type_config(weapon_type)
+	if SaberPrototype.enabled(self):
+		if _attack_anim_elapsed >= SaberPrototype.CONTACT[clampi(combo_state - 1, 0, 2)] * _attack_anim_length:
+			_execute_attack_hit(true)
+			_attack_hit_done = true
+		return
 	var timing_steps: Array = config.get("original_timing_steps", [])
 	if not timing_steps.is_empty():
 		var step: Dictionary = timing_steps[clampi(combo_state - 1, 0, timing_steps.size() - 1)]
@@ -2445,6 +2473,7 @@ func _ensure_combo_ring() -> void:
 
 
 func _chain_window(timing: Dictionary) -> Array[float]:
+	if SaberPrototype.enabled(self): return SaberPrototype.CHAIN.duplicate()
 	var window: Array[float] = [float(timing.just_start), 1.0]
 	var steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
 	if not steps.is_empty():
@@ -3290,8 +3319,11 @@ func _try_interact() -> void:
 			print("[Player] Interacted with: ", target.name)
 
 
-## One guard for hostile contact, ailments and recovery. Dodging does NOT
-## gate hits (spec /mechanics/dodge) — it only passes contact through.
+func try_prototype_guard(source: Node3D) -> bool:
+	return SaberPrototype.try_guard(self, source)
+
+
+## One guard for hostile contact, ailments and recovery. Dodging only passes contact through.
 func can_take_hit() -> bool:
 	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not PhotonBlast.is_presenting(self)
 

@@ -1611,6 +1611,8 @@ func _try_attack_hit() -> void:
 func _deal_damage_for(def: Dictionary) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	if str(def.get("kind", "melee_arc")) == "melee_arc" and target.has_method("try_prototype_guard") and target.try_prototype_guard(self):
+		return
 	if target.has_method("take_damage"):
 		target.take_damage(_attack_damage(def), Vector3.ZERO, bool(def.get("knockdown", false)))
 

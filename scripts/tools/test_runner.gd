@@ -19,6 +19,7 @@ func _ready() -> void:
 	# size bound as the suite grows (each new test is one more line here).
 	# Core first: it creates the active character the combat group's
 	# simulation/damage tests need (they SKIP without one).
+	preload("res://scripts/tools/humar_saber_tests.gd").run(self)
 	_run_tests_core()
 	_run_tests_telepipe_and_roam()
 	_run_tests_combat()

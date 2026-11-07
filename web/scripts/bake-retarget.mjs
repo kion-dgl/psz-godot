@@ -381,12 +381,21 @@ async function main() {
   pszModel.updateMatrixWorld(true);
   const pszRest = captureRestPose(pszModel);
 
-  // Process each bake target
-  for (const { targetGlb, anims } of BAKE_TARGETS) {
+  // Isolated complete saber library for the Coliseum prototype (#790).
+  const saberPrototype = process.argv.includes('--humar-saber');
+  const mapping = JSON.parse(fs.readFileSync('../data/retarget/pso_animation_map.json')).mappings;
+  const targets = saberPrototype ? [{
+    targetGlb: '../assets/player/animations/pso_humar_saber.glb',
+    anims: Object.entries(mapping).filter(([, name]) => name.startsWith('pso_sa_'))
+      .map(([index, name]) => ({ index: Number(index), name,
+        offsets: name.endsWith('_run') ? RUN_OFFSETS : WALK_OFFSETS })),
+  }] : BAKE_TARGETS;
+  if (saberPrototype && targets[0].anims.length !== 15) throw new Error('Expected all 15 saber clips');
+  for (const { targetGlb, anims } of targets) {
     const targetPath = path.resolve(targetGlb);
     console.log(`\n── Baking into: ${targetGlb} ──`);
 
-    const targetGltf = await loadGLB(targetPath);
+    const targetGltf = saberPrototype ? pszGltf : await loadGLB(targetPath);
 
     // Retarget animations
     const newClips = [];
@@ -394,11 +403,24 @@ async function main() {
       const clipName = `plymotiondata_${String(index).padStart(3, '0')}`;
       const srcClip = psoGltf.animations.find((c) => c.name === clipName);
       if (!srcClip) {
+        if (saberPrototype) throw new Error(`Missing source clip: ${clipName}`);
         console.warn(`Animation ${clipName} not found, skipping ${name}`);
         continue;
       }
       const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, posScale, name, offsets);
       if (retargeted) {
+        // PSO chains contain cumulative travel (atk3 starts ~2.65m forward).
+        // The gameplay body owns movement; retain vertical pose, never let the
+        // visible rig walk away from its collider or drift on loop boundaries.
+        if (saberPrototype) {
+          for (const track of retargeted.tracks) {
+            if (track.name !== '000_Root.position') continue;
+            for (let i = 0; i < track.values.length; i += 3) {
+              track.values[i] = 0;
+              track.values[i + 2] = 0;
+            }
+          }
+        }
         newClips.push(retargeted);
         console.log(`  Retargeted: ${clipName} -> ${name} (${retargeted.duration.toFixed(2)}s, ${retargeted.tracks.length} tracks)`);
       }
@@ -411,7 +433,7 @@ async function main() {
 
     // Merge with existing animations (deduplicate by name)
     const newNames = new Set(newClips.map((c) => c.name));
-    const existing = targetGltf.animations.filter((a) => !newNames.has(a.name));
+    const existing = saberPrototype ? [] : targetGltf.animations.filter((a) => !newNames.has(a.name));
     const allAnims = [...existing, ...newClips];
     console.log(`  Existing: ${targetGltf.animations.length}, adding: ${newClips.length}, total: ${allAnims.length}`);
 
