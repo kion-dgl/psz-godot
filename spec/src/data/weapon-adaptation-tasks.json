@@ -1,0 +1,223 @@
+[
+  {
+    "id": "A01",
+    "name": "Saber",
+    "depends": "P00\u2013P03",
+    "scope": "Preserve approved male reference; add the female profile.",
+    "steps": [
+      "Extract the approved rules without changing their timings or contact behavior.",
+      "Resolve female sa roles from the matrix and validate native pwsa attacks; inspect class/body variants.",
+      "Keep rejected source 104 out of normal walk; explicitly retain source 200 general male walk and source 111 saber run."
+    ],
+    "acceptance": "All shared tests pass for M/F; owner comparison finds no male regression.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A02",
+    "name": "Sword",
+    "depends": "A01 + P02",
+    "scope": "Retain PSZ broad swings and adapt PSO sword stance.",
+    "steps": [
+      "Verify male sw donor roles; discover missing female ready/block/walk entries rather than guessing IDs.",
+      "Author sword contact/recovery per step while preserving multi-target cap and turn limits.",
+      "Validate two-handed grip, floor clearance and heavy-hit feedback on both bodies."
+    ],
+    "acceptance": "No body drift; correct multi-target count; identical normal/strong continuation timing.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A03",
+    "name": "Daggers",
+    "depends": "A01 + P02/P03",
+    "scope": "Preserve fast multi-hit PSZ attacks.",
+    "steps": [
+      "Find female dagger stance/reaction donors or approve explicit native fallback.",
+      "Keep each authored hit timestamp and target budget; do not collapse swings to one hit.",
+      "Throttle impact sound/particles and stagger to avoid noise or permanent enemy stun."
+    ],
+    "acceptance": "Every intended contact fires once; fast input still distinguishes all three combo outcomes.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A04",
+    "name": "Claw",
+    "depends": "A01 + P02/P03",
+    "scope": "Preserve close-range multi-hit claw behavior.",
+    "steps": [
+      "Audit female donor gaps and each hand attachment.",
+      "Use claw reach/turn limits and per-impact schedule rather than saber constants.",
+      "Check short reach against small enemies and moving targets; review flinch frequency."
+    ],
+    "acceptance": "No phantom long-range hit or duplicated impact; explicit M/F locomotion fallback.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A05",
+    "name": "Double saber",
+    "depends": "A01 + P02/P03",
+    "scope": "Preserve wide sweeps and mixed hit counts.",
+    "steps": [
+      "Resolve sparse PSO ds roles; inspect HUcaseal attack overrides without replacing native swings.",
+      "Map female pwdss attacks separately from pwds_run.",
+      "Preserve per-step target counts and two-handed weapon orientation during spins."
+    ],
+    "acceptance": "Multi-target sweeps and repeated hits match profile; no foot/root drift.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A06",
+    "name": "Spear / partisan",
+    "depends": "A01 + P02",
+    "scope": "Use PSO partisan posture with PSZ spear attacks.",
+    "steps": [
+      "Map male pa donor roles; discover female equivalents or explicit fallback.",
+      "Retain PSZ thrusts, long reach and finisher target expansion.",
+      "Inspect shaft grip, tip path, caution/run and collision alignment on both bodies."
+    ],
+    "acceptance": "Partisan donors look coherent; thrust contacts and finisher targets remain correct.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A07",
+    "name": "Slicer",
+    "depends": "P00\u2013P03",
+    "scope": "Keep thrown-blade behavior under the shared combo states.",
+    "steps": [
+      "Discover M/F stance roles and keep native PSZ attack sequences.",
+      "Drive projectiles from authored release events; preserve return/bounce/target rules.",
+      "Attach hit feedback to actual projectile damage, not release or swing end."
+    ],
+    "acceptance": "No double release or phantom impact; interruption does not emit a delayed blade.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A08",
+    "name": "Gunblade",
+    "depends": "A01 + A12 + P03",
+    "scope": "Treat melee and shooting as explicit attack modes.",
+    "steps": [
+      "Decide per-role saber/rifle donor choices; inspect shotgun GLBs and mixed prefixes.",
+      "Separate contact and projectile events, timing and feedback by mode.",
+      "Reset queued actions on mode/equipment changes; test every normal/strong transition."
+    ],
+    "acceptance": "No stale-mode shot, wrong pose or doubled damage; M/F grip and shooting alignment approved.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A09",
+    "name": "Shield",
+    "depends": "P01 + support decision",
+    "scope": "Establish a real profile before claiming support.",
+    "steps": [
+      "Audit native shield assets and current runtime behavior; it has no dedicated WEAPON_ANIM_DATA entry.",
+      "Decide attack sequence, stance, guard arcs and shield-specific rules explicitly.",
+      "Implement only with resolved clips; otherwise leave disabled with an explicit unsupported state."
+    ],
+    "acceptance": "No silent saber-library fallback; approved source/profile or documented exclusion.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A10",
+    "name": "Handgun",
+    "depends": "P00\u2013P03",
+    "scope": "Use PSO movement/guard, retain PSZ firing sequence.",
+    "steps": [
+      "Map hg M/F readiness, caution, run and block; fill map gaps explicitly.",
+      "Keep native shot steps and per-step release timing; retain ranged hit semantics.",
+      "Test muzzle alignment, moving targets and target-cursor sound/caution interaction."
+    ],
+    "acceptance": "Each accepted step releases the correct shot; no melee-only hit policy leaks into guns.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A11",
+    "name": "Mechgun",
+    "depends": "A10 + P03",
+    "scope": "Preserve bursts rather than substituting one PSO shot.",
+    "steps": [
+      "Audit pmmg/pwmgs clips and existing PSO locomotion bakes.",
+      "Keep all burst timestamps and projectile budgets; bound per-burst sound/particle density.",
+      "Check interruption during a burst and pending shots during equipment changes."
+    ],
+    "acceptance": "Exact burst count; canceled future releases stay canceled; no stagger lock.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A12",
+    "name": "Rifle",
+    "depends": "A10 + P02",
+    "scope": "Adapt rifle posture with native PSZ rifle sequence.",
+    "steps": [
+      "Use rifle_m/w runtime sources and pmar/pwars prefixes; do not accidentally use shotgun pmri retargets.",
+      "Map ri M/F locomotion/block with explicit missing-role handling.",
+      "Align shoulder, muzzle and projectile release across bodies and strong/normal steps."
+    ],
+    "acceptance": "Correct native sequence and source provenance; no gender-prefix fallback accidents.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A13",
+    "name": "Bazooka",
+    "depends": "A12 + P02/P03",
+    "scope": "Replace or formalize the current shotgun/rifle fallback.",
+    "steps": [
+      "Audit whether a native bazooka sequence exists; do not label injected pmri clips PSZ-native.",
+      "Evaluate launcher donor la; choose explicit M/F fallback where unmapped.",
+      "Define actual step count and explosive release/recovery; preserve splash and immunity rules."
+    ],
+    "acceptance": "Source provenance and supported sequence approved; no fabricated three-step combo or duplicate explosion.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A14",
+    "name": "Laser cannon",
+    "depends": "A12 + P02/P03",
+    "scope": "Adapt stance without changing beam delivery.",
+    "steps": [
+      "Inspect female cannon file containing pmlc_atk1 instead of assumed pwlcs_atk1.",
+      "Evaluate rifle posture donor as a proposal; discover a better donor if grip/recoil is unsuitable.",
+      "Retain actual step count and beam tick/piercing rules; separate release feedback from hit feedback."
+    ],
+    "acceptance": "No duplicated beam damage; correct M/F clip selected explicitly; final-step recovery matches actual N.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A15",
+    "name": "Rod",
+    "depends": "A01 + P02/P03",
+    "scope": "Preserve physical attacks and technique casting.",
+    "steps": [
+      "Map ro M/F stance, reactions and utility clips; inspect FOmarl-specific casting separately.",
+      "Retain native melee contact schedule, rod reach and physical hit feedback.",
+      "Keep technique charge/release/cancellation independent of weapon combo recovery."
+    ],
+    "acceptance": "Physical impacts and casting both work; no lost charge or stale queued cast after melee interruption.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A16",
+    "name": "Wand",
+    "depends": "A15 + P02",
+    "scope": "Preserve wand physical attacks and support casting.",
+    "steps": [
+      "Resolve female prefix/source mismatches and sparse wn role map explicitly.",
+      "Tune wand contact/recovery, grip and effects separately from rod.",
+      "Test physical chains interleaved with support techniques and palette page changes."
+    ],
+    "acceptance": "Both genders use intended clips; no inherited rod/saber timing or stale charge.",
+    "status": "Not started: planning only"
+  },
+  {
+    "id": "A17",
+    "name": "Unarmed",
+    "depends": "P00\u2013P03",
+    "scope": "Handle empty equipment as its own profile.",
+    "steps": [
+      "Audit pmbn/pwbn native attacks and fi M/F stance/reaction candidates.",
+      "Decide unarmed block and ready behavior explicitly; do not inherit saber enum defaults.",
+      "Use empty-equipment feedback and reach; test equip/unequip at every phase."
+    ],
+    "acceptance": "No invisible saber, weapon sound or leftover weapon cooldown; class-specific overrides documented.",
+    "status": "Not started: planning only"
+  }
+]

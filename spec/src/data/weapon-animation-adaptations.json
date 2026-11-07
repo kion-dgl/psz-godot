@@ -1,0 +1,2475 @@
+{
+  "audited_on": "2026-11-07",
+  "provenance": "Local GLB inventory; SHA256 identifies the inspected asset. Includes native and previously retargeted clips; presence does not establish native provenance. Source IDs come only from pso_animation_map.json. This is planning data, not runtime configuration.",
+  "rows": [
+    {
+      "id": "A01-M",
+      "weapon": "Saber",
+      "gender": "male",
+      "path": "assets/player/animations/saver_m.glb",
+      "prefix": "pmsa",
+      "donors": [
+        "sa"
+      ],
+      "note": "Reference; only male HUmar fixture has been playtested.",
+      "sha256": "2058d0db5e7a992e9ba8d3f57fe8535ca4ddc30122d7d19e3496097f60a24cf4",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmsa_atk1",
+        "pmsa_atk2",
+        "pmsa_atk3",
+        "pmsa_chg",
+        "pmsa_dam_d",
+        "pmsa_dam_d_lp",
+        "pmsa_dam_d_wa",
+        "pmsa_dam_h",
+        "pmsa_dam_n",
+        "pmsa_esc_f",
+        "pmsa_pa3",
+        "pmsa_run",
+        "pmsa_slp",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pmsa_tec",
+        "pmsa_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmsa_wait"
+        ],
+        "atk1": [
+          "pmsa_atk1"
+        ],
+        "atk2": [
+          "pmsa_atk2"
+        ],
+        "atk3": [
+          "pmsa_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmsa_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmsa_dam_n"
+        ],
+        "dam_h": [
+          "pmsa_dam_h"
+        ],
+        "dam_d": [
+          "pmsa_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmsa_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmsa_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmsa_esc_f"
+        ],
+        "tec": [
+          "pmsa_tec"
+        ]
+      },
+      "status": "Owner-approved prototype; wider character validation pending"
+    },
+    {
+      "id": "A01-F",
+      "weapon": "Saber",
+      "gender": "female",
+      "path": "assets/player/animations/saver_w.glb",
+      "prefix": "pwsa",
+      "donors": [
+        "sa"
+      ],
+      "note": "Reference; only male HUmar fixture has been playtested.",
+      "sha256": "214c93a37c9e50c6eb8a59e2804e52157c5d09400bd7b4a804aa2326a8db60cd",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmsa_chg",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwsa_atk1",
+        "pwsa_atk2",
+        "pwsa_atk3",
+        "pwsa_dam_d",
+        "pwsa_dam_d_lp",
+        "pwsa_dam_d_wa",
+        "pwsa_dam_h",
+        "pwsa_dam_n",
+        "pwsa_esc_f",
+        "pwsa_pa3",
+        "pwsa_run",
+        "pwsa_run_pso",
+        "pwsa_slp",
+        "pwsa_tec",
+        "pwsa_wait",
+        "pwsa_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwsa_wait"
+        ],
+        "atk1": [
+          "pwsa_atk1"
+        ],
+        "atk2": [
+          "pwsa_atk2"
+        ],
+        "atk3": [
+          "pwsa_atk3"
+        ],
+        "walk": [
+          "pwsa_walk"
+        ],
+        "run": [
+          "pwsa_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pwsa_dam_n"
+        ],
+        "dam_h": [
+          "pwsa_dam_h"
+        ],
+        "dam_d": [
+          "pwsa_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwsa_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwsa_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwsa_esc_f"
+        ],
+        "tec": [
+          "pwsa_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A02-M",
+      "weapon": "Sword",
+      "gender": "male",
+      "path": "assets/player/animations/sword_m.glb",
+      "prefix": "pmsw",
+      "donors": [
+        "sw"
+      ],
+      "note": "Female PSO map is incomplete; do not infer missing source indices.",
+      "sha256": "78771944378fae7af2e94483bcb9f52a5fa66e1013ef3aa68e346f0f26c5b6bf",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmsw_atk1",
+        "pmsw_atk2",
+        "pmsw_atk3",
+        "pmsw_chg",
+        "pmsw_dam_d",
+        "pmsw_dam_d_lp",
+        "pmsw_dam_d_wa",
+        "pmsw_dam_h",
+        "pmsw_dam_n",
+        "pmsw_esc_f",
+        "pmsw_pa3",
+        "pmsw_run",
+        "pmsw_slp",
+        "pmsw_step_fb",
+        "pmsw_step_lr",
+        "pmsw_tec",
+        "pmsw_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmsw_wait"
+        ],
+        "atk1": [
+          "pmsw_atk1"
+        ],
+        "atk2": [
+          "pmsw_atk2"
+        ],
+        "atk3": [
+          "pmsw_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmsw_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmsw_dam_n"
+        ],
+        "dam_h": [
+          "pmsw_dam_h"
+        ],
+        "dam_d": [
+          "pmsw_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmsw_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmsw_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmsw_esc_f"
+        ],
+        "tec": [
+          "pmsw_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A02-F",
+      "weapon": "Sword",
+      "gender": "female",
+      "path": "assets/player/animations/sword_w.glb",
+      "prefix": "pwsw",
+      "donors": [
+        "sw"
+      ],
+      "note": "Female PSO map is incomplete; do not infer missing source indices.",
+      "sha256": "03aeb314094b27c1a64c95c7eb236089482a40fa854788ca869d8f4eec208fe3",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmsw_step_fb",
+        "pmsw_step_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwsw_atk1",
+        "pwsw_atk2",
+        "pwsw_atk3",
+        "pwsw_chg",
+        "pwsw_dam_d",
+        "pwsw_dam_d_lp",
+        "pwsw_dam_d_wa",
+        "pwsw_dam_h",
+        "pwsw_dam_n",
+        "pwsw_esc_f",
+        "pwsw_pa3",
+        "pwsw_run",
+        "pwsw_slp",
+        "pwsw_tec",
+        "pwsw_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwsw_wait"
+        ],
+        "atk1": [
+          "pwsw_atk1"
+        ],
+        "atk2": [
+          "pwsw_atk2"
+        ],
+        "atk3": [
+          "pwsw_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pwsw_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pwsw_dam_n"
+        ],
+        "dam_h": [
+          "pwsw_dam_h"
+        ],
+        "dam_d": [
+          "pwsw_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwsw_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwsw_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwsw_esc_f"
+        ],
+        "tec": [
+          "pwsw_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A03-M",
+      "weapon": "Daggers",
+      "gender": "male",
+      "path": "assets/player/animations/dagger_m.glb",
+      "prefix": "pmda",
+      "donors": [
+        "da"
+      ],
+      "note": "Preserve multiple contacts per swing; female donor requires discovery.",
+      "sha256": "4e964efab48046b7a1329735b1869fdf160ea0301e75ad8f8429af5ad7cd5784",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmda_atk1",
+        "pmda_atk2",
+        "pmda_atk3",
+        "pmda_chg",
+        "pmda_dam_d",
+        "pmda_dam_d_lp",
+        "pmda_dam_d_wa",
+        "pmda_dam_h",
+        "pmda_dam_n",
+        "pmda_esc_f",
+        "pmda_pa3",
+        "pmda_tec",
+        "pmda_wait",
+        "pmsa_run",
+        "pmsa_slp",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmda_wait"
+        ],
+        "atk1": [
+          "pmda_atk1"
+        ],
+        "atk2": [
+          "pmda_atk2"
+        ],
+        "atk3": [
+          "pmda_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pmda_dam_n"
+        ],
+        "dam_h": [
+          "pmda_dam_h"
+        ],
+        "dam_d": [
+          "pmda_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmda_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmda_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmda_esc_f"
+        ],
+        "tec": [
+          "pmda_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A03-F",
+      "weapon": "Daggers",
+      "gender": "female",
+      "path": "assets/player/animations/dagger_w.glb",
+      "prefix": "pwda",
+      "donors": [
+        "da"
+      ],
+      "note": "Preserve multiple contacts per swing; female donor requires discovery.",
+      "sha256": "1567222501c45bd8526f5011d8690e5b807d3bcafe1dac33b2f2882500f94a4a",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmsa_slp",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwda_atk1",
+        "pwda_atk2",
+        "pwda_atk3",
+        "pwda_chg",
+        "pwda_dam_d",
+        "pwda_dam_d_lp",
+        "pwda_dam_d_wa",
+        "pwda_dam_h",
+        "pwda_dam_n",
+        "pwda_esc_f",
+        "pwda_pa3",
+        "pwda_tec",
+        "pwda_wait",
+        "pwsa_run"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwda_wait"
+        ],
+        "atk1": [
+          "pwda_atk1"
+        ],
+        "atk2": [
+          "pwda_atk2"
+        ],
+        "atk3": [
+          "pwda_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwda_dam_n"
+        ],
+        "dam_h": [
+          "pwda_dam_h"
+        ],
+        "dam_d": [
+          "pwda_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwda_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwda_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwda_esc_f"
+        ],
+        "tec": [
+          "pwda_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A04-M",
+      "weapon": "Claw",
+      "gender": "male",
+      "path": "assets/player/animations/claw_m.glb",
+      "prefix": "pmcl",
+      "donors": [
+        "cl"
+      ],
+      "note": "Preserve multi-hit contacts; female stance donor requires discovery.",
+      "sha256": "dca212706317ae50f7c66d0f9bd073c179216bd6562175bfae39d90230d1c9c6",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmcl_atk1",
+        "pmcl_atk2",
+        "pmcl_atk3",
+        "pmcl_chg",
+        "pmcl_dam_d",
+        "pmcl_dam_d_lp",
+        "pmcl_dam_d_wa",
+        "pmcl_dam_n",
+        "pmcl_esc_f",
+        "pmcl_pa3",
+        "pmcl_run_pso",
+        "pmcl_slp",
+        "pmcl_tec",
+        "pmcl_wait",
+        "pmcl_walk",
+        "pmsa_run",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pwcl_dam_h"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmcl_wait"
+        ],
+        "atk1": [
+          "pmcl_atk1"
+        ],
+        "atk2": [
+          "pmcl_atk2"
+        ],
+        "atk3": [
+          "pmcl_atk3"
+        ],
+        "walk": [
+          "pmcl_walk"
+        ],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pmcl_dam_n"
+        ],
+        "dam_h": [],
+        "dam_d": [
+          "pmcl_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmcl_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmcl_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmcl_esc_f"
+        ],
+        "tec": [
+          "pmcl_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A04-F",
+      "weapon": "Claw",
+      "gender": "female",
+      "path": "assets/player/animations/claw_w.glb",
+      "prefix": "pwcl",
+      "donors": [
+        "cl"
+      ],
+      "note": "Preserve multi-hit contacts; female stance donor requires discovery.",
+      "sha256": "a745753dcede04e9ae4bd2b7eab5187f6a43740a03630d4ba38e5e41cb98bebb",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwcl_atk1",
+        "pwcl_atk2",
+        "pwcl_atk3",
+        "pwcl_chg",
+        "pwcl_dam_d",
+        "pwcl_dam_d_lp",
+        "pwcl_dam_d_wa",
+        "pwcl_dam_h",
+        "pwcl_dam_n",
+        "pwcl_esc_f",
+        "pwcl_pa3",
+        "pwcl_run_pso",
+        "pwcl_slp",
+        "pwcl_tec",
+        "pwcl_wait",
+        "pwcl_walk",
+        "pwsa_run"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwcl_wait"
+        ],
+        "atk1": [
+          "pwcl_atk1"
+        ],
+        "atk2": [
+          "pwcl_atk2"
+        ],
+        "atk3": [
+          "pwcl_atk3"
+        ],
+        "walk": [
+          "pwcl_walk"
+        ],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwcl_dam_n"
+        ],
+        "dam_h": [
+          "pwcl_dam_h"
+        ],
+        "dam_d": [
+          "pwcl_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwcl_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwcl_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwcl_esc_f"
+        ],
+        "tec": [
+          "pwcl_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A05-M",
+      "weapon": "Double saber",
+      "gender": "male",
+      "path": "assets/player/animations/dsaver_m.glb",
+      "prefix": "pmds",
+      "donors": [
+        "ds"
+      ],
+      "note": "Female native run uses pwds while attacks use pwdss.",
+      "sha256": "2f11ab9bd54288b6c9503b534e5d16e294c2f893d898d134bc4dc63f58af8235",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmds_atk1",
+        "pmds_atk2",
+        "pmds_atk3",
+        "pmds_chg",
+        "pmds_dam_d",
+        "pmds_dam_d_lp",
+        "pmds_dam_d_wa",
+        "pmds_dam_h",
+        "pmds_dam_n",
+        "pmds_esc_f",
+        "pmds_pa3",
+        "pmds_run",
+        "pmds_slp",
+        "pmds_stp_fb",
+        "pmds_stp_lr",
+        "pmds_tec",
+        "pmds_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmds_wait"
+        ],
+        "atk1": [
+          "pmds_atk1"
+        ],
+        "atk2": [
+          "pmds_atk2"
+        ],
+        "atk3": [
+          "pmds_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmds_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmds_dam_n"
+        ],
+        "dam_h": [
+          "pmds_dam_h"
+        ],
+        "dam_d": [
+          "pmds_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmds_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmds_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmds_esc_f"
+        ],
+        "tec": [
+          "pmds_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A05-F",
+      "weapon": "Double saber",
+      "gender": "female",
+      "path": "assets/player/animations/dsaver_w.glb",
+      "prefix": "pwdss",
+      "donors": [
+        "ds"
+      ],
+      "note": "Female native run uses pwds while attacks use pwdss.",
+      "sha256": "36199aa3dfc0812dae0cac224efa873b405b7c2d1e841a2f3dcbaabacaa31374",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmds_chg",
+        "pmds_slp",
+        "pmds_stp_fb",
+        "pmds_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwds_run",
+        "pwdss_atk1",
+        "pwdss_atk2",
+        "pwdss_atk3",
+        "pwdss_dam_d",
+        "pwdss_dam_d_lp",
+        "pwdss_dam_d_wa",
+        "pwdss_dam_h",
+        "pwdss_dam_n",
+        "pwdss_esc_f",
+        "pwdss_pa3",
+        "pwdss_tec",
+        "pwdss_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwdss_wait"
+        ],
+        "atk1": [
+          "pwdss_atk1"
+        ],
+        "atk2": [
+          "pwdss_atk2"
+        ],
+        "atk3": [
+          "pwdss_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwdss_dam_n"
+        ],
+        "dam_h": [
+          "pwdss_dam_h"
+        ],
+        "dam_d": [
+          "pwdss_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwdss_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwdss_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwdss_esc_f"
+        ],
+        "tec": [
+          "pwdss_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A06-M",
+      "weapon": "Spear",
+      "gender": "male",
+      "path": "assets/player/animations/spear_m.glb",
+      "prefix": "pmsp",
+      "donors": [
+        "pa"
+      ],
+      "note": "PSO donor is partisan; keep PSZ thrusts and finisher target count.",
+      "sha256": "b337d0ca52872cbe66f5cc9ef0506bee34ef669df05c1bb876b3659e7b5db848",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmsp_atk1",
+        "pmsp_atk2",
+        "pmsp_atk3",
+        "pmsp_chg",
+        "pmsp_dam_d",
+        "pmsp_dam_d_lp",
+        "pmsp_dam_d_wa",
+        "pmsp_dam_h",
+        "pmsp_dam_n",
+        "pmsp_esc_f",
+        "pmsp_pa3",
+        "pmsp_run",
+        "pmsp_slp",
+        "pmsp_stp_fb",
+        "pmsp_stp_lr",
+        "pmsp_tec",
+        "pmsp_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmsp_wait"
+        ],
+        "atk1": [
+          "pmsp_atk1"
+        ],
+        "atk2": [
+          "pmsp_atk2"
+        ],
+        "atk3": [
+          "pmsp_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmsp_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmsp_dam_n"
+        ],
+        "dam_h": [
+          "pmsp_dam_h"
+        ],
+        "dam_d": [
+          "pmsp_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmsp_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmsp_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmsp_esc_f"
+        ],
+        "tec": [
+          "pmsp_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A06-F",
+      "weapon": "Spear",
+      "gender": "female",
+      "path": "assets/player/animations/spear_w.glb",
+      "prefix": "pwsp",
+      "donors": [
+        "pa"
+      ],
+      "note": "PSO donor is partisan; keep PSZ thrusts and finisher target count.",
+      "sha256": "4cf657837d0a542f4d4923481f43b042699b796e3d4aaf726dfec01dd1eff125",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmsp_chg",
+        "pmsp_stp_fb",
+        "pmsp_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwsp_atk1",
+        "pwsp_atk2",
+        "pwsp_atk3",
+        "pwsp_dam_d",
+        "pwsp_dam_d_lp",
+        "pwsp_dam_d_wa",
+        "pwsp_dam_h",
+        "pwsp_dam_n",
+        "pwsp_esc_f",
+        "pwsp_pa3",
+        "pwsp_run",
+        "pwsp_slp",
+        "pwsp_tec",
+        "pwsp_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwsp_wait"
+        ],
+        "atk1": [
+          "pwsp_atk1"
+        ],
+        "atk2": [
+          "pwsp_atk2"
+        ],
+        "atk3": [
+          "pwsp_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pwsp_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pwsp_dam_n"
+        ],
+        "dam_h": [
+          "pwsp_dam_h"
+        ],
+        "dam_d": [
+          "pwsp_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwsp_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwsp_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwsp_esc_f"
+        ],
+        "tec": [
+          "pwsp_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A07-M",
+      "weapon": "Slicer",
+      "gender": "male",
+      "path": "assets/player/animations/slicer_m.glb",
+      "prefix": "pmsl",
+      "donors": [
+        "sl"
+      ],
+      "note": "Thrown blade: preserve projectile release, return and bounce semantics.",
+      "sha256": "d2268f51a56efd2f2ea6faf0e5a226b11795f25dd6bfaf699d599ff4b76dce8e",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy5",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmsa_run",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pmsl_atk1",
+        "pmsl_atk2",
+        "pmsl_atk3",
+        "pmsl_chg",
+        "pmsl_dam_d",
+        "pmsl_dam_d_lp",
+        "pmsl_dam_d_wa",
+        "pmsl_dam_h",
+        "pmsl_dam_n",
+        "pmsl_esc_f",
+        "pmsl_pa3",
+        "pmsl_run_pso",
+        "pmsl_slp",
+        "pmsl_tec",
+        "pmsl_wait",
+        "pmsl_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmsl_wait"
+        ],
+        "atk1": [
+          "pmsl_atk1"
+        ],
+        "atk2": [
+          "pmsl_atk2"
+        ],
+        "atk3": [
+          "pmsl_atk3"
+        ],
+        "walk": [
+          "pmsl_walk"
+        ],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pmsl_dam_n"
+        ],
+        "dam_h": [
+          "pmsl_dam_h"
+        ],
+        "dam_d": [
+          "pmsl_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmsl_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmsl_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmsl_esc_f"
+        ],
+        "tec": [
+          "pmsl_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A07-F",
+      "weapon": "Slicer",
+      "gender": "female",
+      "path": "assets/player/animations/slicer_w.glb",
+      "prefix": "pwsls",
+      "donors": [
+        "sl"
+      ],
+      "note": "Thrown blade: preserve projectile release, return and bounce semantics.",
+      "sha256": "a9d532536fd3368c223615ee5cf28bc605326b3a468ae26c7e12e702dbfbf3bc",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy5",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pmsl_chg",
+        "pmsl_slp",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwsa_run",
+        "pwsls_atk1",
+        "pwsls_atk2",
+        "pwsls_atk3",
+        "pwsls_dam_d",
+        "pwsls_dam_d_lp",
+        "pwsls_dam_d_wa",
+        "pwsls_dam_h",
+        "pwsls_dam_n",
+        "pwsls_esc_f",
+        "pwsls_pa3",
+        "pwsls_run_pso",
+        "pwsls_tec",
+        "pwsls_wait",
+        "pwsls_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwsls_wait"
+        ],
+        "atk1": [
+          "pwsls_atk1"
+        ],
+        "atk2": [
+          "pwsls_atk2"
+        ],
+        "atk3": [
+          "pwsls_atk3"
+        ],
+        "walk": [
+          "pwsls_walk"
+        ],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwsls_dam_n"
+        ],
+        "dam_h": [
+          "pwsls_dam_h"
+        ],
+        "dam_d": [
+          "pwsls_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwsls_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwsls_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwsls_esc_f"
+        ],
+        "tec": [
+          "pwsls_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A08-M",
+      "weapon": "Gunblade",
+      "gender": "male",
+      "path": "assets/player/animations/shotgun_m.glb",
+      "prefix": "pmgb",
+      "donors": [
+        "sa",
+        "ri"
+      ],
+      "note": "Proposed donors: saber for melee stance, rifle for shooting stance; choose explicitly per role.",
+      "sha256": "401be4959d7c52f8a2d0c6a518c3e57dc41d562d46bf2389c78b222bac927d45",
+      "clips": [
+        "dummy1",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmgb_atk1",
+        "pmgb_atk2",
+        "pmgb_atk3",
+        "pmgb_chg",
+        "pmgb_dam_d",
+        "pmgb_dam_d_lp",
+        "pmgb_dam_d_wa",
+        "pmgb_dam_h",
+        "pmgb_dam_n",
+        "pmgb_esc_f",
+        "pmgb_pa3",
+        "pmgb_run",
+        "pmgb_sht",
+        "pmgb_slp",
+        "pmgb_stp_fb",
+        "pmgb_stp_lr",
+        "pmgb_tec",
+        "pmgb_wait",
+        "pmgb_wait_sht",
+        "pmri_atk1",
+        "pmri_dam_n",
+        "pmri_run",
+        "pmri_wait",
+        "pmri_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmgb_wait"
+        ],
+        "atk1": [
+          "pmgb_atk1"
+        ],
+        "atk2": [
+          "pmgb_atk2"
+        ],
+        "atk3": [
+          "pmgb_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmgb_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmgb_dam_n"
+        ],
+        "dam_h": [
+          "pmgb_dam_h"
+        ],
+        "dam_d": [
+          "pmgb_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmgb_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmgb_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmgb_esc_f"
+        ],
+        "tec": [
+          "pmgb_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A08-F",
+      "weapon": "Gunblade",
+      "gender": "female",
+      "path": "assets/player/animations/shotgun_w.glb",
+      "prefix": "pwgbs",
+      "donors": [
+        "sa",
+        "ri"
+      ],
+      "note": "Proposed donors: saber for melee stance, rifle for shooting stance; choose explicitly per role.",
+      "sha256": "91947917225192f20a6e3e9c9f3e8b97520f7c923ffded3f1e4d40cf180fc5f1",
+      "clips": [
+        "dummy1",
+        "pmgb_sht",
+        "pmgb_wait_sht",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwgb_run",
+        "pwgbs_atk1",
+        "pwgbs_atk2",
+        "pwgbs_atk3",
+        "pwgbs_chg",
+        "pwgbs_dam_d",
+        "pwgbs_dam_d_lp",
+        "pwgbs_dam_d_wa",
+        "pwgbs_dam_h",
+        "pwgbs_dam_n",
+        "pwgbs_esc_f",
+        "pwgbs_pa3",
+        "pwgbs_slp",
+        "pwgbs_stp_fb",
+        "pwgbs_stp_lr",
+        "pwgbs_tec",
+        "pwgbs_wait",
+        "pwri_atk1",
+        "pwri_dam_n",
+        "pwri_run",
+        "pwri_wait",
+        "pwri_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwgbs_wait"
+        ],
+        "atk1": [
+          "pwgbs_atk1"
+        ],
+        "atk2": [
+          "pwgbs_atk2"
+        ],
+        "atk3": [
+          "pwgbs_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwgbs_dam_n"
+        ],
+        "dam_h": [
+          "pwgbs_dam_h"
+        ],
+        "dam_d": [
+          "pwgbs_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwgbs_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwgbs_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwgbs_esc_f"
+        ],
+        "tec": [
+          "pwgbs_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A09-M",
+      "weapon": "Shield",
+      "gender": "male",
+      "path": null,
+      "prefix": null,
+      "donors": [],
+      "note": "No dedicated entry in WEAPON_ANIM_DATA; discovery and support decision required before enabling.",
+      "sha256": null,
+      "clips": [],
+      "exact_native": {
+        "wait": [],
+        "atk1": [],
+        "atk2": [],
+        "atk3": [],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [],
+        "dam_h": [],
+        "dam_d": [],
+        "dam_d_wa": [],
+        "dam_d_lp": [],
+        "esc_f": [],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A09-F",
+      "weapon": "Shield",
+      "gender": "female",
+      "path": null,
+      "prefix": null,
+      "donors": [],
+      "note": "No dedicated entry in WEAPON_ANIM_DATA; discovery and support decision required before enabling.",
+      "sha256": null,
+      "clips": [],
+      "exact_native": {
+        "wait": [],
+        "atk1": [],
+        "atk2": [],
+        "atk3": [],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [],
+        "dam_h": [],
+        "dam_d": [],
+        "dam_d_wa": [],
+        "dam_d_lp": [],
+        "esc_f": [],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A10-M",
+      "weapon": "Handgun",
+      "gender": "male",
+      "path": "assets/player/animations/handgun_m.glb",
+      "prefix": "pmhg",
+      "donors": [
+        "hg"
+      ],
+      "note": "Retain PSZ attack sequence and projectile release, not PSO single-shot attack.",
+      "sha256": "1f3f3c940fa931c3874aff0f4c85b70e22d5f6e3d2f38f7336d385ec411fdb0a",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmhg_atk1",
+        "pmhg_atk2",
+        "pmhg_atk3",
+        "pmhg_chg",
+        "pmhg_dam_d",
+        "pmhg_dam_d_lp",
+        "pmhg_dam_d_wa",
+        "pmhg_dam_h",
+        "pmhg_dam_n",
+        "pmhg_esc_f",
+        "pmhg_pa3",
+        "pmhg_run",
+        "pmhg_slp",
+        "pmhg_stp_fb",
+        "pmhg_stp_lr",
+        "pmhg_tec",
+        "pmhg_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmhg_wait"
+        ],
+        "atk1": [
+          "pmhg_atk1"
+        ],
+        "atk2": [
+          "pmhg_atk2"
+        ],
+        "atk3": [
+          "pmhg_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmhg_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmhg_dam_n"
+        ],
+        "dam_h": [
+          "pmhg_dam_h"
+        ],
+        "dam_d": [
+          "pmhg_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmhg_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmhg_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmhg_esc_f"
+        ],
+        "tec": [
+          "pmhg_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A10-F",
+      "weapon": "Handgun",
+      "gender": "female",
+      "path": "assets/player/animations/handgun_w.glb",
+      "prefix": "pwhg",
+      "donors": [
+        "hg"
+      ],
+      "note": "Retain PSZ attack sequence and projectile release, not PSO single-shot attack.",
+      "sha256": "9b91ea8b460905ab8f1fc23615908a8d14bac5e7d4af1793192da73d597f1def",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmhg_stp_fb",
+        "pmhg_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwhg_atk1",
+        "pwhg_atk2",
+        "pwhg_atk3",
+        "pwhg_dam_d",
+        "pwhg_dam_d_lp",
+        "pwhg_dam_d_wa",
+        "pwhg_dam_h",
+        "pwhg_dam_n",
+        "pwhg_esc_f",
+        "pwhg_pa3",
+        "pwhg_run",
+        "pwhg_slp",
+        "pwhg_tec",
+        "pwhg_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwhg_wait"
+        ],
+        "atk1": [
+          "pwhg_atk1"
+        ],
+        "atk2": [
+          "pwhg_atk2"
+        ],
+        "atk3": [
+          "pwhg_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pwhg_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pwhg_dam_n"
+        ],
+        "dam_h": [
+          "pwhg_dam_h"
+        ],
+        "dam_d": [
+          "pwhg_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwhg_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwhg_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwhg_esc_f"
+        ],
+        "tec": [
+          "pwhg_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A11-M",
+      "weapon": "Mechgun",
+      "gender": "male",
+      "path": "assets/player/animations/machinegun_m.glb",
+      "prefix": "pmmg",
+      "donors": [
+        "mg"
+      ],
+      "note": "Retain burst count and per-shot release; female prefix differs by role.",
+      "sha256": "c48c808dcc14905722950376693b4bc82f9a77d9de76070c0b474a2186e25f07",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmmg_atk1",
+        "pmmg_atk2",
+        "pmmg_atk3",
+        "pmmg_dam_d",
+        "pmmg_dam_d_lp",
+        "pmmg_dam_d_wa",
+        "pmmg_dam_h",
+        "pmmg_dam_n",
+        "pmmg_esc_f",
+        "pmmg_pa3",
+        "pmmg_run",
+        "pmmg_slp",
+        "pmmg_stp_fb",
+        "pmmg_stp_lr",
+        "pmmg_tec",
+        "pmmg_wait",
+        "pmmg_walk",
+        "pmsa_run",
+        "pwmgs_chg"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmmg_wait"
+        ],
+        "atk1": [
+          "pmmg_atk1"
+        ],
+        "atk2": [
+          "pmmg_atk2"
+        ],
+        "atk3": [
+          "pmmg_atk3"
+        ],
+        "walk": [
+          "pmmg_walk"
+        ],
+        "run": [
+          "pmmg_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmmg_dam_n"
+        ],
+        "dam_h": [
+          "pmmg_dam_h"
+        ],
+        "dam_d": [
+          "pmmg_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmmg_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmmg_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmmg_esc_f"
+        ],
+        "tec": [
+          "pmmg_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A11-F",
+      "weapon": "Mechgun",
+      "gender": "female",
+      "path": "assets/player/animations/machinegun_w.glb",
+      "prefix": "pwmgs",
+      "donors": [
+        "mg"
+      ],
+      "note": "Retain burst count and per-shot release; female prefix differs by role.",
+      "sha256": "15bdd67d05080152d2d29248764f028a199381743f06b932545d120e1877b705",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmmg_atk1",
+        "pmmg_atk2",
+        "pmmg_atk3",
+        "pmmg_esc_f",
+        "pmmg_pa3",
+        "pmmg_slp",
+        "pmmg_stp_fb",
+        "pmmg_stp_lr",
+        "pmmg_tec",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwmgs_chg",
+        "pwmgs_dam_d",
+        "pwmgs_dam_d_lp",
+        "pwmgs_dam_d_wa",
+        "pwmgs_dam_h",
+        "pwmgs_dam_n",
+        "pwmgs_run",
+        "pwmgs_wait",
+        "pwmgs_walk",
+        "pwsa_run"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwmgs_wait"
+        ],
+        "atk1": [],
+        "atk2": [],
+        "atk3": [],
+        "walk": [
+          "pwmgs_walk"
+        ],
+        "run": [
+          "pwmgs_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pwmgs_dam_n"
+        ],
+        "dam_h": [
+          "pwmgs_dam_h"
+        ],
+        "dam_d": [
+          "pwmgs_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwmgs_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwmgs_dam_d_lp"
+        ],
+        "esc_f": [],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A12-M",
+      "weapon": "Rifle",
+      "gender": "male",
+      "path": "assets/player/animations/rifle_m.glb",
+      "prefix": "pmar",
+      "donors": [
+        "ri"
+      ],
+      "note": "Runtime uses rifle GLB, not shotgun GLB containing additional retargeted pmri clips.",
+      "sha256": "546d4139830961d60eb33f2f2aac184fbe10189d37511a5ea45933fb12e69462",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmar_atk1",
+        "pmar_atk2",
+        "pmar_atk3",
+        "pmar_dam_d",
+        "pmar_dam_d_lp",
+        "pmar_dam_d_wa",
+        "pmar_dam_h",
+        "pmar_dam_n",
+        "pmar_esc_f",
+        "pmar_pa3",
+        "pmar_run",
+        "pmar_slp",
+        "pmar_stp_fb",
+        "pmar_stp_lr",
+        "pmar_tec",
+        "pmar_wait",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pwars_chg"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmar_wait"
+        ],
+        "atk1": [
+          "pmar_atk1"
+        ],
+        "atk2": [
+          "pmar_atk2"
+        ],
+        "atk3": [
+          "pmar_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmar_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmar_dam_n"
+        ],
+        "dam_h": [
+          "pmar_dam_h"
+        ],
+        "dam_d": [
+          "pmar_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmar_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmar_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmar_esc_f"
+        ],
+        "tec": [
+          "pmar_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A12-F",
+      "weapon": "Rifle",
+      "gender": "female",
+      "path": "assets/player/animations/rifle_w.glb",
+      "prefix": "pwars",
+      "donors": [
+        "ri"
+      ],
+      "note": "Runtime uses rifle GLB, not shotgun GLB containing additional retargeted pmri clips.",
+      "sha256": "30c02a9c53fb2d6fd8d71e26ac6d53dc2f393d8d2f2f8b5c20573c06f1c878e3",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmar_pa3",
+        "pmar_stp_fb",
+        "pmar_stp_lr",
+        "pmar_tec",
+        "pwar_run",
+        "pwars_atk1",
+        "pwars_atk2",
+        "pwars_atk3",
+        "pwars_chg",
+        "pwars_dam_d",
+        "pwars_dam_d_lp",
+        "pwars_dam_d_wa",
+        "pwars_dam_h",
+        "pwars_dam_n",
+        "pwars_esc_f",
+        "pwars_slp",
+        "pwars_wait",
+        "pwbn_pb",
+        "pwbn_pb_lp"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwars_wait"
+        ],
+        "atk1": [
+          "pwars_atk1"
+        ],
+        "atk2": [
+          "pwars_atk2"
+        ],
+        "atk3": [
+          "pwars_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwars_dam_n"
+        ],
+        "dam_h": [
+          "pwars_dam_h"
+        ],
+        "dam_d": [
+          "pwars_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwars_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwars_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwars_esc_f"
+        ],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A13-M",
+      "weapon": "Bazooka",
+      "gender": "male",
+      "path": "assets/player/animations/shotgun_m.glb",
+      "prefix": "pmri",
+      "donors": [
+        "la"
+      ],
+      "note": "PSO launcher is a proposed stance donor. Current runtime uses shotgun fallback plus retargeted rifle clips; native provenance unresolved.",
+      "sha256": "401be4959d7c52f8a2d0c6a518c3e57dc41d562d46bf2389c78b222bac927d45",
+      "clips": [
+        "dummy1",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmgb_atk1",
+        "pmgb_atk2",
+        "pmgb_atk3",
+        "pmgb_chg",
+        "pmgb_dam_d",
+        "pmgb_dam_d_lp",
+        "pmgb_dam_d_wa",
+        "pmgb_dam_h",
+        "pmgb_dam_n",
+        "pmgb_esc_f",
+        "pmgb_pa3",
+        "pmgb_run",
+        "pmgb_sht",
+        "pmgb_slp",
+        "pmgb_stp_fb",
+        "pmgb_stp_lr",
+        "pmgb_tec",
+        "pmgb_wait",
+        "pmgb_wait_sht",
+        "pmri_atk1",
+        "pmri_dam_n",
+        "pmri_run",
+        "pmri_wait",
+        "pmri_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmri_wait"
+        ],
+        "atk1": [
+          "pmri_atk1"
+        ],
+        "atk2": [],
+        "atk3": [],
+        "walk": [
+          "pmri_walk"
+        ],
+        "run": [
+          "pmri_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmri_dam_n"
+        ],
+        "dam_h": [],
+        "dam_d": [],
+        "dam_d_wa": [],
+        "dam_d_lp": [],
+        "esc_f": [],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A13-F",
+      "weapon": "Bazooka",
+      "gender": "female",
+      "path": "assets/player/animations/shotgun_w.glb",
+      "prefix": "pwri",
+      "donors": [
+        "la"
+      ],
+      "note": "PSO launcher is a proposed stance donor. Current runtime uses shotgun fallback plus retargeted rifle clips; native provenance unresolved.",
+      "sha256": "91947917225192f20a6e3e9c9f3e8b97520f7c923ffded3f1e4d40cf180fc5f1",
+      "clips": [
+        "dummy1",
+        "pmgb_sht",
+        "pmgb_wait_sht",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwgb_run",
+        "pwgbs_atk1",
+        "pwgbs_atk2",
+        "pwgbs_atk3",
+        "pwgbs_chg",
+        "pwgbs_dam_d",
+        "pwgbs_dam_d_lp",
+        "pwgbs_dam_d_wa",
+        "pwgbs_dam_h",
+        "pwgbs_dam_n",
+        "pwgbs_esc_f",
+        "pwgbs_pa3",
+        "pwgbs_slp",
+        "pwgbs_stp_fb",
+        "pwgbs_stp_lr",
+        "pwgbs_tec",
+        "pwgbs_wait",
+        "pwri_atk1",
+        "pwri_dam_n",
+        "pwri_run",
+        "pwri_wait",
+        "pwri_walk"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwri_wait"
+        ],
+        "atk1": [
+          "pwri_atk1"
+        ],
+        "atk2": [],
+        "atk3": [],
+        "walk": [
+          "pwri_walk"
+        ],
+        "run": [
+          "pwri_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pwri_dam_n"
+        ],
+        "dam_h": [],
+        "dam_d": [],
+        "dam_d_wa": [],
+        "dam_d_lp": [],
+        "esc_f": [],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A14-M",
+      "weapon": "Laser cannon",
+      "gender": "male",
+      "path": "assets/player/animations/cannon_m.glb",
+      "prefix": "pmlc",
+      "donors": [
+        "ri"
+      ],
+      "note": "PSO rifle is a proposed stance donor, not a beam animation match. Female local file contains male-named pmlc_atk1; inspect explicitly.",
+      "sha256": "956dc0d8af3410e87ae898a6dee3d12b5106bf2d540b17284bcf0cf52f6d751b",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy3",
+        "dummy4",
+        "dummy5",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmlc_atk1",
+        "pmlc_chg",
+        "pmlc_dam_d",
+        "pmlc_dam_d_lp",
+        "pmlc_dam_d_wa",
+        "pmlc_dam_h",
+        "pmlc_dam_n",
+        "pmlc_esc_f",
+        "pmlc_pa3",
+        "pmlc_run",
+        "pmlc_slp",
+        "pmlc_stp_fb",
+        "pmlc_stp_lr",
+        "pmlc_tec",
+        "pmlc_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmlc_wait"
+        ],
+        "atk1": [
+          "pmlc_atk1"
+        ],
+        "atk2": [],
+        "atk3": [],
+        "walk": [],
+        "run": [
+          "pmlc_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmlc_dam_n"
+        ],
+        "dam_h": [
+          "pmlc_dam_h"
+        ],
+        "dam_d": [
+          "pmlc_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmlc_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmlc_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmlc_esc_f"
+        ],
+        "tec": [
+          "pmlc_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A14-F",
+      "weapon": "Laser cannon",
+      "gender": "female",
+      "path": "assets/player/animations/cannon_w.glb",
+      "prefix": "pwlcs",
+      "donors": [
+        "ri"
+      ],
+      "note": "PSO rifle is a proposed stance donor, not a beam animation match. Female local file contains male-named pmlc_atk1; inspect explicitly.",
+      "sha256": "c0c5d689fc6844c8b55c676202d6045cfa7b70a9d3ecd069ff97c87ae9a8dd96",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy3",
+        "dummy4",
+        "dummy5",
+        "pmlc_atk1",
+        "pmlc_chg",
+        "pmlc_esc_f",
+        "pmlc_pa3",
+        "pmlc_slp",
+        "pmlc_stp_fb",
+        "pmlc_stp_lr",
+        "pmlc_tec",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwlc_run",
+        "pwlcs_dam_d",
+        "pwlcs_dam_d_lp",
+        "pwlcs_dam_d_wa",
+        "pwlcs_dam_h",
+        "pwlcs_dam_n",
+        "pwlcs_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwlcs_wait"
+        ],
+        "atk1": [],
+        "atk2": [],
+        "atk3": [],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwlcs_dam_n"
+        ],
+        "dam_h": [
+          "pwlcs_dam_h"
+        ],
+        "dam_d": [
+          "pwlcs_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwlcs_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwlcs_dam_d_lp"
+        ],
+        "esc_f": [],
+        "tec": []
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A15-M",
+      "weapon": "Rod",
+      "gender": "male",
+      "path": "assets/player/animations/rod_m.glb",
+      "prefix": "pmro",
+      "donors": [
+        "ro"
+      ],
+      "note": "Keep physical contacts and technique charge/cast behavior; evaluate FOmarl override separately.",
+      "sha256": "78556a9e6979d804e80c2afee609415cd77d63cf16924a911a8c83e7737ee3c6",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy5",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmro_atk1",
+        "pmro_atk2",
+        "pmro_atk3",
+        "pmro_chg",
+        "pmro_dam_d",
+        "pmro_dam_d_lp",
+        "pmro_dam_d_wa",
+        "pmro_dam_h",
+        "pmro_dam_n",
+        "pmro_esc_f",
+        "pmro_pa3",
+        "pmro_run",
+        "pmro_stp_fb",
+        "pmro_stp_lr",
+        "pmro_tec",
+        "pmro_wait",
+        "pwro_slp"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmro_wait"
+        ],
+        "atk1": [
+          "pmro_atk1"
+        ],
+        "atk2": [
+          "pmro_atk2"
+        ],
+        "atk3": [
+          "pmro_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pmro_run"
+        ],
+        "block": [],
+        "dam_n": [
+          "pmro_dam_n"
+        ],
+        "dam_h": [
+          "pmro_dam_h"
+        ],
+        "dam_d": [
+          "pmro_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmro_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmro_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmro_esc_f"
+        ],
+        "tec": [
+          "pmro_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A15-F",
+      "weapon": "Rod",
+      "gender": "female",
+      "path": "assets/player/animations/rod_w.glb",
+      "prefix": "pwro",
+      "donors": [
+        "ro"
+      ],
+      "note": "Keep physical contacts and technique charge/cast behavior; evaluate FOmarl override separately.",
+      "sha256": "40dd8cbbc2529b2377585c801b182422c060145b014853c9555f7865dcc4212c",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy5",
+        "pmro_stp_fb",
+        "pmro_stp_lr",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwro_atk1",
+        "pwro_atk2",
+        "pwro_atk3",
+        "pwro_chg",
+        "pwro_pa3",
+        "pwro_run",
+        "pwro_slp",
+        "pwro_tec",
+        "pwros_dam_d",
+        "pwros_dam_d_lp",
+        "pwros_dam_d_wa",
+        "pwros_dam_h",
+        "pwros_dam_n",
+        "pwros_esc_f",
+        "pwros_wait"
+      ],
+      "exact_native": {
+        "wait": [],
+        "atk1": [
+          "pwro_atk1"
+        ],
+        "atk2": [
+          "pwro_atk2"
+        ],
+        "atk3": [
+          "pwro_atk3"
+        ],
+        "walk": [],
+        "run": [
+          "pwro_run"
+        ],
+        "block": [],
+        "dam_n": [],
+        "dam_h": [],
+        "dam_d": [],
+        "dam_d_wa": [],
+        "dam_d_lp": [],
+        "esc_f": [],
+        "tec": [
+          "pwro_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A16-M",
+      "weapon": "Wand",
+      "gender": "male",
+      "path": "assets/player/animations/wand_m.glb",
+      "prefix": "pmwa",
+      "donors": [
+        "wn"
+      ],
+      "note": "Female runtime prefix pwwa has not been assumed to match available clip names; audit below.",
+      "sha256": "c5b976aa4e77d44760a23ad968573d52bdb84f2c384ac7e78961b303526ba981",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy5",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmsa_run",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pmwa_atk1",
+        "pmwa_atk2",
+        "pmwa_atk3",
+        "pmwa_chg",
+        "pmwa_dam_d",
+        "pmwa_dam_d_lp",
+        "pmwa_dam_d_wa",
+        "pmwa_dam_h",
+        "pmwa_dam_n",
+        "pmwa_esc_f",
+        "pmwa_pa3",
+        "pmwa_slp",
+        "pmwa_tec",
+        "pmwa_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmwa_wait"
+        ],
+        "atk1": [
+          "pmwa_atk1"
+        ],
+        "atk2": [
+          "pmwa_atk2"
+        ],
+        "atk3": [
+          "pmwa_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pmwa_dam_n"
+        ],
+        "dam_h": [
+          "pmwa_dam_h"
+        ],
+        "dam_d": [
+          "pmwa_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmwa_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmwa_dam_d_lp"
+        ],
+        "esc_f": [
+          "pmwa_esc_f"
+        ],
+        "tec": [
+          "pmwa_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A16-F",
+      "weapon": "Wand",
+      "gender": "female",
+      "path": "assets/player/animations/wand_w.glb",
+      "prefix": "pwwa",
+      "donors": [
+        "wn"
+      ],
+      "note": "Female runtime prefix pwwa has not been assumed to match available clip names; audit below.",
+      "sha256": "391d422ad914e6b83186ad0c83b0d8103388610c28799243208037bb2b8a60ec",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy5",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pmwa_slp",
+        "pmwas_chg",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwsa_run",
+        "pwwa_atk1",
+        "pwwa_atk2",
+        "pwwa_atk3",
+        "pwwa_dam_d",
+        "pwwa_dam_d_lp",
+        "pwwa_dam_d_wa",
+        "pwwa_dam_h",
+        "pwwa_dam_n",
+        "pwwa_esc_f",
+        "pwwa_pa3",
+        "pwwa_tec",
+        "pwwa_wait"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwwa_wait"
+        ],
+        "atk1": [
+          "pwwa_atk1"
+        ],
+        "atk2": [
+          "pwwa_atk2"
+        ],
+        "atk3": [
+          "pwwa_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwwa_dam_n"
+        ],
+        "dam_h": [
+          "pwwa_dam_h"
+        ],
+        "dam_d": [
+          "pwwa_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwwa_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwwa_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwwa_esc_f"
+        ],
+        "tec": [
+          "pwwa_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A17-M",
+      "weapon": "Unarmed",
+      "gender": "male",
+      "path": "assets/player/animations/common_m.glb",
+      "prefix": "pmbn",
+      "donors": [
+        "fi"
+      ],
+      "note": "Use empty-equipment path, never saber enum fallback; class-specific PSO overrides need review.",
+      "sha256": "0920cbdf23dabc7f5a0dc82bb74f99f75d9ed7b4b6199a9e40ece3d24e35c1b0",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_atk1",
+        "pmbn_atk2",
+        "pmbn_atk3",
+        "pmbn_dam_d",
+        "pmbn_dam_d_lp",
+        "pmbn_dam_d_wa",
+        "pmbn_dam_h",
+        "pmbn_dam_n",
+        "pmbn_pa3",
+        "pmbn_pb",
+        "pmbn_pb_lp",
+        "pmbn_tec",
+        "pmbn_wait",
+        "pmsa_chg",
+        "pmsa_esc_f",
+        "pmsa_run",
+        "pmsa_slp",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr"
+      ],
+      "exact_native": {
+        "wait": [
+          "pmbn_wait"
+        ],
+        "atk1": [
+          "pmbn_atk1"
+        ],
+        "atk2": [
+          "pmbn_atk2"
+        ],
+        "atk3": [
+          "pmbn_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pmbn_dam_n"
+        ],
+        "dam_h": [
+          "pmbn_dam_h"
+        ],
+        "dam_d": [
+          "pmbn_dam_d"
+        ],
+        "dam_d_wa": [
+          "pmbn_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pmbn_dam_d_lp"
+        ],
+        "esc_f": [],
+        "tec": [
+          "pmbn_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    },
+    {
+      "id": "A17-F",
+      "weapon": "Unarmed",
+      "gender": "female",
+      "path": "assets/player/animations/common_w.glb",
+      "prefix": "pwbn",
+      "donors": [
+        "fi"
+      ],
+      "note": "Use empty-equipment path, never saber enum fallback; class-specific PSO overrides need review.",
+      "sha256": "7ca3ca4461682ec81834cf9015f738c792fc525aef40e1271c78b4c5cd91acfe",
+      "clips": [
+        "dummy1",
+        "dummy2",
+        "dummy4",
+        "pmbn_pa3",
+        "pmsa_slp",
+        "pmsa_stp_fb",
+        "pmsa_stp_lr",
+        "pwbn_atk1",
+        "pwbn_atk2",
+        "pwbn_atk3",
+        "pwbn_dam_d",
+        "pwbn_dam_d_lp",
+        "pwbn_dam_d_wa",
+        "pwbn_dam_h",
+        "pwbn_dam_n",
+        "pwbn_esc_f",
+        "pwbn_pb",
+        "pwbn_pb_lp",
+        "pwbn_tec",
+        "pwbn_wait",
+        "pwbns_chg",
+        "pwsa_run"
+      ],
+      "exact_native": {
+        "wait": [
+          "pwbn_wait"
+        ],
+        "atk1": [
+          "pwbn_atk1"
+        ],
+        "atk2": [
+          "pwbn_atk2"
+        ],
+        "atk3": [
+          "pwbn_atk3"
+        ],
+        "walk": [],
+        "run": [],
+        "block": [],
+        "dam_n": [
+          "pwbn_dam_n"
+        ],
+        "dam_h": [
+          "pwbn_dam_h"
+        ],
+        "dam_d": [
+          "pwbn_dam_d"
+        ],
+        "dam_d_wa": [
+          "pwbn_dam_d_wa"
+        ],
+        "dam_d_lp": [
+          "pwbn_dam_d_lp"
+        ],
+        "esc_f": [
+          "pwbn_esc_f"
+        ],
+        "tec": [
+          "pwbn_tec"
+        ]
+      },
+      "status": "Planned; source presence is not visual validation"
+    }
+  ]
+}

@@ -78,13 +78,41 @@ func _verify(player) -> void:
 			_verify_root(player.animation_player.get_animation(clip), clip)
 			player.play_animation(clip, false)
 			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
-			await _snapshot(clip)
+			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot(clip)
 	_check(count == 15, "complete saber inventory")
 	_check(player.animation_player.has_animation("pmsa_esc_f"), "native dodge remains available")
 	_check(player.animation_player.has_animation("pmsa_dam_d_lp"), "native defeated hold remains available")
-	await _snapshot("humar_saber")
+	for step in range(1, 4):
+		var clip := "pmsa_atk" + str(step)
+		var animation: Animation = player.animation_player.get_animation(clip)
+		var last_key := 0.0
+		for track in animation.get_track_count():
+			for key in animation.track_get_key_count(track):
+				last_key = maxf(last_key, animation.track_get_key_time(track, key))
+		_check(animation.length - last_key >= float(Rules.RECOVERY[step - 1]) - 0.002, "native swing holds recovery pose " + str(step))
+	for evasion in [0, 50, 200]:
+		for attempt in range(30):
+			var result := CombatManager.apply_damage_to_enemy(30, 5, evasion, Rules.contact_accuracy(evasion))
+			_check(result.hit, "fixture contact ignores accuracy RNG")
+	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
+	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
+	await _verify_mixed_combos(player)
+	_verify_ready_recovery(player, enemy)
+	await _verify_feedback(player, enemy)
+	_verify_combo_outcomes(player, enemy)
 	await _verify_exchange(player, enemy)
+	var saved_evasion: int = enemy.current_evasion
+	var saved_hp: int = enemy.current_hp
+	enemy.current_evasion = 500
+	var all_connected := true
+	for attempt in range(20):
+		enemy.current_hp = 10000
+		enemy.hurtbox.take_attack(player._get_attack_damage(), Vector3.ZERO, player)
+		all_connected = all_connected and enemy.current_hp < 10000
+	_check(all_connected, "real hurtbox bypasses evasion for every fixture contact")
+	enemy.current_evasion = saved_evasion
+	enemy.current_hp = saved_hp
 
 func _verify_exchange(player, enemy) -> void:
 	player.player_rotation = 0.0
@@ -105,6 +133,7 @@ func _verify_exchange(player, enemy) -> void:
 	_check(not player.try_prototype_guard(enemy), "rear attack cannot guard")
 	enemy.global_position = player.global_position + Vector3(0,0,2)
 	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
 	_check(player.animation_player.current_animation == "pmsa_atk1", "real attack uses native PSZ clip")
 	_check(not player.try_prototype_guard(enemy), "guard cannot cancel attack")
 	player._attack_anim_elapsed = player._attack_anim_length * 0.65
@@ -157,7 +186,8 @@ func _verify_player_swing(player, enemy) -> void:
 		player._handle_attack_state(1.0 / 60.0)
 		await get_tree().physics_frame
 	_check(enemy.current_hp < before, "PSZ swing delivers real saber damage")
-	_check(player.current_state == player.PlayerState.IDLE, "unchained swing completes recovery")
+	_check(player.current_state == player.PlayerState.IDLE and player._saber_attack_cooldown > 0.0, "unchained swing releases movement before attack cooldown")
+	player._tick_saber_attack_cooldown(Rules.STOPPED_ATTACK_COOLDOWN)
 
 func _verify_root(animation: Animation, clip: String) -> void:
 	var aligned := true
@@ -171,26 +201,215 @@ func _verify_root(animation: Animation, clip: String) -> void:
 
 func _verify_movement(player, enemies: Array) -> void:
 	var positions: Array[Vector3] = []
-	for enemy in enemies:
-		positions.append(enemy.global_position)
-		enemy.global_position = player.global_position + Vector3(0, 0, 2)
-	player.transition_to(player.PlayerState.IDLE)
-	_check(player.animation_player.current_animation == "pso_sa_wait", "near enemy selects weapon ready")
+	for enemy in enemies: positions.append(enemy.global_position)
+	player._saber_caution_active = false
+	player._saber_retreat_elapsed = 0.0
+	player._targeted_enemies.clear()
 	player.transition_to(player.PlayerState.RUNNING)
 	Input.action_press("move_forward")
+	var movement_yaw: float = player._held_movement_yaw()
+	var direction := Vector3(sin(movement_yaw), 0, cos(movement_yaw))
+	player.player_rotation = movement_yaw
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 5.0
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
 	player._handle_movement(0.1)
-	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == "pso_sa_walk_ready", "near enemies interrupt running with caution animation")
-	for enemy in enemies: enemy.global_position += Vector3(0, 0, 30)
-	player._handle_movement(1.3)
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == "pmsa_walk", "proximity without cursor does not trigger caution")
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
+	player._update_combat_targets()
+	_check(not player._targeted_enemies.is_empty(), "close enemy acquires cursor")
+	player._handle_movement(0.1)
+	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == "pso_sa_walk_ready", "cursor acquisition engages caution")
+	for enemy in enemies: enemy.global_position = player.global_position - direction * 1.2
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "retreat loses cursor")
+	player._handle_movement(0.25)
+	player._handle_movement(0.24)
+	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == "pso_sa_walk_ready", "retreat keeps caution for first 490 ms despite cursor loss")
+	player._handle_movement(0.02)
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == "pmsa_walk", "500 ms caution hold transitions directly to run")
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
+	player._update_combat_targets()
+	player._handle_movement(0.1)
+	_check(player.current_state == player.PlayerState.WALKING, "reacquiring cursor restores caution")
+	for enemy in enemies: enemy.global_position = player.global_position - direction * 1.2
+	player._update_combat_targets()
+	player._handle_movement(0.25)
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
+	player._update_combat_targets()
+	player._handle_movement(0.1)
+	_check(is_zero_approx(player._saber_retreat_elapsed), "reacquiring target cancels pending retreat")
 	Input.action_release("move_forward")
-	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == "pso_sa_walk", "leaving threats restores normal locomotion")
 	player._handle_movement(0.1)
-	_check(player.animation_player.current_animation == "pmsa_wait", "stopping clear of enemies selects PSZ relaxed idle")
-	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 2)
-	player._handle_movement(0.1)
-	_check(player.animation_player.current_animation == "pso_sa_wait", "approaching enemy readies stationary player")
-	for enemy in enemies: enemy.global_position += Vector3(0, 0, 30)
-	player._handle_movement(0.1)
-	_check(player.animation_player.current_animation == "pmsa_wait", "departing enemy relaxes stationary player")
+	_check(player.animation_player.current_animation == "pmsa_wait", "stopping remains relaxed even with cursor")
 	for i in enemies.size(): enemies[i].global_position = positions[i]
+	player._targeted_enemies.clear()
+	player._saber_caution_active = false
+	player._saber_retreat_elapsed = 0.0
 	player.transition_to(player.PlayerState.IDLE)
+
+func _verify_mixed_combos(player) -> void:
+	_check(ResourceLoader.exists(Rules.CHARGE_SOUND) and ResourceLoader.exists(Rules.LOCK_SOUND), "named charge and lock sounds imported")
+	for pattern in range(8):
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		if pattern & 1: player._start_strong_attack()
+		else: player._start_attack()
+		_check(player._saber_phase == "prepare" and player.animation_player.current_animation == "pso_sa_wait", "fresh combo briefly readies weapon")
+		player._handle_attack_state(Rules.READY_PREP)
+		for step in range(1, 4):
+			var clip := "pmsa_atk" + str(step)
+			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
+			_check(is_equal_approx(player._attack_anim_length, player.animation_player.get_animation(clip).length), "normal and strong use identical step duration")
+			if step < 3:
+				player._attack_anim_elapsed = player._attack_anim_length * 0.65
+				if pattern & (1 << step): player._start_strong_attack()
+				else: player._start_attack()
+				_check(player._queued_combo != player.ComboQueue.NONE, "same timing accepts normal or strong continuation")
+			player._attack_step_finished()
+		_check(player._saber_phase == "guard_recovery" and player.animation_player.current_animation == "pso_sa_wait", "completed combo enters ready recovery")
+		player._handle_attack_state(Rules.FINISHER_GUARD)
+		_check(player.current_state == player.PlayerState.IDLE and not player._charge_active, "mixed combo finishes cleanly")
+	# Interrupt strong windup: no delayed callback may restart the swing.
+	player._start_strong_attack()
+	player._hit_invulnerability_left = 0
+	player.take_damage(1)
+	_check(not player._charge_active, "interruption clears strong charge feedback")
+	await get_tree().create_timer(0.8).timeout
+	_check(player.current_state == player.PlayerState.IDLE, "interrupted strong attack never restarts")
+
+func _verify_lock_sound(player, enemies: Array) -> void:
+	player._saber_lock_last_id = 0
+	player._saber_lock_last_seen = 0
+	var original := SfxManager._load(Rules.LOCK_SOUND) as AudioStreamWAV
+	var soft := SfxManager._load_soft_edges(Rules.LOCK_SOUND) as AudioStreamWAV
+	_check(original != soft and is_equal_approx(original.get_length(), soft.get_length()), "soft lock cue preserves original asset and duration")
+	_check(soft.format == AudioStreamWAV.FORMAT_16_BITS and absi(soft.data.decode_s16(4)) < 1000 and soft.data.decode_s16(0) == 0, "lock cue start spike is softened")
+	var positions: Array[Vector3] = []
+	for enemy in enemies:
+		positions.append(enemy.global_position)
+		enemy.global_position = player.global_position + Vector3(0, 0, 50)
+	player.player_rotation = 0.0
+	player._update_combat_targets()
+	var before: int = SfxManager._next_idx
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 1.2)
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == (before + 1) % SfxManager.POOL_SIZE, "acquiring enemy plays lock sound")
+	before = SfxManager._next_idx
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == before, "held cursor does not repeat lock sound")
+	enemies[0].global_position += Vector3(0, 0, 50)
+	player._update_combat_targets()
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 1.2)
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == before, "brief same-target cursor flicker is silent")
+	if enemies.size() > 1:
+		enemies[0].global_position += Vector3(0, 0, 50)
+		enemies[1].global_position = player.global_position + Vector3(0, 0, 1.2)
+		player._update_combat_targets()
+		_check(SfxManager._next_idx == (before + 1) % SfxManager.POOL_SIZE, "switching enemy plays lock sound")
+		before = SfxManager._next_idx
+	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 50)
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == before, "losing cursor is silent")
+	for i in enemies.size(): enemies[i].global_position = positions[i]
+
+func _verify_feedback(player, enemy) -> void:
+	player._recovery_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	_check(Rules.palette_cue(player).is_empty(), "palette cue hidden while idle")
+	player._start_strong_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player._update_combo_ring(0.01)
+	_check(player._combo_ring == null or not player._combo_ring.visible, "prototype has no ground combo ring")
+	_check(player._charge_ring == null or not player._charge_ring.visible, "prototype has no ground charge ring")
+	_check(player._charge_particles.amount == 8 and player._charge_particles.emitting, "strong windup emits small weapon sparks")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.2
+	_check(not Rules.palette_cue(player).ready, "palette countdown precedes valid window")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.65
+	_check(Rules.palette_cue(player).ready, "palette ready matches accepted chain window")
+	player._start_attack()
+	_check(Rules.palette_cue(player).queued, "palette confirms queued follow-up")
+	player.animation_player.pause()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await _snapshot("palette_chain_cue")
+	player.transition_to(player.PlayerState.IDLE)
+	_check(Rules.palette_cue(player).is_empty() and not player._charge_active, "interruption clears palette and charge feedback")
+	var saved_hp: int = enemy.current_hp
+	enemy.current_hp = 10000
+	var packet: Dictionary = player._get_attack_damage()
+	packet["prototype_strong"] = true
+	var before: int = SfxManager._next_3d_idx
+	enemy.hurtbox.take_attack(packet, Vector3.ZERO, player)
+	_check(enemy.current_state == enemy.EnemyState.HURT and enemy.hurt_timer >= 0.45, "strong contact produces extended flinch")
+	_check(SfxManager._next_3d_idx != before, "strong contact plays impact sound")
+	_check(not get_tree().get_nodes_in_group("saber_contact_feedback").is_empty(), "actual damage emits subtle contact spark")
+	enemy.current_hp = saved_hp
+	await get_tree().create_timer(0.4).timeout
+	_check(get_tree().get_nodes_in_group("saber_contact_feedback").is_empty(), "contact sparks clean themselves up")
+
+func _verify_ready_recovery(player, enemy) -> void:
+	player._recovery_left = 0
+	player._hit_invulnerability_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player.player_rotation = 0.0
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	player._start_attack()
+	_check(not player.try_prototype_guard(enemy), "first-attack preparation is vulnerable")
+	player._handle_attack_state(0.05)
+	_check(player._saber_phase == "prepare" and player.animation_player.current_animation == "pso_sa_wait", "ready stance persists beyond 50 ms")
+	_check(is_equal_approx(player.animation_player.get_blend_time("pmsa_wait", "pso_sa_wait"), Rules.READY_BLEND), "idle blends into ready stance")
+	_check(is_equal_approx(player.animation_player.get_blend_time("pso_sa_wait", "pmsa_atk1"), Rules.READY_BLEND), "ready blends into first swing")
+	player._handle_attack_state(Rules.READY_PREP)
+	player._attack_anim_elapsed = player._attack_anim_length * 0.1
+	player._try_queue_combo(false)
+	player._attack_step_finished()
+	_check(player._saber_phase == "open_recovery" and not player.try_prototype_guard(enemy), "fumbled combo recovery cannot block")
+	player._start_attack()
+	_check(player._saber_phase == "open_recovery", "attack cannot cancel failed-combo recovery")
+	player._handle_attack_state(Rules.BROKEN_RECOVERY)
+	_check(player.current_state == player.PlayerState.IDLE, "failed recovery expires")
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	for step in range(2):
+		player._attack_anim_elapsed = player._attack_anim_length * 0.65
+		player._try_queue_combo(false)
+		player._attack_step_finished()
+	player._attack_step_finished()
+	_check(player._saber_phase == "guard_recovery", "third swing earns guarded cooldown")
+	enemy.global_position = player.global_position - Vector3(0, 0, 1.5)
+	_check(not player.try_prototype_guard(enemy), "ready cooldown still exposes rear")
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	_check(player.try_prototype_guard(enemy), "ready cooldown blocks frontal retaliation")
+	_check(player._saber_phase.is_empty(), "block consumes the ready phase")
+	player.transition_to(player.PlayerState.IDLE)
+
+func _verify_combo_outcomes(player, enemy) -> void:
+	player._recovery_left = 0
+	player._saber_attack_cooldown = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player._attack_step_finished()
+	_check(player.current_state == player.PlayerState.IDLE and player._saber_attack_cooldown > 0, "intentional stop frees movement but starts attack cooldown")
+	Input.action_press("move_forward")
+	player._handle_movement(0.1)
+	Input.action_release("move_forward")
+	_check(player.current_state in [player.PlayerState.WALKING, player.PlayerState.RUNNING], "stopped combo can move during attack cooldown")
+	player._start_attack()
+	player._start_strong_attack()
+	_check(player.current_state != player.PlayerState.ATTACKING, "stopped cooldown rejects normal and strong attacks")
+	_check(not player.try_prototype_guard(enemy), "stopped combo does not earn finisher guard")
+	player._tick_saber_attack_cooldown(Rules.STOPPED_ATTACK_COOLDOWN)
+	player._start_attack()
+	_check(player._saber_phase == "prepare", "attack becomes available after stopped cooldown")
+	player._handle_attack_state(Rules.READY_PREP)
+	player._attack_anim_elapsed = player._attack_anim_length * 0.99
+	player._try_queue_combo(true)
+	player._attack_step_finished()
+	_check(player._saber_phase == "open_recovery", "late press fails rather than counting as an intentional stop")
+	player._start_dodge()
+	_check(player._saber_phase == "open_recovery", "failed combo cannot dodge out of exposure")
+	player._handle_attack_state(Rules.BROKEN_RECOVERY)
+	_check(player.current_state == player.PlayerState.IDLE, "failed recovery releases player after its delay")

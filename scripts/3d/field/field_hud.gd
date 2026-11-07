@@ -374,6 +374,9 @@ class _ActionPalette extends Control:
 			_slot_counts.append(count_label)
 
 		_update_slot_icons()
+		var timing := _PaletteComboCue.new()
+		timing.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(timing)
 
 		ActionPalette.page_changed.connect(_on_palette_changed)
 		ActionPalette.config_changed.connect(_on_palette_changed)
@@ -825,3 +828,28 @@ class _BossHealthBar extends Control:
 		var fill := Rect2(bar_rect.position, Vector2(BAR_W * frac, BAR_H))
 		draw_rect(fill, HP_LOW if frac < 0.35 else HP_COLOR, true)
 		draw_rect(bar_rect, BORDER, false, 1.5)
+
+
+class _PaletteComboCue extends Control:
+	const Rules = preload("res://scripts/3d/player/humar_saber_prototype.gd")
+	var _cue: Dictionary = {}
+
+	func _process(_delta: float) -> void:
+		var player = get_tree().get_first_node_in_group("player")
+		_cue = Rules.palette_cue(player) if is_instance_valid(player) else {}
+		queue_redraw()
+
+	func _draw() -> void:
+		if _cue.is_empty(): return
+		var progress: float = _cue.progress
+		var radius := lerpf(29.0, 21.0, clampf(progress / Rules.CHAIN[0], 0, 1))
+		var color := Color(0.8, 0.9, 1.0, 0.55)
+		if _cue.ready:
+			radius = lerpf(21.0, 15.0, inverse_lerp(Rules.CHAIN[0], Rules.CHAIN[1], progress))
+			color = Color(0.35, 1.0, 0.65, 0.9)
+		if _cue.queued: color = Color(1.0, 0.8, 0.3, 0.9)
+		var slots: Array = ActionPalette.get_current_slots()
+		for i in mini(3, slots.size()):
+			if slots[i] not in ["attack", "strong_attack"]: continue
+			var center: Vector2 = _ActionPalette.SLOT_CENTERS[i] * _ActionPalette.BG_SCALE
+			draw_arc(center, radius, 0, TAU, 48, color, 1.5, true)

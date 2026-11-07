@@ -1,0 +1,27 @@
+stateDiagram-v2
+    [*] --> FieldAvailable
+    FieldAvailable --> TechniqueCharge: learned technique pressed while eligible
+    TechniqueCharge --> NormalCast: release before charge threshold
+    TechniqueCharge --> ChargedCast: release after charge threshold
+    TechniqueCharge --> FieldAvailable: cancellation or interruption
+    NormalCast --> FieldAvailable: cast completes
+    ChargedCast --> FieldAvailable: cast completes
+    FieldAvailable --> MenuOverlay: open menu
+    TechniqueCharge --> MenuOverlay: open menu / cancel charge
+    MenuOverlay --> FieldAvailable: close menu / no buffered action
+    FieldAvailable --> Cutscene: scripted entry
+    Cutscene --> FieldAvailable: scripted exit
+    FieldAvailable --> EquipmentChange: accepted equipment change
+    EquipmentChange --> FieldAvailable: validate profile / clear transient state
+    FieldAvailable --> SceneTransition: area change or city return
+    SceneTransition --> FieldAvailable: new scene / reset transient state
+    note right of MenuOverlay
+        Overlay is not a replacement locomotion state.
+        Preserve existing movement and pause policy.
+        Menu and cooldown interactions need rollout testing.
+    end note
+    note right of EquipmentChange
+        Planned shared-system contract.
+        Never carry old weapon queue, guard or release timers.
+        Missing mappings require an explicit fallback.
+    end note

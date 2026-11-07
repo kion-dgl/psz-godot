@@ -1,0 +1,37 @@
+stateDiagram-v2
+    [*] --> Available
+    Available --> ReadyPreparation: normal or strong / cooldown clear
+    ReadyPreparation --> Swing: 250 ms / 80 ms pose blends
+    state Swing {
+        [*] --> Windup
+        Windup --> Contact: configured hit or projectile release times
+        Contact --> Contact: additional authored impacts or burst shots
+        Contact --> SwingRecovery: final impact or release elapsed
+        SwingRecovery --> [*]: motion and held recovery complete
+    }
+    Swing --> Swing: valid queued follow-up and step less than N
+    Swing --> FailedRecovery: early or late press and step less than N
+    Swing --> StoppedCooldown: no follow-up press and step less than N
+    Swing --> FinisherReady: step N completed
+    FailedRecovery --> Available: 250 ms / stationary and exposed
+    StoppedCooldown --> Available: 300 ms / attacks and guard unlock
+    FinisherReady --> Available: 350 ms / movement unlocks
+    FinisherReady --> Block: eligible frontal melee
+    Block --> Available: block animation completes
+    note right of Swing
+        Normal and strong use the same queue window.
+        One accepted follow-up; duplicates cannot replace it.
+        Strong cue occurs during existing windup.
+        N and contact schedule belong to the weapon profile.
+        Final step accepts no further follow-up.
+    end note
+    note right of StoppedCooldown
+        Movement and dodge available at swing completion.
+        Attack cooldown is independent of locomotion.
+        No earned guard during this cooldown.
+    end note
+    note right of FinisherReady
+        Prototype has guaranteed frontal guard, not random odds.
+        Rear attacks and status ticks are not blocked.
+        Failed recovery and preparation cannot guard.
+    end note

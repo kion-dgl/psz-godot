@@ -1,0 +1,23 @@
+stateDiagram-v2
+    [*] --> RelaxedIdle
+    RelaxedIdle --> NormalWalk: movement / no cursor engagement
+    NormalWalk --> Run: ordinary walk timer reaches 1.2 s
+    RelaxedIdle --> Caution: movement toward or across acquired enemy cursor
+    NormalWalk --> Caution: living enemy cursor acquired
+    Run --> Caution: living enemy cursor acquired
+    Caution --> RetreatHold: moving away or losing cursor
+    RetreatHold --> Caution: reacquire target toward movement / reset timer
+    RetreatHold --> Run: 500 ms continuous retreat elapsed
+    NormalWalk --> RelaxedIdle: release movement
+    Run --> RelaxedIdle: release movement
+    Caution --> RelaxedIdle: release movement
+    RetreatHold --> RelaxedIdle: release movement / reset elapsed retreat
+    note right of RetreatHold
+        Still uses caution animation and walking speed.
+        Cursor loss does not skip the hold.
+        Prior caution engagement is retained while stopped.
+    end note
+    note right of RelaxedIdle
+        Proximity alone never readies weapon.
+        Attack and reactions use companion diagrams.
+    end note

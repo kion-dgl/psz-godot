@@ -2,6 +2,14 @@ extends CharacterBody3D
 ## Player controller - handles movement, rotation, and animation states
 ## Ported from psz-sketch PlayerMovementDemo.tsx
 
+var _saber_attack_cooldown := 0.0
+var _saber_lock_last_id := 0
+var _saber_lock_last_seen := 0
+var _saber_caution_active := false
+var _saber_retreat_elapsed := 0.0
+var _saber_phase := ""
+var _saber_phase_left := 0.0
+
 const SaberPrototype := preload("res://scripts/3d/player/humar_saber_prototype.gd")
 
 # Movement settings
@@ -492,7 +500,7 @@ func _load_weapon_animations() -> void:
 		_walk_anim = "pmsa_walk"
 		_run_anim = "pmsa_run_pso"
 	if SaberPrototype.enabled(self):
-		_walk_anim = "pso_sa_walk"
+		_walk_anim = "pmsa_walk"
 		_run_anim = "pso_sa_run"
 	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
 
@@ -500,6 +508,14 @@ func _load_weapon_animations() -> void:
 	if animation_player.has_animation_library(""):
 		animation_player.remove_animation_library("")
 	animation_player.add_animation_library("", lib)
+	if SaberPrototype.enabled(self):
+		# Ease into the authored stance and out into swing/idle instead of
+		# flashing a single unrelated pose between native animations.
+		for clip in lib.get_animation_list():
+			if clip != "pso_sa_wait":
+				animation_player.set_blend_time(clip, "pso_sa_wait", SaberPrototype.READY_BLEND)
+		animation_player.set_blend_time("pso_sa_wait", "pmsa_atk1", SaberPrototype.READY_BLEND)
+		animation_player.set_blend_time("pso_sa_wait", "pmsa_wait", SaberPrototype.READY_BLEND)
 
 	var anim_list := animation_player.get_animation_list()
 	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
@@ -578,7 +594,11 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 				push_error("Saber prototype requires native clip: " + clip)
 				anim_scene.queue_free()
 				return null
-			lib.add_animation(clip, native.get_animation(clip))
+			var native_clip := native.get_animation(clip).duplicate() as Animation
+			if clip.begins_with("pmsa_atk"):
+				var step := int(clip.right(1)) - 1
+				native_clip.length += SaberPrototype.RECOVERY[step]
+			lib.add_animation(clip, native_clip)
 
 	anim_scene.queue_free()
 	return lib
@@ -1041,6 +1061,7 @@ func _sync_dodge_body_collisions() -> void:
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
 	_tick_hit_invulnerability(delta)
+	_tick_saber_attack_cooldown(delta)
 	if dodge_cooldown > 0.0:
 		dodge_cooldown = maxf(0.0, dodge_cooldown - delta)
 	if _recovery_left > 0.0:
@@ -1300,7 +1321,7 @@ func _handle_movement(delta: float) -> void:
 			rot_diff += TAU
 		player_rotation += rot_diff * ROTATE_SPEED * delta
 
-		var cautious := SaberPrototype.enabled(self) and SaberPrototype.caution(self)
+		var cautious := SaberPrototype.enabled(self) and SaberPrototype.update_caution(self, target_rotation, delta)
 		if SaberPrototype.enabled(self): SaberPrototype.select_walk(self, cautious)
 		if cautious and current_state == PlayerState.RUNNING:
 			transition_to(PlayerState.WALKING)
@@ -1309,7 +1330,7 @@ func _handle_movement(delta: float) -> void:
 			walk_timer = 0.0
 			transition_to(PlayerState.WALKING)
 		elif current_state == PlayerState.WALKING:
-			walk_timer += delta
+			walk_timer = 0.0 if cautious else walk_timer + delta
 			if walk_timer >= WALK_TO_RUN_DELAY and not cautious:
 				transition_to(PlayerState.RUNNING)
 
@@ -1351,6 +1372,7 @@ func _handle_movement(delta: float) -> void:
 				velocity.x = 0
 				velocity.z = 0
 	else:
+		_saber_retreat_elapsed = 0.0
 		# Stop horizontal movement
 		velocity.x = 0
 		velocity.z = 0
@@ -1570,7 +1592,12 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 			return
 
 
+func _tick_saber_attack_cooldown(delta: float) -> void:
+	_saber_attack_cooldown = maxf(0.0, _saber_attack_cooldown - delta)
+
+
 func _start_attack() -> void:
+	if _saber_attack_cooldown > 0.0: return
 	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
@@ -1627,6 +1654,7 @@ func _try_queue_combo(special: bool) -> void:
 	var open := window[0]
 	var close := window[1]
 	if close >= 0.0 and frac > close:
+		if SaberPrototype.enabled(self): _combo_fumbled = true
 		return
 	if frac >= open:
 		_queued_combo = ComboQueue.NORMAL
@@ -1646,6 +1674,7 @@ func _try_queue_combo(special: bool) -> void:
 ## step — _attack_step_ended guard).
 func _attack_step_finished() -> void:
 	_deactivate_attack_hitbox()
+	if SaberPrototype.enabled(self): _end_charge_visual()
 	if combo_state == 0:
 		# Technique cast finished (no combo)
 		transition_to(PlayerState.IDLE)
@@ -1659,6 +1688,20 @@ func _attack_step_finished() -> void:
 		_queued_combo_yaw = null
 		_queued_combo_special = false
 		_play_attack_animation(combo_state)
+		return
+	if SaberPrototype.enabled(self):
+		var completed := combo_state == max_combo
+		if not completed and not _combo_fumbled:
+			# Choosing not to chain releases movement, but not another attack.
+			_saber_attack_cooldown = SaberPrototype.STOPPED_ATTACK_COOLDOWN
+			combo_state = 0
+			transition_to(PlayerState.IDLE)
+			return
+		_saber_phase = "guard_recovery" if completed else "open_recovery"
+		_saber_phase_left = SaberPrototype.FINISHER_GUARD if completed else SaberPrototype.BROKEN_RECOVERY
+		_attack_step_ended = true
+		_attack_anim_length = 0.0
+		if completed: play_animation("pso_sa_wait", true)
 		return
 	if combo_state < max_combo:
 		_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Chain broken mid-combo
@@ -2216,6 +2259,7 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
+	if _saber_attack_cooldown > 0.0: return
 	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
@@ -2290,6 +2334,19 @@ func _spawn_heal_number(heal_type: String, amount: int) -> void:
 
 
 func _handle_attack_state(delta: float) -> void:
+	if not _saber_phase.is_empty():
+		velocity.x = 0
+		velocity.z = 0
+		_saber_phase_left = maxf(0.0, _saber_phase_left - delta)
+		if _saber_phase_left <= 0.0:
+			var phase := _saber_phase
+			_saber_phase = ""
+			if phase == "prepare":
+				_play_attack_animation(1, true)
+			else:
+				combo_state = 0
+				transition_to(PlayerState.IDLE)
+		return
 	var previous_elapsed := _attack_anim_elapsed
 	_attack_anim_elapsed += delta
 	_update_attack_contact(previous_elapsed)
@@ -2326,7 +2383,12 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 	var weapon_type := _get_equipped_weapon_type()
 	var config := CombatManager.get_weapon_type_config(weapon_type)
 	if SaberPrototype.enabled(self):
-		if _attack_anim_elapsed >= SaberPrototype.CONTACT[clampi(combo_state - 1, 0, 2)] * _attack_anim_length:
+		var step := clampi(combo_state - 1, 0, 2)
+		var motion_length := _attack_anim_length - float(SaberPrototype.RECOVERY[step])
+		if _attack_anim_elapsed >= SaberPrototype.CONTACT[step] * motion_length:
+			if _is_special_attack:
+				_end_charge_visual()
+				SfxManager.play_at(WEAPON_SFX[WeaponData.WeaponType.SABER], global_position)
 			_execute_attack_hit(true)
 			_attack_hit_done = true
 		return
@@ -2379,13 +2441,28 @@ func _set_weapon_hold(mode: String) -> void:
 
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
 
-func _play_attack_animation(attack_num: int) -> void:
+func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
 	var attack_prefix := "pmsa" if SaberPrototype.enabled(self) else _anim_prefix
 	var anim_name := attack_prefix + "_atk" + str(attack_num)
 	_attack_step_ended = false
 	_attack_anim_elapsed = 0.0
 	_attack_anim_length = 0.0
 	_combo_fumbled = false  # each step gets a clean chain attempt
+
+	if SaberPrototype.enabled(self):
+		if attack_num == 1 and not prepared:
+			_saber_phase = "prepare"
+			_saber_phase_left = SaberPrototype.READY_PREP
+			_attack_step_ended = true
+			play_animation("pso_sa_wait", true)
+			return
+		# Both inputs share the same timeline. Strong's tell occupies the
+		# existing windup instead of adding a second, delayed attack clock.
+		_play_and_track_attack(anim_name)
+		if _is_special_attack:
+			SfxManager.play_at(SaberPrototype.CHARGE_SOUND, global_position)
+			_start_charge_visual()
+		return
 
 	if _is_special_attack:
 		# Pause before attack — player is exposed during wind-up
@@ -2466,7 +2543,7 @@ func _play_and_track_attack(anim_name: String) -> void:
 		sfx_path = BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
 	else:
 		sfx_path = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
-	if not sfx_path.is_empty():
+	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and _is_special_attack):
 		SfxManager.play_at(sfx_path, global_position)
 
 
@@ -2506,7 +2583,7 @@ func _chain_window(timing: Dictionary) -> Array[float]:
 
 
 func _update_combo_ring(_delta: float) -> void:
-	if not DebugConfig.show_combo_timing:
+	if SaberPrototype.enabled(self) or not DebugConfig.show_combo_timing:
 		if _combo_ring:
 			_combo_ring.visible = false
 		return
@@ -2536,7 +2613,7 @@ func _update_combo_ring(_delta: float) -> void:
 
 
 func _combo_ring_flash(flash_color: Color) -> void:
-	if not DebugConfig.show_combo_timing:
+	if SaberPrototype.enabled(self) or not DebugConfig.show_combo_timing:
 		return
 	_ensure_combo_ring()
 	_combo_ring.visible = true
@@ -2570,7 +2647,7 @@ func _start_charge_visual() -> void:
 	#    heavy/special-attack charge ring (the green normal-attack combo ring is
 	#    already gated in _update_combo_ring/_combo_ring_flash). The rising
 	#    particles + model glow below are permanent attack VFX and stay regardless.
-	if DebugConfig.show_combo_timing:
+	if DebugConfig.show_combo_timing and not SaberPrototype.enabled(self):
 		if not _charge_ring:
 			_charge_ring = MeshInstance3D.new()
 			var torus := TorusMesh.new()
@@ -2594,6 +2671,7 @@ func _start_charge_visual() -> void:
 
 	# 2. Glow on player model (uses cached material references)
 	for mat in _cached_materials:
+		if SaberPrototype.enabled(self): continue
 		mat.emission_enabled = true
 		mat.emission = _charge_color
 		mat.emission_energy_multiplier = 0.5
@@ -2619,10 +2697,24 @@ func _start_charge_visual() -> void:
 		_charge_particles.explosiveness = 0.3
 		add_child(_charge_particles)
 
+	if SaberPrototype.enabled(self):
+		_charge_particles.amount = 8
+		_charge_particles.lifetime = 0.22
+		var small_mat := _charge_particles.process_material as ParticleProcessMaterial
+		small_mat.initial_velocity_min = 0.15
+		small_mat.initial_velocity_max = 0.45
+		small_mat.scale_min = 0.3
+		small_mat.scale_max = 0.6
+		small_mat.gravity = Vector3(0, 0.3, 0)
+		var spark_material := StandardMaterial3D.new()
+		spark_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		spark_material.albedo_color = Color(1.0, 0.8, 0.35)
+		_charge_particles.draw_pass_1.material = spark_material
+
 	# Set particle color
 	var p_mat: ParticleProcessMaterial = _charge_particles.process_material as ParticleProcessMaterial
 	p_mat.color = _charge_color
-	_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
+	_charge_particles.global_position = weapon_node.global_position if SaberPrototype.enabled(self) and is_instance_valid(weapon_node) else global_position + Vector3(0, 0.8, 0)
 	_charge_particles.visible = true
 	_charge_particles.emitting = true
 
@@ -2665,7 +2757,7 @@ func _update_charge_visual(delta: float) -> void:
 
 	# Update particle position
 	if _charge_particles:
-		_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
+		_charge_particles.global_position = weapon_node.global_position if SaberPrototype.enabled(self) and is_instance_valid(weapon_node) else global_position + Vector3(0, 0.8, 0)
 
 
 ## Cancel an in-progress technique charge WITHOUT casting (#352). Clears the
@@ -2687,10 +2779,15 @@ func _drop_charge() -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
+	if new_state not in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING]:
+		_saber_retreat_elapsed = 0.0
 	# A mid-charge technique drops on damage, knockdown, or dodging
 	# (#273, spec /states/player-state) — rolling releases the charge.
 	if new_state in [PlayerState.DAMAGED, PlayerState.DOWN, PlayerState.DODGING]:
 		_drop_charge()
+	if new_state != PlayerState.ATTACKING:
+		_saber_phase = ""
+		_saber_phase_left = 0.0
 	var was_attacking: bool = current_state == PlayerState.ATTACKING
 	current_state = new_state
 	state_changed.emit(new_state)
@@ -2706,6 +2803,7 @@ func transition_to(new_state: PlayerState) -> void:
 		# anything future) land here. Deactivation clears _hit_targets, so
 		# no "stored" hits carry into the next swing.
 		_deactivate_attack_hitbox()
+		if SaberPrototype.enabled(self): _end_charge_visual()
 		# Combo queue dies with the swing (#155): an interrupted attack must
 		# never fire its queued follow-up after the DAMAGED/DOWN recovery.
 		_queued_combo = ComboQueue.NONE
@@ -2985,6 +3083,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		for _h in range(int(atk.get("hits", 1))):
 			if hb is Hurtbox:
 				var packet := atk.duplicate(true)
+				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
 				packet["element"] = element
 				packet["element_level"] = element_level
 				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)), self)
@@ -3099,6 +3198,9 @@ func _get_technique_targeting() -> Dictionary:
 
 
 func _update_combat_targets() -> void:
+	var previous_primary := 0
+	if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+		previous_primary = _targeted_enemies[0].get_instance_id()
 	# Clear old reticles
 	for enemy in _targeted_enemies:
 		if is_instance_valid(enemy) and enemy.has_method("hide_reticle"):
@@ -3163,6 +3265,14 @@ func _update_combat_targets() -> void:
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
 		_targeted_enemies.append(enemy)
+
+	if SaberPrototype.enabled(self) and not _targeted_enemies.is_empty():
+		var primary_id: int = _targeted_enemies[0].get_instance_id()
+		var now := Time.get_ticks_msec()
+		if primary_id != previous_primary and (primary_id != _saber_lock_last_id or now - _saber_lock_last_seen >= 350):
+			SfxManager.play(SaberPrototype.LOCK_SOUND, -5.0, true)
+		_saber_lock_last_id = primary_id
+		_saber_lock_last_seen = now
 
 	# Slicer: show secondary reticles for bounce targets near the primary
 	if weapon_type == WeaponData.WeaponType.SLICER and not _targeted_enemies.is_empty():
