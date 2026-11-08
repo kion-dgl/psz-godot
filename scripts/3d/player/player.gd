@@ -2528,6 +2528,9 @@ func _set_sword_pose_hold(clip: String) -> void:
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
 		target = Quaternion(Vector3.RIGHT, directions[clip].normalized()) * native
+	# Only the isolated authoring panel sets these per-animation overrides.
+	var fixture_grips: Dictionary = get_meta("fixture_grips", {})
+	if fixture_grips.has(clip): target = fixture_grips[clip].get_rotation_quaternion()
 	_weapon_grip_tween = create_tween()
 	_weapon_grip_tween.tween_property(weapon_node, "quaternion", target, SaberPrototype.READY_BLEND)
 

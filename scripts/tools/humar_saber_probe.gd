@@ -85,6 +85,26 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
+		if _native_prefix == "pmsp":
+			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
+			add_child(controls)
+			controls.setup(player)
+			if OS.get_environment("PSZ_SPEAR_CONTROLS_CHECK") == "1":
+				var initial: Basis = player.weapon_node.basis
+				controls._rotate(1, 90)
+				var adjusted: Basis = player.weapon_node.basis
+				controls._select(1)
+				controls._select(0)
+				_check(player.weapon_node.basis.is_equal_approx(adjusted), "grip survives animation selection")
+				controls._toggle_preview(false)
+				player._weapon_grip_tween.custom_step(1.0)
+				_check(player.weapon_node.basis.is_equal_approx(adjusted), "gameplay applies selected idle grip")
+				controls._toggle_preview(true)
+				controls._action("Reset selected")
+				_check(player.weapon_node.basis.is_equal_approx(initial), "reset restores selected grip")
+				await _snapshot("spear_grip_panel")
+				print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
+				get_tree().quit(0 if _ok else 1)
 		print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
 
 func _verify(player) -> void:
