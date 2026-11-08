@@ -1544,7 +1544,7 @@
           "pmmg_tec"
         ]
       },
-      "status": "Male gameplay owner-approved; photon fix ready for visual confirmation. Female planned."
+      "status": "Owner-approved including photon fix"
     },
     {
       "id": "A11-F",
@@ -1555,7 +1555,7 @@
       "donors": [
         "mg"
       ],
-      "note": "Retain burst count and per-shot release; female prefix differs by role.",
+      "note": "Female PSO mechgun sources 263–272 plus female saber casting/PB 328/341. Female native machinegun mixed-prefix pmmg attacks/dodge explicitly aliased to pwmgs; paired photon materials and alternating releases retained.",
       "sha256": "15bdd67d05080152d2d29248764f028a199381743f06b932545d120e1877b705",
       "clips": [
         "dummy1",
@@ -1615,7 +1615,7 @@
         "esc_f": [],
         "tec": []
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented; owner playtest pending"
     },
     {
       "id": "A12-M",

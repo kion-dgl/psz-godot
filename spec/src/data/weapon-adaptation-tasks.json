@@ -140,7 +140,7 @@
       "Check interruption during a burst and pending shots during equipment changes."
     ],
     "acceptance": "Exact burst count; canceled future releases stay canceled; no stagger lock.",
-    "status": "Male gameplay owner-approved; photon fix ready for visual confirmation. Female planned."
+    "status": "Male owner-approved including photon fix. Female implemented; owner playtest pending."
   },
   {
     "id": "A12",

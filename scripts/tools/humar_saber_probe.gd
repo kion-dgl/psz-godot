@@ -55,8 +55,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_hg" if female else "pso_hg"
 		CharacterManager._characters[0].equipment.weapon = "handgun"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "mechgun":
-		_native_prefix = "pmmg"
-		_pso_prefix = "pso_mg"
+		_native_prefix = "pwmgs" if female else "pmmg"
+		_pso_prefix = "pso_f_mg" if female else "pso_mg"
 		CharacterManager._characters[0].equipment.weapon = "mechgun"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
@@ -205,7 +205,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg"]: await _verify_gunblade(player, enemies)
-	if _native_prefix == "pmmg": _verify_mechgun(player, enemies[0])
+	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
 	_verify_booma_detour(enemies[0])
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
@@ -952,7 +952,7 @@ func _verify_mechgun(player, enemy) -> void:
 		for step in range(3):
 			var hits: Array = Rules.profile(player).hit_fracs[step]
 			var motion: float = player._attack_anim_length - Rules.profile(player).recovery[step]
-			_check(player.animation_player.current_animation == "pmmg_atk" + str(step + 1), "native mechgun combo clip")
+			_check(player.animation_player.current_animation == _native_prefix + "_atk" + str(step + 1), "native mechgun combo clip")
 			for hit in range(hits.size()):
 				var at: float = hits[hit] * motion
 				player._attack_anim_elapsed = at - 0.001
