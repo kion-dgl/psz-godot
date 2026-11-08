@@ -2583,7 +2583,10 @@ func _set_sword_pose_hold(clip: String) -> void:
 		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.RIFLE][mode]
 		var degrees: Vector3 = hold.rot
 		native = Quaternion.from_euler(degrees * PI / 180.0)
-		weapon_node.position = hold.pos
+		# Keep the grip at the hand; the legacy attack offset displaced it.
+		weapon_node.position = WEAPON_HOLD[WeaponData.WeaponType.RIFLE].idle.pos
+		var positions: Dictionary = get_meta("fixture_grip_positions", {})
+		if positions.has(clip): weapon_node.position = positions[clip]
 	var target := native
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):

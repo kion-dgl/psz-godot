@@ -12,6 +12,8 @@ var _path: String
 var _clip := ""
 var _grips: Dictionary = {}
 var _defaults: Dictionary = {}
+var _positions: Dictionary = {}
+var _default_positions: Dictionary = {}
 var _clips := ["pmsp_wait", "pmsa_walk", "pso_pa_walk_ready", "pso_pa_wait", "pso_pa_run", "pmsp_atk1", "pmsp_atk2", "pmsp_atk3", "pso_pa_block", "pso_pa_walk"]
 
 func setup(player: Node3D) -> void:
@@ -30,12 +32,20 @@ func setup(player: Node3D) -> void:
 	if FileAccess.file_exists(_path):
 		var data = JSON.parse_string(FileAccess.get_file_as_string(_path))
 		if data is Dictionary:
+			var saved_positions = data.get("_positions", {})
+			if saved_positions is Dictionary:
+				for clip in saved_positions:
+					var values = saved_positions[clip]
+					if values is Array and values.size() == 3:
+						var position := Vector3(values[0], values[1], values[2])
+						if position.is_finite(): _positions[clip] = position
 			for clip in data:
 				var a = data[clip]
 				if a is Array and a.size() == 9:
 					var b := Basis(Vector3(a[0], a[1], a[2]), Vector3(a[3], a[4], a[5]), Vector3(a[6], a[7], a[8]))
 					if b.is_finite() and absf(b.determinant()) > 0.001: _grips[clip] = b
 	_player.set_meta("fixture_grips", _grips)
+	_player.set_meta("fixture_grip_positions", _positions)
 	layer = 210
 	var panel := PanelContainer.new()
 	panel.position = Vector2(245, 12)
@@ -88,6 +98,19 @@ func setup(player: Node3D) -> void:
 			button.focus_mode = Control.FOCUS_NONE
 			button.pressed.connect(_rotate.bind(axis, degrees))
 			row.add_child(button)
+	if rifle:
+		for axis in range(3):
+			var row := HBoxContainer.new()
+			box.add_child(row)
+			var label := Label.new()
+			label.text = ["Position X", "Position Y", "Position Z"][axis]
+			row.add_child(label)
+			for amount in [-0.05, -0.01, 0.01, 0.05]:
+				var button := Button.new()
+				button.text = "%+.2f" % amount
+				button.focus_mode = Control.FOCUS_NONE
+				button.pressed.connect(_move.bind(axis, amount))
+				row.add_child(button)
 	var actions := HBoxContainer.new()
 	box.add_child(actions)
 	for caption in ["Reset selected", "Save all", "Copy selected"]:
@@ -100,6 +123,9 @@ func setup(player: Node3D) -> void:
 	_status.text = "Enemies freeze during preview. Changes persist when switching poses."
 	box.add_child(_status)
 	_preview.button_pressed = true
+	if rifle:
+		_selector.select(5)
+		_select(5)
 
 func _select(index: int) -> void:
 	_clip = _clips[index]
@@ -108,12 +134,16 @@ func _select(index: int) -> void:
 		return
 	# Measure the branch default separately from saved/user adjustments.
 	_player.set_meta("fixture_grips", {})
+	_player.set_meta("fixture_grip_positions", {})
 	_player._sword_grip_clip = ""
 	_player.play_animation(_clip, true)
 	if _player._weapon_grip_tween: _player._weapon_grip_tween.custom_step(1.0)
 	_defaults[_clip] = _blade.basis
+	_default_positions[_clip] = _blade.position
+	_player.set_meta("fixture_grip_positions", _positions)
 	_player.set_meta("fixture_grips", _grips)
 	if _grips.has(_clip): _blade.basis = _grips[_clip]
+	if _positions.has(_clip): _blade.position = _positions[_clip]
 	_seek(_scrub.value)
 	_toggle_play(_playing.button_pressed)
 	_update_angles()
@@ -149,9 +179,17 @@ func _rotate(axis: int, degrees: int) -> void:
 	_update_angles()
 	_status.text = "Unsaved change for " + _clip + " — Save all when ready."
 
+func _move(axis: int, amount: float) -> void:
+	if not _preview.button_pressed: return
+	_blade.position += [Vector3.RIGHT, Vector3.UP, Vector3.BACK][axis] * amount
+	_positions[_clip] = _blade.position
+	_update_angles()
+	_status.text = "Unsaved position for " + _clip + " — Save all when ready."
+
 func _update_angles() -> void:
 	var r := _blade.rotation_degrees
 	_angles.text = "%s: X %.1f°  Y %.1f°  Z %.1f°" % [_clip, r.x, r.y, r.z]
+	_angles.text += "\nPosition: %.2f, %.2f, %.2f" % [_blade.position.x, _blade.position.y, _blade.position.z]
 
 func _action(action: String) -> void:
 	if action == "Save all":
@@ -159,6 +197,11 @@ func _action(action: String) -> void:
 		for clip in _grips:
 			var b: Basis = _grips[clip]
 			data[clip] = [b.x.x,b.x.y,b.x.z,b.y.x,b.y.y,b.y.z,b.z.x,b.z.y,b.z.z]
+		if not _positions.is_empty():
+			data["_positions"] = {}
+			for clip in _positions:
+				var pos: Vector3 = _positions[clip]
+				data["_positions"][clip] = [pos.x, pos.y, pos.z]
 		var file := FileAccess.open(_path, FileAccess.WRITE)
 		if file == null:
 			_status.text = "Could not save grips."
@@ -172,5 +215,7 @@ func _action(action: String) -> void:
 	elif action == "Reset selected" and _preview.button_pressed:
 		_blade.basis = _defaults[_clip]
 		_grips.erase(_clip)
+		_blade.position = _default_positions[_clip]
+		_positions.erase(_clip)
 		_update_angles()
 		_status.text = "Selected pose reset to branch default. Save all to keep reset."

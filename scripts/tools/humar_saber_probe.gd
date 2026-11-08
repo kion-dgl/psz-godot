@@ -113,6 +113,8 @@ func _launch() -> void:
 			add_child(controls)
 			controls.setup(player)
 			if OS.get_environment("PSZ_SPEAR_CONTROLS_CHECK") == "1":
+				controls._selector.select(0)
+				controls._select(0)
 				var initial: Basis = player.weapon_node.basis
 				controls._rotate(1, 90)
 				var adjusted: Basis = player.weapon_node.basis
@@ -125,6 +127,11 @@ func _launch() -> void:
 				controls._toggle_preview(true)
 				controls._action("Reset selected")
 				_check(player.weapon_node.basis.is_equal_approx(initial), "reset restores selected grip")
+				controls._move(0, 0.05)
+				var adjusted_position: Vector3 = player.weapon_node.position
+				controls._select(1)
+				controls._select(0)
+				_check(player.weapon_node.position.is_equal_approx(adjusted_position), "position survives pose selection")
 				controls._path = "user://grip-controls-test.json"
 				controls._action("Save all")
 				_check(not controls.visible and player.is_physics_processing(), "save hides controls and resumes gameplay")
