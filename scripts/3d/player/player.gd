@@ -2580,6 +2580,7 @@ func _set_sword_pose_hold(clip: String) -> void:
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
 
 func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
+	if not prepared: SaberPrototype.select_gunblade_step(self)
 	var attack_prefix: String = str(SaberPrototype.profile(self).get("attack_prefix", SaberPrototype.profile(self).native_prefix)) if SaberPrototype.enabled(self) else _anim_prefix
 	var anim_name := attack_prefix + "_atk" + str(attack_num)
 	_attack_step_ended = false
@@ -3374,6 +3375,8 @@ func _update_combat_targets() -> void:
 
 	var weapon_type: int = _get_equipped_weapon_type()
 	var config: Dictionary = _weapon_combat_config(weapon_type)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
+		config = config.merged({"hit_h_dist": 8.0, "hit_h_angle_deg": 40.0}, true)
 	var max_targets: int = int(config.get("max_targets", 1))
 
 	# Extend the scan to cover equipped techniques: their box-ish reach maps

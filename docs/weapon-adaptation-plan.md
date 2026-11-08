@@ -377,7 +377,7 @@ Female slicer library SHA-256: `f3ba1d06c998e51ad2e2db21580adcb2e891d46faa27ba35
 
 ## Male — Gunblade playtest
 
-Female slicer owner-approved at `47d40ef0`. Run `python3 scripts/tools/run_humar_saber.py --weapon gunblade --no-grip-controls`; add `--group` for three Boomas. Press **G** to switch blade/gun mode while free to act. Normal/strong attack buttons use the selected mode. Switching during preparation, attacks, finisher guard, hit recovery or stopped-combo cooldown is rejected. Female gunblade is not enabled yet.
+Female slicer owner-approved at `47d40ef0`. Run `python3 scripts/tools/run_humar_saber.py --weapon gunblade --no-grip-controls`; add `--group` for three Boomas. Each combo step independently selects a slash for a targeted enemy within 2.4 horizontal units, or a shot for a farther target. Without a target it slashes. Selection commits before the step windup (including first-hit preparation); movement during that windup does not change the action. All eight slash/shot sequences share the normal/strong timing window. There is no mode-toggle input. Target acquisition spans 8 units with a 40° cone regardless of the previous action. The owner-saved identity grip applies to all blade and gun poses. Female gunblade is not enabled yet.
 
 Bake with `cd web && node scripts/bake-retarget.mjs --male-gunblade`, then import Godot. This fixture equips **Axeon** (weapon type 7) and explicitly resolves its native `wgbr02_1_o` visual from its legacy model metadata. Ein Mazurka is currently classified as rifle (11) in item data and was not used; its registry entry is unchanged.
 

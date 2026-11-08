@@ -312,6 +312,7 @@ func _verify_movement(player, enemies: Array) -> void:
 	var direction := Vector3(sin(movement_yaw), 0, cos(movement_yaw))
 	player.player_rotation = movement_yaw
 	var outside_reach: float = float(player._weapon_combat_config(player._get_equipped_weapon_type()).hit_h_dist) + 2.0
+	if _native_prefix == "pmgb": outside_reach = 10.0
 	for enemy in enemies: enemy.global_position = player.global_position + direction * outside_reach
 	player._update_combat_targets()
 	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
@@ -771,13 +772,12 @@ func _verify_gunblade(player, enemies: Array) -> void:
 	enemy.hurtbox.monitorable = true
 	for other in enemies: other.global_position = player.global_position + Vector3(0, 0, 20)
 	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
-	for mode in range(2):
+	for sequence in range(8):
 		player._saber_attack_cooldown = 0
 		player._recovery_left = 0
 		player.transition_to(player.PlayerState.IDLE)
-		if Rules.gun_mode(player) != (mode == 1): _check(Rules.toggle_gun_mode(player), "gunblade switches mode while free")
-		var prefix := "pmgb_shot" if mode == 1 else "pmgb"
-		if mode == 1:
+		var prefix := "pmgb"
+		if sequence == 7:
 			for clip in ["pso_gb_gun_wait", "pso_gb_gun_walk_ready", "pso_gb_gun_run"]:
 				player.play_animation(clip, true)
 				player.animation_player.seek(0.3, true)
@@ -787,11 +787,15 @@ func _verify_gunblade(player, enemies: Array) -> void:
 			player._saber_attack_cooldown = 0
 			player.transition_to(player.PlayerState.IDLE)
 			player.player_rotation = 0
+			enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & 1 else 1.5)
 			if pattern & 1: player._start_strong_attack()
 			else: player._start_attack()
 			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during preparation")
 			player._handle_attack_state(Rules.READY_PREP)
 			for step in range(3):
+				var mode := 1 if sequence & (1 << step) else 0
+				prefix = "pmgb_shot" if mode == 1 else "pmgb"
+				_check(Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
 				enemy.current_hp = 10000
 				_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")
 				var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
@@ -819,6 +823,7 @@ func _verify_gunblade(player, enemies: Array) -> void:
 					await _snapshot(prefix + "_attack_mode")
 				player._attack_anim_elapsed = player._attack_anim_length * 0.65
 				if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
+				if step < 2: enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & (1 << (step + 1)) else 1.5)
 				player._attack_step_finished()
 			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during finisher recovery")
 			player._handle_attack_state(Rules.FINISHER_GUARD)
@@ -836,7 +841,7 @@ func _verify_gunblade(player, enemies: Array) -> void:
 	player._saber_attack_cooldown = Rules.STOPPED_ATTACK_COOLDOWN
 	_check(not Rules.toggle_gun_mode(player), "gunblade cannot bypass stopped-combo cooldown by switching")
 	player._saber_attack_cooldown = 0
-	_check(Rules.toggle_gun_mode(player) and not Rules.gun_mode(player), "gunblade returns safely to blade mode")
+	player.set_meta("prototype_gun_mode", false)
 	for i in enemies.size(): enemies[i].global_position = positions[i]
 	enemy.global_position = position
 	enemy.current_hp = hp

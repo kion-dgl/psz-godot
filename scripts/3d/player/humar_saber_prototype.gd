@@ -278,6 +278,20 @@ static func block_feedback(player, source: Node3D) -> void:
 static func gun_mode(player) -> bool:
 	return player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE and bool(player.get_meta("prototype_gun_mode", false))
 
+static func select_gunblade_step(player) -> void:
+	if not enabled(player) or player._get_equipped_weapon_type() != WeaponData.WeaponType.GUN_BLADE: return
+	player._update_combat_targets()
+	var shoot := false
+	if not player._targeted_enemies.is_empty():
+		var target = player._targeted_enemies[0]
+		if is_instance_valid(target):
+			var offset: Vector3 = target.global_position - player.global_position
+			offset.y = 0
+			shoot = offset.length() > 2.4
+	player.set_meta("prototype_gun_mode", shoot)
+	player._run_anim = str(profile(player).run)
+	select_walk(player, player._saber_caution_active)
+
 static func toggle_gun_mode(player) -> bool:
 	if not enabled(player) or player._get_equipped_weapon_type() != WeaponData.WeaponType.GUN_BLADE: return false
 	if player.current_state not in [player.PlayerState.IDLE, player.PlayerState.WALKING, player.PlayerState.RUNNING] or player._saber_attack_cooldown > 0 or player._recovery_left > 0: return false
