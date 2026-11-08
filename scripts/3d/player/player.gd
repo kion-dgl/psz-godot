@@ -607,6 +607,9 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			for role in ["atk1", "atk2", "atk3", "esc_f"]:
 				native.add_animation("pwmgs_" + role, native.get_animation("pmmg_" + role).duplicate())
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
+		if anim_glb == SaberPrototype.MALE_UNARMED_PROFILE.library:
+			native.add_animation("pmbn_esc_f", native.get_animation("pmsa_esc_f").duplicate())
+			native_roles.append_array(["esc_f", "dam_d_lp", "tec"])
 		if anim_glb in [SaberPrototype.MALE_ROD_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library, SaberPrototype.MALE_WAND_PROFILE.library, SaberPrototype.FEMALE_WAND_PROFILE.library]: native_roles.append_array(["tec", "chg"])
 		if anim_glb == SaberPrototype.FEMALE_WAND_PROFILE.library:
 			native.add_animation("pwwa_chg", native.get_animation("pmwas_chg").duplicate())
@@ -3274,6 +3277,8 @@ func _setup_attack_hitbox() -> void:
 
 
 func _weapon_combat_config(weapon_type: int) -> Dictionary:
+	if SaberPrototype.enabled(self) and _is_barehanded():
+		return {"combo_steps": 3, "hit_h_dist": 1.7, "hit_v_dist": 0.6, "hit_h_angle_deg": 35.0, "hit_v_angle_deg": 45.0, "max_targets": 1, "damaging_frac": [0.4, 0.4, 0.45], "damage_end_frac": [0.55, 0.55, 0.6]}
 	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.DAGGERS:
 		return config.merged({"hit_h_dist": 2.6, "hit_v_dist": 0.9, "hit_h_angle_deg": 38.0, "hit_v_angle_deg": 45.0}, true)

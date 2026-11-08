@@ -74,6 +74,10 @@ func _launch() -> void:
 		_native_prefix = "pwwa" if female else "pmwa"
 		_pso_prefix = "pso_f_wn" if female else "pso_wn"
 		CharacterManager._characters[0].equipment.weapon = "wand"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "unarmed":
+		_native_prefix = "pmbn"
+		_pso_prefix = "pso_fi"
+		CharacterManager._characters[0].equipment.weapon = ""
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
 	DebugConfig.invincible = false
@@ -172,7 +176,10 @@ func _verify(player) -> void:
 	enemy.target = player
 	_check(enemy.enemy_level == 1, "fixed enemy level")
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
-	_check(player.weapon_node != null, "saber attached")
+	if _native_prefix == "pmbn":
+		_check(player._is_barehanded() and player.weapon_node == null, "unarmed uses empty equipment with no weapon model")
+	else:
+		_check(player.weapon_node != null, "saber attached")
 	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]:
 		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
 		var surfaces: Array = []
@@ -236,7 +243,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
 	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
-	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn"]:
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi"]:
 		for target in enemies:
 			target.reveal()
 			target.hurtbox.monitorable = true
