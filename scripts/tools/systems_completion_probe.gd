@@ -116,6 +116,8 @@ func _death_paths(player: Node3D, ch: Dictionary) -> void:
 	Inventory._items["scape_doll"] = 1
 	GameState.set_hp(GameState.max_hp)
 	player._recovery_left = 0.0
+	# Physics is frozen by this probe; expire the previous hit window explicitly.
+	player._hit_invulnerability_left = 0.0
 	player.transition_to(player.PlayerState.IDLE)
 	player.take_damage(99999)
 	_verify(Inventory.get_item_count("scape_doll") == 0 and GameState.hp == 0, "lethal hit consumes last doll once")

@@ -556,7 +556,8 @@ func _ensure_http() -> void:
 		return
 	_http = HTTPRequest.new()
 	_http.use_threads = true
-	_http.timeout = 30.0
+	# A full pack is hundreds of MB; 30 seconds aborts healthy downloads.
+	_http.timeout = 300.0
 	# Skip TLS cert verification for pack downloads. Content is public, URLs
 	# are content-addressed (sha256 in filename), and the pack is sha256-
 	# verified post-download — so a MITM can at worst substitute bytes that

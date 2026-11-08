@@ -41,12 +41,15 @@ func _run() -> void:
 	get_tree().quit(0 if _ok else 1)
 
 func _damage_guards(player: Node3D, boss: ReyburnBoss) -> void:
-	# Isolate immunity from facing; directional contact is covered by PR #750.
+	# Roll-through is body-contact avoidance, not damage immunity (decoded ROM).
 	GameState.set_hp(GameState.max_hp)
+	player._hit_invulnerability_left = 0.0
 	player.current_state = player.PlayerState.DODGING
 	player.dodge_timer = 0.0
 	boss._damage_target()
-	_check(GameState.hp == GameState.max_hp, "dodge rejects boss delivery")
+	_check(GameState.hp < GameState.max_hp, "boss damage interrupts dodge")
+	GameState.set_hp(GameState.max_hp)
+	player._hit_invulnerability_left = 0.0
 	player.current_state = player.PlayerState.IDLE
 	player._recovery_left = 1.0
 	boss._damage_target()

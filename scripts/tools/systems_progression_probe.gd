@@ -28,6 +28,7 @@ func _run() -> void:
 		player.set_physics_process(false)
 		var enemy = get_tree().get_first_node_in_group("enemies")
 		enemy.set_physics_process(false)
+		enemy.reveal()
 		await _combat(player, enemy, ch)
 	print("[systems] DONE %s failures=%s" % ["ok" if _failures.is_empty() else "FAIL", _failures])
 	get_tree().quit(0 if _failures.is_empty() else 1)
@@ -70,6 +71,7 @@ func _combat(player: Node3D, enemy: EnemyBase, ch: Dictionary) -> void:
 			break
 		var next: EnemyBase = live.back()
 		next.set_physics_process(false)
+		next.reveal()
 		player.global_position = next.global_position + Vector3(0, 0, 1.5)
 		for swing in 40:
 			player._deactivate_attack_hitbox()
