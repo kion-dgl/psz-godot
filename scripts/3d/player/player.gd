@@ -2513,7 +2513,7 @@ const SWORD_CARRY_DIRECTIONS := {
 const PARTISAN_CARRY_DIRECTIONS := {
 	"pso_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
 	"pso_pa_run": Vector3(-0.553328, -0.381034, 0.740703),
-	"pso_pa_wait": Vector3(-0.220334, -0.961007, 0.167088),
+	"pso_pa_wait": Vector3(0.421957, -0.874271, -0.240005), # 143: tip up across the torso at 45 degrees.
 }
 
 func _set_sword_pose_hold(clip: String) -> void:

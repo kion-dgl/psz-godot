@@ -564,7 +564,8 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 			var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
 			player._weapon_grip_tween.custom_step(1.0)
 			var tip: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3(0.5, 0, 0.8660254)).normalized()
-			_check(tip.dot(Vector3.UP) > 0.99, clip + " carries partisan upright")
+			var expected_tip := Vector3(1, 1, 0).normalized() if role == "wait" else Vector3.UP
+			_check(tip.dot(expected_tip) > 0.99, clip + " uses calibrated partisan carry angle")
 		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
 
 	var geometry: Dictionary = player._weapon_combat_config(weapon_type)

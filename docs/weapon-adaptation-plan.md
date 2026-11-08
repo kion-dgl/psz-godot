@@ -283,7 +283,7 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon spear` (HUmar with native
 | Photon blast | Partisan 150 |
 | Dodge / defeated hold | Native `pmsp_esc_f`, `pmsp_dam_d_lp` |
 
-Owner requested a fuller partisan adaptation after rejecting the spear-thrust version. The runtime caution alias `pso_pa_walk_ready` now uses source 145 instead of 138. Carry poses use calibrated local grips, accounting for the Ein Spear mesh shaft being 30 degrees off local +Z; caution, ready and run point upward at their calibration pose while retaining animated sway.
+Owner requested a fuller partisan adaptation after rejecting the spear-thrust version. The runtime caution alias `pso_pa_walk_ready` now uses source 145 instead of 138. Carry poses use calibrated local grips, accounting for the Ein Spear mesh shaft being 30 degrees off local +Z; caution and run point upright; ready stance 143 holds the tip diagonally upward across the torso at 45° at its calibration pose, retaining animated sway.
 
 All three swings use native PSZ attacks, each with one impact and up to three targets. Prototype sweep geometry is reach 3.2, horizontal angle 65°, vertical height 0.9 and vertical angle 45°; native chain turns remain 75°. Contact fractions [10/34, 11/37, 22/40] follow the decoded PSZ spear hit frames. Recovery holds remain [0.14, 0.16, 0.22] seconds. Normal/strong inputs retain the shared continuation window and combo outcomes.
 
