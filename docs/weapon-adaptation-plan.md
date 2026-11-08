@@ -493,3 +493,7 @@ Bazooka fall-down rotation (PSO saber 108 donor) saved as a default, preserving 
 Bazooka PSO 57 get-up rotation saved as a default. Per-pose calibration is complete; big damage was accepted unchanged. Relaunch without grip controls for review. The requested three-step combo repeating PSO launcher 51 and three-target explosion cap remain to be implemented; current gameplay still uses the single-shot rifle donor. Male bazooka gameplay approval remains pending.
 
 Bazooka relaxed-idle (`pmar_wait`) rotation saved as a default after the reaction poses; no idle position override was saved. All earlier calibrations are preserved. Relaunched without controls for review; the repeated launcher-shot combo remains pending.
+
+Owner found the active rifle-donor firing grip still needs calibration; reopen that clip (pmar_atk1), distinct from saved launcher preview 51. Owner also rejects one-handed launcher normal walk/run 54/61 for the heavy bazooka. Inspect shot-family walk 41, run 48 and caution walk 36 as alternatives before selecting a replacement; two-handed suitability is not yet visually verified.
+
+Bazooka active rifle-donor attack rotation and position saved. Owner selected shot walk 41 and run 48 to replace launcher 54/61; bake keeps pso_la_walk/run role names. Both new movement grips start from the saved relaxed-idle rotation with the default idle position, replacing the old locomotion offsets. Movement alignment awaits playtest.

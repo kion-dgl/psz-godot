@@ -428,7 +428,12 @@ async function main() {
   if (femaleDouble) targets[0].anims.push(...[[344, 'tec'], [349, 'block'], [351, 'dam_h'], [352, 'dam_d_wa'], [353, 'dam_n'], [354, 'dam_d'], [355, 'pb'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_ds_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
   if (maleSlicer) targets[0].anims.push(...[[98, 'tec'], [103, 'block'], [111, 'run']].map(([index, role]) => ({ index, name: 'pso_sl_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
   if (femaleSlicer) targets[0].anims.push(...[[328, 'tec'], [333, 'block'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_sl_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
-  if (maleBazooka) targets[0].anims.push({ index: 108, name: 'pso_la_dam_d', offsets: WALK_OFFSETS });
+  if (maleBazooka) {
+    // Heavy two-handed locomotion: owner-selected shot donors, retaining role aliases.
+    targets[0].anims.find(clip => clip.name === 'pso_la_walk').index = 41;
+    targets[0].anims.find(clip => clip.name === 'pso_la_run').index = 48;
+    targets[0].anims.push({ index: 108, name: 'pso_la_dam_d', offsets: WALK_OFFSETS });
+  }
   if (maleRifle) targets[0].anims.push({ index: 110, name: 'pso_ri_pb', offsets: WALK_OFFSETS });
   if (femaleMechgun) targets[0].anims.push(...[[328, 'tec'], [341, 'pb']].map(([index, role]) => ({ index, name: 'pso_f_mg_' + role, offsets: F_WALK_OFFSETS })));
   if (maleMechgun) targets[0].anims.push(...[[105, 'dam_h'], [106, 'dam_d_wa']].map(([index, role]) => ({ index, name: 'pso_mg_' + role, offsets: WALK_OFFSETS })));

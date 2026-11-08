@@ -66,7 +66,7 @@ func setup(player: Node3D) -> void:
 	if gunblade: labels = ["Blade relaxed idle", "Normal walk", "Blade caution walk", "Blade ready", "Blade run", "Blade attack 1", "Blade attack 2", "Blade attack 3", "Block", "Gun idle", "Gun caution walk", "Gun ready", "Gun run", "Gun attack 1", "Gun attack 2", "Gun attack 3"]
 	if rifle: labels = ["Relaxed idle", "Normal walk — PSO 15", "Caution walk — PSO 10", "Weapon ready — PSO 13", "Run — PSO 22", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 14", "Damage", "Big damage", "Fall down", "Get up"]
 	if rifle and player._is_female: labels = ["Relaxed idle", "Normal walk — PSO 255", "Caution walk — PSO 250", "Weapon ready — PSO 253", "Run — PSO 262", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 254", "Damage", "Big damage", "Fall down", "Get up"]
-	if bazooka: labels = ["Current relaxed idle", "Normal walk — PSO 54", "Caution walk — PSO 49", "Carry / ready — PSO 52", "Run — PSO 61", "Launcher firing — PSO 51 (preview)", "Current rifle-donor firing", "Block — PSO 53", "Damage", "Big damage", "Fall down", "Get up"]
+	if bazooka: labels = ["Current relaxed idle", "Normal walk — PSO shot 41", "Caution walk — PSO 49", "Carry / ready — PSO 52", "Run — PSO shot 48", "Launcher firing — PSO 51 (preview)", "Current rifle-donor firing", "Block — PSO 53", "Damage", "Big damage", "Fall down", "Get up"]
 	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)
@@ -133,8 +133,8 @@ func setup(player: Node3D) -> void:
 		_selector.select(1)
 		_select(1)
 	if bazooka:
-		_selector.select(0)
-		_select(0)
+		_selector.select(6)
+		_select(6)
 
 func _select(index: int) -> void:
 	_clip = _clips[index]
