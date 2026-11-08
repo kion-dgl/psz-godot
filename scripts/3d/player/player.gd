@@ -579,7 +579,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			var shared_clips := ["pmsa_walk", "pmsa_run_pso"]
 			if anim_glb == SaberPrototype.LIBRARY:
 				shared_clips.append_array(["pmsa_esc_f", "pmsa_dam_d_lp"])
-			elif anim_glb in [SaberPrototype.FEMALE_LIBRARY, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library]:
+			elif anim_glb in [SaberPrototype.FEMALE_LIBRARY, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library]:
 				shared_clips = [] # Female roles come from saver_w, not the male scene.
 			for anim_name in shared_clips:
 				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
@@ -598,15 +598,16 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		if native == null:
 			anim_scene.queue_free()
 			return null
-		if anim_glb == SaberPrototype.MALE_SPEAR_PROFILE.library:
-			lib.remove_animation("pso_pa_walk_ready")
-			lib.add_animation("pso_pa_walk_ready", lib.get_animation("pso_pa_walk").duplicate()) # Owner-selected PSO 145.
+		if anim_glb in [SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library]:
+			var prefix: String = str(prototype_profile.prefix)
+			lib.remove_animation(prefix + "_walk_ready")
+			lib.add_animation(prefix + "_walk_ready", lib.get_animation(prefix + "_walk").duplicate()) # Owner-selected PSO 145.
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library]:
+		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library]:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
 			if female_walk == null or not female_walk.has_animation("pwsa_walk"):
 				push_error("Female sword requires general female walk")
@@ -2511,6 +2512,9 @@ const SWORD_CARRY_DIRECTIONS := {
 }
 
 const PARTISAN_CARRY_DIRECTIONS := {
+	"pso_f_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
+	"pso_f_pa_run": Vector3(-0.553328, -0.381034, 0.740703),
+	"pso_f_pa_wait": Vector3(0.421957, -0.874271, -0.240005),
 	"pso_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
 	"pso_pa_run": Vector3(-0.553328, -0.381034, 0.740703),
 	"pso_pa_wait": Vector3(0.421957, -0.874271, -0.240005), # 143: tip up across the torso at 45 degrees.
@@ -2525,6 +2529,14 @@ const PARTISAN_SAVED_GRIPS := {
 	"pmsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
 }
 
+const FEMALE_PARTISAN_SAVED_GRIPS := {
+	"pwsa_walk": Basis(Vector3(-0.000000060, -1.000000000, 0.000000016), Vector3(0.866025507, -0.000000044, 0.500000060), Vector3(-0.500000060, 0.000000044, 0.866025507)),
+	"pwsp_atk1": Basis(Vector3(0.559926212, -0.049990490, -0.827033162), Vector3(0.496731937, 0.819152355, 0.286788255), Vector3(0.663129270, -0.571393907, 0.483496726)),
+	"pwsp_atk2": Basis(Vector3(0.383022368, -0.422618419, -0.821394145), Vector3(0.178606227, 0.906308174, -0.383022308), Vector3(0.906308055, 0.000000000, 0.422618449)),
+	"pwsp_atk3": Basis(Vector3(0.819152296, -0.000000007, -0.573576868), Vector3(0.000000004, 1.000000358, 0.000000000), Vector3(0.573576629, 0.000000003, 0.819152355)),
+	"pwsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
+}
+
 func _set_sword_pose_hold(clip: String) -> void:
 	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR]:
 		return
@@ -2537,8 +2549,9 @@ func _set_sword_pose_hold(clip: String) -> void:
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
 		target = Quaternion(Vector3.RIGHT, directions[clip].normalized()) * native
-	if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR and PARTISAN_SAVED_GRIPS.has(clip):
-		target = PARTISAN_SAVED_GRIPS[clip].get_rotation_quaternion()
+	var saved_grips: Dictionary = FEMALE_PARTISAN_SAVED_GRIPS if _is_female else PARTISAN_SAVED_GRIPS
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR and saved_grips.has(clip):
+		target = saved_grips[clip].get_rotation_quaternion()
 	# Only the isolated authoring panel sets these per-animation overrides.
 	var fixture_grips: Dictionary = get_meta("fixture_grips", {})
 	if fixture_grips.has(clip): target = fixture_grips[clip].get_rotation_quaternion()

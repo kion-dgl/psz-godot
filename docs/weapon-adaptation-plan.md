@@ -270,7 +270,7 @@ Four-enemy and rendered solo checks passed. Female double saber owner-approved a
 
 ## Male — Spear / partisan playtest
 
-Run `python3 scripts/tools/run_humar_saber.py --weapon spear` (HUmar with native PSZ Ein Spear). Add `--group` for four Boomas. Female remains disabled until adapted. Bake with `cd web && node scripts/bake-retarget.mjs --male-spear`, then import with Godot.
+Run `python3 scripts/tools/run_humar_saber.py --weapon spear` (HUmar with native PSZ Ein Spear). Add `--group` for four Boomas. Use `--gender female` for the female adaptation. Bake with `cd web && node scripts/bake-retarget.mjs --male-spear`, then import with Godot.
 
 | Role | Explicit source |
 | --- | --- |
@@ -298,3 +298,22 @@ The interactive spear fixture opens with a per-animation rotation panel. Select 
 Owner-saved normal walk (`pmsa_walk`) and relaxed idle (`pmsp_wait`) rotations are promoted separately into `PARTISAN_SAVED_GRIPS`. Local panel overrides remain available for further tuning.
 
 Owner-saved attack grips `pmsp_atk1`, `pmsp_atk2`, and `pmsp_atk3` are also promoted independently. Combo checks verify each grip across all eight normal/strong input combinations.
+
+## Female — Spear / partisan playtest
+
+Male spear owner-approved at `ab2536ff`. Run female gameplay with `python3 scripts/tools/run_humar_saber.py --weapon spear --gender female --no-grip-controls`; add `--group` for four Boomas. Omit `--no-grip-controls` to adjust her grips, saved independently in `.godot/spear-female-grips.json`. Bake using `cd web && node scripts/bake-retarget.mjs --female-spear` and import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks / dodge / defeated hold | Female native `pwsp_wait`, `pwsp_atk1/2/3`, `pwsp_esc_f`, `pwsp_dam_d_lp` |
+| Normal walk | General female 412, `pwsa_walk` |
+| Caution / ready / run | Shared male partisan donors 145 / 143 / 151, retargeted to HUmarl |
+| Casting / block | Shared partisan 139 / 144 |
+| Light / heavy / fall / get up / photon blast | Shared partisan 148 / 146 / 149 / 147 / 150 |
+| Unused source inventory | Partisan attacks 140–142; original caution 138 replaced by 145 |
+
+These are explicit shared donors, not claimed female source IDs. The runtime prefix is `pso_f_pa`; `source_prefix: pso_pa` records the source mapping. Female attack/idle/dodge clips remain gender-specific. Carry directions were measured on the female skeleton; her independent grip table starts with the approved male walk/idle/attack bases. Normal walk uses her female animation. Native hit timing, three-target sweep geometry and combo outcomes retain the male-approved settings.
+
+Four-enemy and rendered checks passed, including upright caution/run, diagonal ready and 24 attack-grip transition checks. Male spear regression passed. Owner playtest and asset publication remain pending.
+
+Female spear library SHA-256: `b334ba7a10201e2126751fde3b73206d859a8cbd4e82f7c452a8f255c6f60c1b`.

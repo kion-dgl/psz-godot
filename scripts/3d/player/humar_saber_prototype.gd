@@ -15,12 +15,13 @@ const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_
 const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
 const MALE_SPEAR_PROFILE := {"library": "res://assets/player/animations/pso_male_spear.glb", "native_library": "res://assets/player/animations/spear_m.glb", "prefix": "pso_pa", "native_prefix": "pmsp", "walk": "pmsa_walk", "run": "pso_pa_run", "source_count": 14, "class_id": "humar", "hit_fracs": [[0.294118], [0.297297], [0.55]], "recovery": [0.14, 0.16, 0.22]}
+const FEMALE_SPEAR_PROFILE := {"library": "res://assets/player/animations/pso_female_spear.glb", "native_library": "res://assets/player/animations/spear_w.glb", "prefix": "pso_f_pa", "source_prefix": "pso_pa", "native_prefix": "pwsp", "walk": "pwsa_walk", "run": "pso_f_pa_run", "source_count": 14, "class_id": "humarl", "hit_fracs": [[0.294118], [0.297297], [0.55]], "recovery": [0.14, 0.16, 0.22]}
 
 const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_male_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_m.glb", "prefix": "pso_ds", "native_prefix": "pmds", "walk": "pmsa_walk", "run": "pso_ds_run", "source_count": 5, "class_id": "humar", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
 static func profile(player) -> Dictionary:
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR and not player._is_female: return MALE_SPEAR_PROFILE
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR: return FEMALE_SPEAR_PROFILE if player._is_female else MALE_SPEAR_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER: return FEMALE_DOUBLE_PROFILE if player._is_female else MALE_DOUBLE_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW: return FEMALE_CLAW_PROFILE if player._is_female else MALE_CLAW_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS: return FEMALE_DAGGER_PROFILE if player._is_female else MALE_DAGGER_PROFILE
@@ -29,6 +30,7 @@ static func profile(player) -> Dictionary:
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == FEMALE_SPEAR_PROFILE.library: return FEMALE_SPEAR_PROFILE
 	if path == MALE_SPEAR_PROFILE.library: return MALE_SPEAR_PROFILE
 	if path == FEMALE_DOUBLE_PROFILE.library: return FEMALE_DOUBLE_PROFILE
 	if path == MALE_DOUBLE_PROFILE.library: return MALE_DOUBLE_PROFILE
@@ -70,7 +72,7 @@ static func enabled(player) -> bool:
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER \
-		 or (character.get("class_id", "") == "humar" and player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR))
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR)
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:

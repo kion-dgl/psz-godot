@@ -853,7 +853,7 @@
           "pmsp_tec"
         ]
       },
-      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
+      "status": "Owner-approved at ab2536ff"
     },
     {
       "id": "A06-F",
@@ -864,7 +864,7 @@
       "donors": [
         "pa"
       ],
-      "note": "PSO donor is partisan; keep PSZ thrusts and finisher target count.",
+      "note": "Explicit shared PSO male partisan donors 138\u2013151 retargeted to HUmarl, not unverified female source IDs. Caution uses 145, ready 143, run 151; native pwsp attacks/idle/dodge/defeat, general female walk 412. Independent female grip defaults, three targets per swing and decoded PSZ contact timing.",
       "sha256": "4cf657837d0a542f4d4923481f43b042699b796e3d4aaf726dfec01dd1eff125",
       "clips": [
         "dummy1",
@@ -930,7 +930,7 @@
           "pwsp_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
     },
     {
       "id": "A07-M",

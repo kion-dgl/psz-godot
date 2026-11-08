@@ -75,7 +75,7 @@
       "Inspect shaft grip, tip path, caution/run and collision alignment on both bodies."
     ],
     "acceptance": "Upright 145 caution carry, coherent partisan sweeps, one contact per swing and three-target cap.",
-    "status": "Male implemented; focused checks passed, owner playtest pending. Female planned."
+    "status": "Male owner-approved at ab2536ff; female implemented, focused checks passed; owner playtest pending."
   },
   {
     "id": "A07",

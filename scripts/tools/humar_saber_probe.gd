@@ -39,8 +39,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_ds" if female else "pso_ds"
 		CharacterManager._characters[0].equipment.weapon = "ein_double_saber"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "spear":
-		_native_prefix = "pmsp"
-		_pso_prefix = "pso_pa"
+		_native_prefix = "pwsp" if female else "pmsp"
+		_pso_prefix = "pso_f_pa" if female else "pso_pa"
 		CharacterManager._characters[0].equipment.weapon = "ein_spear"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -85,7 +85,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix == "pmsp" and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -114,7 +114,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix in ["pmds", "pwdss", "pmsp"]:
+	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -132,8 +132,10 @@ func _verify(player) -> void:
 		camera.look_at(player.global_position + Vector3.UP)
 		camera.current = true
 	var count := 0
-	for clip in mapping.mappings.values():
-		if not str(clip).begins_with((_pso_prefix + "_")): continue
+	for source_clip in mapping.mappings.values():
+		var source_prefix: String = str(Rules.profile(player).get("source_prefix", _pso_prefix))
+		if not str(source_clip).begins_with(source_prefix + "_"): continue
+		var clip: String = str(source_clip).replace(source_prefix, _pso_prefix)
 		count += 1
 		_check(player.animation_player.has_animation(clip), "clip " + clip)
 		if player.animation_player.has_animation(clip):
@@ -163,7 +165,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -337,9 +339,9 @@ func _verify_mixed_combos(player) -> void:
 		for step in range(1, 4):
 			var clip := (_native_prefix + "_atk") + str(step)
 			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
-			if _native_prefix == "pmsp":
+			if _native_prefix in ["pmsp", "pwsp"]:
 				player._weapon_grip_tween.custom_step(1.0)
-				_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.PARTISAN_SAVED_GRIPS[clip].orthonormalized()), "saved spear attack grip survives combo transition: " + clip)
+				_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "saved spear attack grip survives combo transition: " + clip)
 			_check(is_equal_approx(player._attack_anim_length, player.animation_player.get_animation(clip).length), "normal and strong use identical step duration")
 			if step < 3:
 				player._attack_anim_elapsed = player._attack_anim_length * 0.65
@@ -555,7 +557,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
 	var claw := _native_prefix in ["pmcl", "pwcl"]
 	var double_saber := _native_prefix in ["pmds", "pwdss"]
-	var spear := _native_prefix == "pmsp"
+	var spear := _native_prefix in ["pmsp", "pwsp"]
 	var weapon_type: int = player._get_equipped_weapon_type()
 	var target_cap := 3 if double_saber else 1
 	if double_saber:
@@ -592,11 +594,11 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
 
 	if spear:
-		for clip in ["pmsa_walk", "pmsp_wait"]:
+		for clip in [str(Rules.profile(player).walk), _native_prefix + "_wait"]:
 			player._sword_grip_clip = ""
 			player.play_animation(clip, true)
 			player._weapon_grip_tween.custom_step(1.0)
-			_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.PARTISAN_SAVED_GRIPS[clip].orthonormalized()), "owner-saved spear grip applied: " + clip)
+			_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "owner-saved spear grip applied: " + clip)
 	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
 	player.player_rotation = 0
 	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 10)

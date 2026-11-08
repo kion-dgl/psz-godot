@@ -16,6 +16,8 @@ var _clips := ["pmsp_wait", "pmsa_walk", "pso_pa_walk_ready", "pso_pa_wait", "ps
 
 func setup(player: Node3D) -> void:
 	_player = player
+	if player._is_female:
+		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa")
 	_blade = player.weapon_node
 	_path = OS.get_environment("PSZ_SPEAR_GRIP_PATH")
 	if FileAccess.file_exists(_path):
@@ -38,7 +40,7 @@ func setup(player: Node3D) -> void:
 	box.add_child(title)
 	_selector = OptionButton.new()
 	var labels := ["Relaxed idle — PSZ pmsp_wait", "Normal walk — pmsa_walk", "Caution walk — PSO 145", "Weapon ready — PSO 143", "Run — PSO 151", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 144", "Source walk — PSO 145 (comparison)"]
-	for label in labels: _selector.add_item(label)
+	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)
 	box.add_child(_selector)
