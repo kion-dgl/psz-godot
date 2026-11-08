@@ -2575,7 +2575,7 @@ const RIFLE_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
@@ -2592,6 +2592,14 @@ func _set_sword_pose_hold(clip: String) -> void:
 		native = Quaternion.from_euler(degrees * PI / 180.0)
 		# Keep the grip at the hand; the legacy attack offset displaced it.
 		weapon_node.position = WEAPON_HOLD[WeaponData.WeaponType.RIFLE].idle.pos
+		var positions: Dictionary = get_meta("fixture_grip_positions", {})
+		if positions.has(clip): weapon_node.position = positions[clip]
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.BAZOOKA:
+		var mode := "attack" if clip in ["pmar_atk1", "pso_la_atk1"] else "idle"
+		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.BAZOOKA][mode]
+		var degrees: Vector3 = hold.rot
+		native = Quaternion.from_euler(degrees * PI / 180.0)
+		weapon_node.position = hold.pos
 		var positions: Dictionary = get_meta("fixture_grip_positions", {})
 		if positions.has(clip): weapon_node.position = positions[clip]
 	var rifle_grip_key := clip.replace("pwars_", "pmar_").replace("pso_f_ri_", "pso_ri_")
