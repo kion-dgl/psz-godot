@@ -27,7 +27,7 @@ func setup(player: Node3D) -> void:
 	if rifle: _clips = ["pmar_wait", "pso_ri_walk", "pso_ri_walk_ready", "pso_ri_wait", "pso_ri_run", "pmar_atk1", "pmar_atk2", "pmar_atk3", "pso_ri_block", "pso_ri_dam_n", "pso_ri_dam_h", "pso_ri_dam_d", "pso_ri_dam_d_wa"]
 	if bazooka: _clips = ["pmar_wait", "pso_la_walk", "pso_la_walk_ready", "pso_la_wait", "pso_la_run", "pso_la_atk1", "pmar_atk1", "pso_la_block", "pso_la_dam_n", "pso_la_dam_h", "pso_la_dam_d", "pso_la_dam_d_wa"]
 	if player._is_female:
-		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb").replace("pmar", "pwars").replace("pso_ri", "pso_f_ri")
+		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb").replace("pmar", "pwars").replace("pso_ri", "pso_f_ri").replace("pso_la", "pso_f_la")
 	_blade = player.weapon_node
 	_path = OS.get_environment("PSZ_GUNBLADE_GRIP_PATH" if gunblade else ("PSZ_SLICER_GRIP_PATH" if slicer else "PSZ_SPEAR_GRIP_PATH"))
 	if rifle: _path = OS.get_environment("PSZ_RIFLE_GRIP_PATH")
@@ -67,6 +67,7 @@ func setup(player: Node3D) -> void:
 	if rifle: labels = ["Relaxed idle", "Normal walk — PSO 15", "Caution walk — PSO 10", "Weapon ready — PSO 13", "Run — PSO 22", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 14", "Damage", "Big damage", "Fall down", "Get up"]
 	if rifle and player._is_female: labels = ["Relaxed idle", "Normal walk — PSO 255", "Caution walk — PSO 250", "Weapon ready — PSO 253", "Run — PSO 262", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 254", "Damage", "Big damage", "Fall down", "Get up"]
 	if bazooka: labels = ["Current relaxed idle", "Normal walk — PSO shot 41", "Caution walk — PSO 49", "Carry / ready — PSO 52", "Run — PSO shot 48", "Launcher firing — PSO 51 (preview)", "Current rifle-donor firing", "Block — PSO 53", "Damage", "Big damage", "Fall down", "Get up"]
+	if bazooka and player._is_female: labels = ["Current relaxed idle", "Normal walk — PSO shot 278", "Caution walk — PSO 286", "Carry / ready — PSO 289", "Run — PSO shot 285", "Launcher firing — PSO 288 (preview)", "Current rifle-donor firing", "Block — PSO 290", "Damage", "Big damage", "Fall down", "Get up"]
 	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)

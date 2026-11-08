@@ -42,8 +42,8 @@ def main():
         if not (ROOT / 'assets/weapons/wslc01/wslc01/wslc01_3_o/wslc01_3_o.glb').exists():
             parser.error('Fetch projectile asset: sh scripts/tools/fetch_slicer_projectile.sh, then import with Godot')
     if args.weapon == 'bazooka':
-        if args.gender == 'female': parser.error('Female bazooka is not adapted yet')
-        library, bake_flag = 'pso_male_bazooka.glb', '--male-bazooka'
+        library = 'pso_female_bazooka.glb' if args.gender == 'female' else 'pso_male_bazooka.glb'
+        bake_flag = '--female-bazooka' if args.gender == 'female' else '--male-bazooka'
     if args.weapon == 'rifle':
         library, bake_flag = 'pso_' + args.gender + '_rifle.glb', '--' + args.gender + '-rifle'
     if args.weapon == 'mechgun':

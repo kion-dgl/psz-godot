@@ -499,3 +499,11 @@ Owner found the active rifle-donor firing grip still needs calibration; reopen t
 Bazooka active rifle-donor attack rotation and position saved. Owner selected shot walk 41 and run 48 to replace launcher 54/61; bake keeps pso_la_walk/run role names. Both new movement grips start from the saved relaxed-idle rotation with the default idle position, replacing the old locomotion offsets. Movement alignment awaits playtest.
 
 Bazooka block (PSO 53) rotation revised from the latest owner save; carry/ready was unchanged in that save. Relaunch without adjustment controls to check the transition in gameplay.
+
+## Female — Bazooka playtest
+
+Male bazooka owner-approved for this pass at `23bffd41`; remaining small grip adjustments are deferred. The requested repeated three-shot launcher combo, three-target splash cap and asset publication remain explicit follow-ups, not completed features.
+
+Female bazooka uses native female rifle `pwars` idle/fire/dodge/defeat as the same explicit donor approach. PSO female launcher 286–298 supplies stances/reactions, with shot walk 278 and run 285 replacing launcher locomotion, and saber fall 339 filling the missing fall role. Saved male grips map onto female role names as initial defaults; independent female adjustment files are supported. Existing single-shot/splash behavior is retained. Run `python3 scripts/tools/run_humar_saber.py --weapon bazooka --gender female --group --no-grip-controls`. Bake with `--female-bazooka`. Female owner approval pending.
+
+Female library SHA-256: `7e70838e57f5a9aab97acc377eb80592d0c6c2b340b0fffe8bd372edf250aa47`.
