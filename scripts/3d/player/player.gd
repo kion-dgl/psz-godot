@@ -2490,7 +2490,9 @@ func _set_weapon_hold(mode: String) -> void:
 	var hold: Dictionary = WEAPON_HOLD.get(wtype, WEAPON_HOLD_DEFAULT)
 	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
 	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
-	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
+	# Keep the calibrated central grip (including live fixture adjustments) across attacks.
+	if not (SaberPrototype.enabled(self) and wtype == WeaponData.WeaponType.DOUBLE_SABER):
+		weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
 
 
 # Local forearm-space blade directions calibrated against the retargeted

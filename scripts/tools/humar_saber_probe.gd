@@ -323,6 +323,8 @@ func _verify_mixed_combos(player) -> void:
 		_check(player._saber_phase == "guard_recovery" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "completed combo enters ready recovery")
 		player._handle_attack_state(Rules.FINISHER_GUARD)
 		_check(player.current_state == player.PlayerState.IDLE and not player._charge_active, "mixed combo finishes cleanly")
+		if _native_prefix == "pmds":
+			_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber grip survives completed combo and return to idle")
 	# Interrupt strong windup: no delayed callback may restart the swing.
 	player._start_strong_attack()
 	player._hit_invulnerability_left = 0
