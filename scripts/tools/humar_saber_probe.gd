@@ -927,6 +927,15 @@ func _verify_booma_detour(enemy) -> void:
 
 func _verify_mechgun(player, enemy) -> void:
 	_check(is_instance_valid(player.weapon_node_left), "mechgun equips both hands")
+	for weapon in [player.weapon_node, player.weapon_node_left]:
+		_check(weapon.get_parent().get_node_or_null("PhotonLight") == null, "mechgun has no wrist light")
+		var surfaces: Array = []
+		player._collect_surfaces(weapon, surfaces)
+		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "both mechgun photon inserts emit tier color")
+		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "mechgun photon insert keeps solid color")
+		var casing: StandardMaterial3D = surfaces[0][0].get_active_material(surfaces[0][1])
+		_check(not casing.emission_enabled and casing.albedo_texture != null, "mechgun casing stays textured")
 	var old_position: Vector3 = enemy.global_position
 	var old_hp: int = enemy.current_hp
 	enemy.reveal()

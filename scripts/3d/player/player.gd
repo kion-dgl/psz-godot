@@ -839,7 +839,7 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	# Photon light (#646): a tinted weapon reads as a light source — a small
 	# omni so the blade tints the player and nearby ground at night. Attached
 	# to the bone attachment (unscaled) so range isn't shrunk by weapon scale.
-	if weapon_data.tint_color != Color.WHITE and weapon_data.glb_path != "res://assets/weapons/basic/Handgun.glb":
+	if weapon_data.tint_color != Color.WHITE and weapon_data.glb_path not in PHOTON_INSERT_MODELS:
 		var photon := OmniLight3D.new()
 		photon.name = "PhotonLight"
 		photon.light_color = weapon_data.tint_color
@@ -857,6 +857,8 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 
 # Weapon type → global material indices that get additive blending (blade/energy surfaces)
 # Indices count across all mesh children in order (matching web preview)
+const PHOTON_INSERT_MODELS := ["res://assets/weapons/basic/Handgun.glb", "res://assets/weapons/basic/Mechgun.glb"]
+
 const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
 	WeaponData.WeaponType.SABER: [1, 2],
 	WeaponData.WeaponType.SWORD: [1, 3],
@@ -875,9 +877,9 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 	if has_tint:
 		# Basic weapons: additive blending on blade/energy surfaces
 		var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
-		# Basic handgun surface 0 is the casing; surface 1 is its photon insert.
-		var handgun_photons: bool = weapon_data.glb_path == "res://assets/weapons/basic/Handgun.glb"
-		if handgun_photons: additive_indices = [1]
+		# Basic handgun/mechgun surface 0 is the casing; surface 1 is its photon insert.
+		var photon_insert: bool = weapon_data.glb_path in PHOTON_INSERT_MODELS
+		if photon_insert: additive_indices = [1]
 		for global_idx in additive_indices:
 			if global_idx >= surfaces.size():
 				continue
@@ -888,14 +890,14 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 			if mat is StandardMaterial3D:
 				var new_mat := mat.duplicate() as StandardMaterial3D
 				new_mat.albedo_color = tint
-				if handgun_photons:
+				if photon_insert:
 					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 					new_mat.emission_enabled = true
 					new_mat.emission = tint
 					new_mat.emission_energy_multiplier = 1.2
-				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX if handgun_photons else BaseMaterial3D.BLEND_MODE_ADD
+				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX if photon_insert else BaseMaterial3D.BLEND_MODE_ADD
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY if handgun_photons else BaseMaterial3D.DEPTH_DRAW_DISABLED
+				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY if photon_insert else BaseMaterial3D.DEPTH_DRAW_DISABLED
 				mesh_inst.set_surface_override_material(surf_idx, new_mat)
 	else:
 		# Unique weapons: normal textures, double-sided faces
