@@ -47,6 +47,7 @@ def main():
         env = dict(os.environ, PSZ_HUMAR_SABER='1', PSZ_SABER_GENDER=args.gender, PSZ_MELEE_WEAPON=args.weapon, PSZ_SABER_CHECK='1' if args.check else '0',
                    PSZ_SABER_GROUP='1' if args.group else '0', XDG_DATA_HOME=str(project / 'save'))
         env["PSZ_DAGGER_GRIP_PATH"] = str(ROOT / ".godot" / ("dagger-female-left-grip.json" if args.gender == "female" else "dagger-left-grip.json"))
+        env["PSZ_DOUBLE_SABER_GRIP_PATH"] = str(ROOT / ".godot" / "double-saber-grip.json")
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
             command += ['--headless']

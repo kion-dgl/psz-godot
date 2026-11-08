@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Local-only controls for the isolated dagger playtest; never loaded in campaign.
+## Local-only controls for the isolated weapon playtest; never loaded in campaign.
 var _player: Node3D
 var _blade: Node3D
 var _original: Basis
@@ -7,11 +7,11 @@ var _angles: Label
 var _status: Label
 var _path: String
 
-func setup(player: Node3D) -> void:
+func setup(player: Node3D, double_saber: bool = false) -> void:
 	_player = player
-	_blade = player.weapon_node_left
+	_blade = player.weapon_node if double_saber else player.weapon_node_left
 	_original = _blade.basis
-	_path = OS.get_environment("PSZ_DAGGER_GRIP_PATH")
+	_path = OS.get_environment("PSZ_DOUBLE_SABER_GRIP_PATH" if double_saber else "PSZ_DAGGER_GRIP_PATH")
 	layer = 210
 	var panel := PanelContainer.new()
 	panel.position = Vector2(245, 12)
@@ -19,7 +19,7 @@ func setup(player: Node3D) -> void:
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	var title := Label.new()
-	title.text = "Left dagger orientation (right hand unchanged)"
+	title.text = "Double saber orientation" if double_saber else "Left dagger orientation (right hand unchanged)"
 	box.add_child(title)
 	_angles = Label.new()
 	box.add_child(_angles)
@@ -60,7 +60,7 @@ func setup(player: Node3D) -> void:
 			var saved := Basis(Vector3(a[0], a[1], a[2]), Vector3(a[3], a[4], a[5]), Vector3(a[6], a[7], a[8]))
 			if saved.is_finite() and absf(saved.determinant()) > 0.001:
 				_blade.basis = saved
-				_status.text = "Loaded your saved left-hand orientation."
+				_status.text = "Loaded your saved weapon orientation."
 	_update_angles()
 
 func _rotate(axis: int, degrees: int) -> void:
