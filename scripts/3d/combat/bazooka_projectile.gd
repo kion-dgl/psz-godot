@@ -8,11 +8,7 @@ func _on_area_entered(area: Area3D) -> void:
 	if not is_instance_valid(primary) or primary == owner_node or primary.get("is_alive") == false: return
 	_spent = true
 	var center: Vector3 = primary.global_position
-	var victims: Array = [primary]
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if enemy == primary or not enemy.is_visible_in_tree() or bool(enemy.get("dormant")) or enemy.get("is_alive") == false: continue
-		if enemy.global_position.distance_to(center) <= BLAST_RADIUS: victims.append(enemy)
-	victims.sort_custom(func(a, b): return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
+	var victims := _blast_victims(primary, center)
 	for enemy in victims:
 		if _hit_targets.size() >= max_hits: break
 		var hurtbox = enemy.get("hurtbox")
@@ -26,3 +22,11 @@ func _on_area_entered(area: Area3D) -> void:
 	if is_instance_valid(owner_node):
 		owner_node._spawn_aoe_visual(center + Vector3.UP * 0.5, Color(1.0, 0.45, 0.1), BLAST_RADIUS)
 	queue_free()
+
+func _blast_victims(primary, center: Vector3) -> Array:
+	var victims: Array = [primary]
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy == primary or not enemy.is_visible_in_tree() or enemy.get("dormant") == true or enemy.get("is_alive") == false: continue
+		if enemy.global_position.distance_to(center) <= BLAST_RADIUS: victims.append(enemy)
+	victims.sort_custom(func(a, b): return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
+	return victims

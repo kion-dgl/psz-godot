@@ -70,8 +70,7 @@ func _rotate(axis: int, degrees: int) -> void:
 	_status.text = "Unsaved adjustment — test it, then Save."
 
 func _update_angles() -> void:
-	var r := _blade.rotation_degrees
-	_angles.text = "Rotation: X %.1f°   Y %.1f°   Z %.1f°" % [r.x, r.y, r.z]
+	_angles.text = rotation_text(_blade.rotation_degrees)
 
 func _action(action: String) -> void:
 	if action == "Preview block":
@@ -99,3 +98,6 @@ func _action(action: String) -> void:
 func _freeze_enemies(frozen: bool) -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.set_physics_process(not frozen)
+
+static func rotation_text(angles: Vector3) -> String:
+	return "Rotation: X %.1f°   Y %.1f°   Z %.1f°" % [angles.x, angles.y, angles.z]

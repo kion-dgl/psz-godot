@@ -2,6 +2,24 @@ extends "res://scripts/tools/probe_checks.gd"
 ## #790 fixture. Launch through run_humar_saber.py; scene changes preserve this observer.
 const Rules := preload("res://scripts/3d/player/humar_saber_prototype.gd")
 
+const FIXTURE_PROFILES := {
+	"sword": [Rules.MALE_SWORD_PROFILE, Rules.FEMALE_SWORD_PROFILE, "sword"],
+	"daggers": [Rules.MALE_DAGGER_PROFILE, Rules.FEMALE_DAGGER_PROFILE, "dagger"],
+	"claw": [Rules.MALE_CLAW_PROFILE, Rules.FEMALE_CLAW_PROFILE, "ein_claw"],
+	"double-saber": [Rules.MALE_DOUBLE_PROFILE, Rules.FEMALE_DOUBLE_PROFILE, "ein_double_saber"],
+	"spear": [Rules.MALE_SPEAR_PROFILE, Rules.FEMALE_SPEAR_PROFILE, "ein_spear"],
+	"slicer": [Rules.MALE_SLICER_PROFILE, Rules.FEMALE_SLICER_PROFILE, "ein_slicer"],
+	"gunblade": [Rules.MALE_GUNBLADE_PROFILE, Rules.FEMALE_GUNBLADE_PROFILE, "axeon"],
+	"handgun": [Rules.MALE_HANDGUN_PROFILE, Rules.FEMALE_HANDGUN_PROFILE, "handgun"],
+	"mechgun": [Rules.MALE_MECHGUN_PROFILE, Rules.FEMALE_MECHGUN_PROFILE, "mechgun"],
+	"rifle": [Rules.MALE_RIFLE_PROFILE, Rules.FEMALE_RIFLE_PROFILE, "rifle"],
+	"bazooka": [Rules.MALE_BAZOOKA_PROFILE, Rules.FEMALE_BAZOOKA_PROFILE, "ein_bazooka"],
+	"laser-cannon": [Rules.MALE_BAZOOKA_PROFILE, Rules.FEMALE_BAZOOKA_PROFILE, "ein_cannon"],
+	"rod": [Rules.MALE_ROD_PROFILE, Rules.FEMALE_ROD_PROFILE, "pole"],
+	"wand": [Rules.MALE_WAND_PROFILE, Rules.FEMALE_WAND_PROFILE, "wand"],
+	"unarmed": [Rules.MALE_UNARMED_PROFILE, Rules.FEMALE_UNARMED_PROFILE, ""],
+}
+
 var _native_prefix := "pmsa"
 var _pso_prefix := "pso_sa"
 
@@ -22,76 +40,18 @@ func _launch() -> void:
 	_native_prefix = "pwsa" if female else "pmsa"
 	_pso_prefix = "pso_f_sa" if female else "pso_sa"
 	CharacterManager.create_character(0, "humarl" if female else "humar", "Saber Test")
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "sword":
-		_native_prefix = "pwsw" if female else "pmsw"
-		_pso_prefix = "pso_f_sw" if female else "pso_sw"
-		CharacterManager._characters[0].equipment.weapon = "sword"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "daggers":
-		_native_prefix = "pwda" if female else "pmda"
-		_pso_prefix = "pso_f_da" if female else "pso_da"
-		CharacterManager._characters[0].equipment.weapon = "dagger"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "claw":
-		_native_prefix = "pwcl" if female else "pmcl"
-		_pso_prefix = "pso_f_cl" if female else "pso_cl"
-		CharacterManager._characters[0].equipment.weapon = "ein_claw"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "double-saber":
-		_native_prefix = "pwdss" if female else "pmds"
-		_pso_prefix = "pso_f_ds" if female else "pso_ds"
-		CharacterManager._characters[0].equipment.weapon = "ein_double_saber"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "spear":
-		_native_prefix = "pwsp" if female else "pmsp"
-		_pso_prefix = "pso_f_pa" if female else "pso_pa"
-		CharacterManager._characters[0].equipment.weapon = "ein_spear"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer":
-		_native_prefix = "pwsls" if female else "pmsl"
-		_pso_prefix = "pso_f_sl" if female else "pso_sl"
-		CharacterManager._characters[0].equipment.weapon = "ein_slicer"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "gunblade":
-		_native_prefix = "pwgbs" if female else "pmgb"
-		_pso_prefix = "pso_f_gb" if female else "pso_gb"
-		CharacterManager._characters[0].equipment.weapon = "axeon"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "handgun":
-		_native_prefix = "pwhg" if female else "pmhg"
-		_pso_prefix = "pso_f_hg" if female else "pso_hg"
-		CharacterManager._characters[0].equipment.weapon = "handgun"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "mechgun":
-		_native_prefix = "pwmgs" if female else "pmmg"
-		_pso_prefix = "pso_f_mg" if female else "pso_mg"
-		CharacterManager._characters[0].equipment.weapon = "mechgun"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "rifle":
-		_native_prefix = "pwars" if female else "pmar"
-		_pso_prefix = "pso_f_ri" if female else "pso_ri"
-		CharacterManager._characters[0].equipment.weapon = "rifle"
-	if OS.get_environment("PSZ_MELEE_WEAPON") in ["bazooka", "laser-cannon"]:
-		_native_prefix = "pwars" if female else "pmar"
-		_pso_prefix = "pso_f_la" if female else "pso_la"
-		CharacterManager._characters[0].equipment.weapon = "ein_cannon" if OS.get_environment("PSZ_MELEE_WEAPON") == "laser-cannon" else "ein_bazooka"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "rod":
-		_native_prefix = "pwro" if female else "pmro"
-		_pso_prefix = "pso_f_ro" if female else "pso_ro"
-		CharacterManager._characters[0].equipment.weapon = "pole"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "wand":
-		_native_prefix = "pwwa" if female else "pmwa"
-		_pso_prefix = "pso_f_wn" if female else "pso_wn"
-		CharacterManager._characters[0].equipment.weapon = "wand"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "unarmed":
-		_native_prefix = "pwbn" if female else "pmbn"
-		_pso_prefix = "pso_f_fi" if female else "pso_fi"
-		CharacterManager._characters[0].equipment.weapon = ""
+	var selected: Array = FIXTURE_PROFILES.get(OS.get_environment("PSZ_MELEE_WEAPON"), [Rules.MALE_PROFILE, Rules.FEMALE_PROFILE, "saber"])
+	var selected_profile: Dictionary = selected[1 if female else 0]
+	_native_prefix = str(selected_profile.native_prefix)
+	_pso_prefix = str(selected_profile.prefix)
+	CharacterManager._characters[0].equipment.weapon = str(selected[2])
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
 	ColiseumRoster.selected_enemy_level = 1
 	SessionManager.enter_quest("debug_coliseum", "normal")
-	var sections := ColiseumRoster.make_sections("pso_booma")
-	if OS.get_environment("PSZ_SABER_GROUP") == "1":
-		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[-3.0,0.0,5.0]})
-		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[3.0,0.0,5.0]})
-	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber", "spear", "slicer"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
-		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[0.0,0.0,7.0]})
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer" and OS.get_environment("PSZ_SABER_GROUP") == "1":
-		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[2.0,0.0,7.0]})
+	var sections := _fixture_sections()
 	SessionManager.set_field_sections(sections)
 	ColiseumRoster.apply_level_override()
 	await SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", ColiseumRoster.warp_data())
@@ -118,50 +78,7 @@ func _launch() -> void:
 		print("[humar-saber] DONE " + ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 	else:
-		if _native_prefix in ["pmda", "pwda", "pmds", "pwdss"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
-			var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
-			add_child(controls)
-			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
-			await get_tree().process_frame
-			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro", "pwro", "pmwa", "pwwa"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
-			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
-			add_child(controls)
-			controls.setup(player)
-			if OS.get_environment("PSZ_SPEAR_CONTROLS_CHECK") == "1":
-				controls._selector.select(0)
-				controls._select(0)
-				var initial: Basis = player.weapon_node.basis
-				controls._rotate(1, 90)
-				var adjusted: Basis = player.weapon_node.basis
-				controls._select(1)
-				controls._select(0)
-				_check(player.weapon_node.basis.is_equal_approx(adjusted), "grip survives animation selection")
-				controls._toggle_preview(false)
-				player._weapon_grip_tween.custom_step(1.0)
-				_check(player.weapon_node.basis.is_equal_approx(adjusted), "gameplay applies selected idle grip")
-				controls._toggle_preview(true)
-				controls._action("Reset selected")
-				_check(player.weapon_node.basis.is_equal_approx(initial), "reset restores selected grip")
-				controls._move(0, 0.05)
-				var adjusted_position: Vector3 = player.weapon_node.position
-				controls._select(1)
-				controls._select(0)
-				_check(player.weapon_node.position.is_equal_approx(adjusted_position), "position survives pose selection")
-				controls._path = "user://grip-controls-test.json"
-				controls._action("Save all")
-				_check(not controls.visible and player.is_physics_processing(), "save hides controls and resumes gameplay")
-				_check(not player.get_meta("fixture_grip_preview", true), "save exits preview")
-				_check(FileAccess.file_exists(controls._path), "save writes rotations")
-				for enemy in get_tree().get_nodes_in_group("enemies"):
-					_check(enemy.is_physics_processing(), "save resumes enemy")
-				print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
-				get_tree().quit(0 if _ok else 1)
-		if _native_prefix in ["pmgb", "pwgbs"]:
-			var controls = preload("res://scripts/tools/gunblade_mode_controls.gd").new()
-			add_child(controls)
-			controls.setup(player)
-		print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
+		await _setup_fixture_controls(player)
 
 func _verify(player) -> void:
 	_check(player.is_on_floor() and absf(player.global_position.y) < 1.0, "player settles on actual Coliseum floor")
@@ -169,7 +86,10 @@ func _verify(player) -> void:
 	var enemies := get_tree().get_nodes_in_group("enemies")
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
-	for enemy in enemies: enemy.set_physics_process(false)
+	for enemy in enemies:
+		enemy.set_physics_process(false)
+		enemy.reveal()
+		enemy.hurtbox.monitorable = true
 	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
@@ -182,84 +102,18 @@ func _verify(player) -> void:
 		_check(player._weapon_attack_sound(player._get_equipped_weapon_type()) == expected_sound, "unarmed delayed release uses fist swing instead of saber sound")
 	else:
 		_check(player.weapon_node != null, "saber attached")
-	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]:
-		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
-		var surfaces: Array = []
-		player._collect_surfaces(player.weapon_node, surfaces)
-		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
-		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "handgun photon insert is solid colored, not additive white")
-		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
-		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
-	if _native_prefix in ["pmro", "pwro"]:
-		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "rod has no wrist glow")
-		var surfaces: Array = []
-		player._collect_surfaces(player.weapon_node, surfaces)
-		var tip: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
-		_check(tip.emission_enabled and tip.emission.g > tip.emission.r and tip.vertex_color_use_as_albedo, "rod tip emits green and preserves vertex coloring")
-		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled, "rod shaft remains non-emissive")
-	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
-	for clip in player.animation_player.get_animation_list():
-		_check(not str(clip).begins_with(wrong_prefix), "no opposite-gender native clip: " + str(clip))
-	var mapping: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/retarget/pso_animation_map.json"))
-	if DisplayServer.get_name() != "headless":
-		var camera := Camera3D.new()
-		add_child(camera)
-		camera.global_position = player.global_position + Vector3(3, 2, 4)
-		camera.look_at(player.global_position + Vector3.UP)
-		camera.current = true
-	var count := 0
-	for source_clip in mapping.mappings.values():
-		var source_prefix: String = str(Rules.profile(player).get("source_prefix", _pso_prefix))
-		if not str(source_clip).begins_with(source_prefix + "_"): continue
-		var clip: String = str(source_clip).replace(source_prefix, _pso_prefix)
-		count += 1
-		_check(player.animation_player.has_animation(clip), "clip " + clip)
-		if player.animation_player.has_animation(clip):
-			_verify_root(player.animation_player.get_animation(clip), clip)
-			player.animation_player.stop()
-			player.play_animation(clip, false)
-			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
-			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or str(clip).begins_with("pso_f_cl_") or str(clip).begins_with("pso_f_ds_") or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
-	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
-	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
-	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
-	for step in range(1, 4):
-		var clip := (_native_prefix + "_atk") + str(step)
-		var animation: Animation = player.animation_player.get_animation(clip)
-		player.animation_player.stop()
-		player.play_animation(clip, false)
-		player.animation_player.seek(animation.length * 0.35, true)
-		if OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _snapshot(clip)
-		var last_key := 0.0
-		for track in animation.get_track_count():
-			for key in animation.track_get_key_count(track):
-				last_key = maxf(last_key, animation.track_get_key_time(track, key))
-		_check(animation.length - last_key >= float(Rules.profile(player).get("recovery", Rules.RECOVERY)[step - 1]) - 0.002, "native swing holds recovery pose " + str(step))
+	_verify_weapon_materials(player)
+	await _verify_animation_inventory(player)
 	for evasion in [0, 50, 200]:
 		for attempt in range(30):
 			var result := CombatManager.apply_damage_to_enemy(30, 5, evasion, Rules.contact_accuracy(evasion))
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
-	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
-	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
-	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
-	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
-	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi", "pso_f_fi"]:
-		for target in enemies:
-			target.reveal()
-			target.hurtbox.monitorable = true
+	await _verify_weapon_contacts(player, enemies)
 	_verify_booma_detour(enemies[0])
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
-	if _pso_prefix in ["pso_la", "pso_f_la"]:
-		_verify_bazooka(player, enemies)
-	else:
-		await _verify_mixed_combos(player)
-		_verify_ready_recovery(player, enemy)
-		await _verify_feedback(player, enemy)
-		_verify_combo_outcomes(player, enemy)
-		await _verify_exchange(player, enemy)
+	await _verify_recovery_suite(player, enemies, enemy)
 	var saved_evasion: int = enemy.current_evasion
 	var saved_hp: int = enemy.current_hp
 	enemy.current_evasion = 500
@@ -652,45 +506,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	var spear := _native_prefix in ["pmsp", "pwsp"]
 	var weapon_type: int = player._get_equipped_weapon_type()
 	var target_cap := 3 if double_saber else 1
-	if double_saber:
-		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber uses owner-saved zero-rotation grip")
-		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_double_saber").glb_path and player.weapon_node_left == null, "native double saber attaches once at its central grip")
-	elif spear:
-		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_spear").glb_path and player.weapon_node_left == null, "native spear attaches once to right hand")
-	elif claw:
-		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")
-		_check(is_equal_approx(player.weapon_node.rotation_degrees.y, -4.0), "claw retains native grip")
-	else:
-		_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "multi-hit weapon attach to both hands")
-		var expected_left := Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0))
-		_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger uses owner-saved grip; right grip unchanged")
-		var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
-		_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
-		_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
-	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "multi-hit weapon uses explicit PSO run donor")
-	_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "multi-hit weapon run")
-	for role in ["run", "walk_ready", "wait", "block", "dam_h", "dam_d_wa", "dam_n", "dam_d", "pb"]:
-		var clip: String = _pso_prefix + "_" + str(role)
-		_check(player.animation_player.has_animation(clip), "explicit donor role exists: " + clip)
-		player.animation_player.stop()
-		player.play_animation(clip, true)
-		player.animation_player.seek(0.3, true)
-		player.animation_player.pause()
-		if spear and role in ["walk_ready", "wait", "run"]:
-			player.skeleton.force_update_all_bone_transforms()
-			var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
-			player._weapon_grip_tween.custom_step(1.0)
-			var tip: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3(0.5, 0, 0.8660254)).normalized()
-			var expected_tip := Vector3(1, 1, 0).normalized() if role == "wait" else Vector3.UP
-			_check(tip.dot(expected_tip) > 0.99, clip + " uses calibrated partisan carry angle")
-		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
-
-	if spear:
-		for clip in [str(Rules.profile(player).walk), _native_prefix + "_wait"]:
-			player._sword_grip_clip = ""
-			player.play_animation(clip, true)
-			player._weapon_grip_tween.custom_step(1.0)
-			_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "owner-saved spear grip applied: " + clip)
+	await _verify_multi_poses(player, claw, double_saber, spear)
 	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
 	player.player_rotation = 0
 	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 10)
@@ -853,61 +669,13 @@ func _verify_gunblade(player, enemies: Array) -> void:
 		player._saber_attack_cooldown = 0
 		player._recovery_left = 0
 		player.transition_to(player.PlayerState.IDLE)
-		var prefix := _native_prefix
 		if sequence == 7 and not handgun:
 			for clip in [_pso_prefix + "_gun_wait", _pso_prefix + "_gun_walk_ready", _pso_prefix + "_gun_run"]:
 				player.play_animation(clip, true)
 				player.animation_player.seek(0.3, true)
 				await _snapshot(clip)
 		for pattern in range(8):
-			for projectile in _slicer_projectiles(): projectile.free()
-			player._saber_attack_cooldown = 0
-			player.transition_to(player.PlayerState.IDLE)
-			player.player_rotation = 0
-			enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & 1 else 1.5)
-			if pattern & 1: player._start_strong_attack()
-			else: player._start_attack()
-			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during preparation")
-			player._handle_attack_state(Rules.READY_PREP)
-			for step in range(3):
-				var mode := 1 if sequence & (1 << step) else 0
-				prefix = _native_prefix + "_shot" if mode == 1 and not handgun else _native_prefix
-				_check(handgun or Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
-				enemy.current_hp = 10000
-				_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")
-				var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
-				player._attack_anim_elapsed = contact - 0.001
-				player._update_attack_contact(0)
-				_check(enemy.current_hp == 10000 and _slicer_projectiles().is_empty(), "no early gunblade contact or shot")
-				player._attack_anim_elapsed = contact + 0.001
-				player._update_attack_contact(contact - 0.001)
-				if mode == 0:
-					_check(enemy.current_hp < 10000 and _slicer_projectiles().is_empty(), "blade mode deals melee damage only")
-				else:
-					var shots := _slicer_projectiles()
-					_check(shots.size() == 1 and enemy.current_hp == 10000, "gun mode releases exactly one shot without melee damage")
-					if shots.size() == 1:
-						var shot: Projectile = shots[0]
-						shot.set_physics_process(false)
-						_check(bool(shot.attack_packet.prototype_strong) == bool(pattern & (1 << step)), "gunblade snapshots normal or strong state")
-						shot._on_area_entered(enemy.hurtbox)
-						_check(enemy.current_hp < 10000, "gunblade shot deals damage at impact")
-						shot.free()
-				player._update_attack_contact(contact)
-				_check(_slicer_projectiles().is_empty(), "gunblade does not release duplicate shot")
-				if pattern == 0 and step == 0:
-					player.animation_player.seek(0.3, true)
-					await _snapshot(prefix + "_attack_mode")
-				player._attack_anim_elapsed = player._attack_anim_length * 0.65
-				if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
-				if step < 2: enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & (1 << (step + 1)) else 1.5)
-				player._attack_step_finished()
-			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during finisher recovery")
-			_check(player.animation_player.current_animation == _pso_prefix + "_wait", "gunblade finisher uses blade ready stance after either action")
-			player._handle_attack_state(Rules.FINISHER_GUARD)
-			_check(Rules.idle_clip(player) == _native_prefix + "_wait", "gunblade defaults to blade idle after shooting")
-			_check(str(Rules.profile(player).run) == _pso_prefix + "_run", "gunblade defaults to blade locomotion")
-			_check(player._queued_combo == player.ComboQueue.NONE, "gunblade ends combo with no stale queued action")
+			await _verify_gunblade_pattern(player, enemy, handgun, sequence, pattern)
 	player.transition_to(player.PlayerState.IDLE)
 	player._saber_attack_cooldown = 0
 	player._start_attack()
@@ -1088,3 +856,241 @@ func _verify_bazooka(player, enemies: Array) -> void:
 	for i in enemies.size():
 		enemies[i].global_position = saved[i][0]
 		enemies[i].current_hp = saved[i][1]
+
+func _setup_fixture_controls(player) -> void:
+	if _native_prefix in ["pmda", "pwda", "pmds", "pwdss"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
+		add_child(controls)
+		controls.setup(player, _native_prefix in ["pmds", "pwdss"])
+		await get_tree().process_frame
+		await _snapshot("weapon_grip_controls")
+	if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro", "pwro", "pmwa", "pwwa"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
+		add_child(controls)
+		controls.setup(player)
+		if OS.get_environment("PSZ_SPEAR_CONTROLS_CHECK") == "1":
+			controls._selector.select(0)
+			controls._select(0)
+			var initial: Basis = player.weapon_node.basis
+			controls._rotate(1, 90)
+			var adjusted: Basis = player.weapon_node.basis
+			controls._select(1)
+			controls._select(0)
+			_check(player.weapon_node.basis.is_equal_approx(adjusted), "grip survives animation selection")
+			controls._toggle_preview(false)
+			player._weapon_grip_tween.custom_step(1.0)
+			_check(player.weapon_node.basis.is_equal_approx(adjusted), "gameplay applies selected idle grip")
+			controls._toggle_preview(true)
+			controls._action("Reset selected")
+			_check(player.weapon_node.basis.is_equal_approx(initial), "reset restores selected grip")
+			controls._move(0, 0.05)
+			var adjusted_position: Vector3 = player.weapon_node.position
+			controls._select(1)
+			controls._select(0)
+			_check(player.weapon_node.position.is_equal_approx(adjusted_position), "position survives pose selection")
+			controls._path = "user://grip-controls-test.json"
+			controls._action("Save all")
+			_check(not controls.visible and player.is_physics_processing(), "save hides controls and resumes gameplay")
+			_check(not player.get_meta("fixture_grip_preview", true), "save exits preview")
+			_check(FileAccess.file_exists(controls._path), "save writes rotations")
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				_check(enemy.is_physics_processing(), "save resumes enemy")
+			print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
+			get_tree().quit(0 if _ok else 1)
+	if _native_prefix in ["pmgb", "pwgbs"]:
+		var controls = preload("res://scripts/tools/gunblade_mode_controls.gd").new()
+		add_child(controls)
+		controls.setup(player)
+	print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
+
+
+func _verify_weapon_materials(player) -> void:
+	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]:
+		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
+		var surfaces: Array = []
+		player._collect_surfaces(player.weapon_node, surfaces)
+		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "handgun photon insert is solid colored, not additive white")
+		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
+		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
+	if _native_prefix in ["pmro", "pwro"]:
+		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "rod has no wrist glow")
+		var surfaces: Array = []
+		player._collect_surfaces(player.weapon_node, surfaces)
+		var tip: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(tip.emission_enabled and tip.emission.g > tip.emission.r and tip.vertex_color_use_as_albedo, "rod tip emits green and preserves vertex coloring")
+		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled, "rod shaft remains non-emissive")
+
+
+func _verify_animation_inventory(player) -> void:
+	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
+	for clip in player.animation_player.get_animation_list():
+		_check(not str(clip).begins_with(wrong_prefix), "no opposite-gender native clip: " + str(clip))
+	var mapping: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/retarget/pso_animation_map.json"))
+	if DisplayServer.get_name() != "headless":
+		var camera := Camera3D.new()
+		add_child(camera)
+		camera.global_position = player.global_position + Vector3(3, 2, 4)
+		camera.look_at(player.global_position + Vector3.UP)
+		camera.current = true
+	var count := 0
+	for source_clip in mapping.mappings.values():
+		var source_prefix: String = str(Rules.profile(player).get("source_prefix", _pso_prefix))
+		if not str(source_clip).begins_with(source_prefix + "_"): continue
+		var clip: String = str(source_clip).replace(source_prefix, _pso_prefix)
+		count += 1
+		_check(player.animation_player.has_animation(clip), "clip " + clip)
+		if player.animation_player.has_animation(clip):
+			_verify_root(player.animation_player.get_animation(clip), clip)
+			player.animation_player.stop()
+			player.play_animation(clip, false)
+			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
+			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or str(clip).begins_with("pso_f_cl_") or str(clip).begins_with("pso_f_ds_") or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
+	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
+	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
+	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
+	for step in range(1, 4):
+		var clip := (_native_prefix + "_atk") + str(step)
+		var animation: Animation = player.animation_player.get_animation(clip)
+		player.animation_player.stop()
+		player.play_animation(clip, false)
+		player.animation_player.seek(animation.length * 0.35, true)
+		if OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _snapshot(clip)
+		var last_key := 0.0
+		for track in animation.get_track_count():
+			for key in animation.track_get_key_count(track):
+				last_key = maxf(last_key, animation.track_get_key_time(track, key))
+		_check(animation.length - last_key >= float(Rules.profile(player).get("recovery", Rules.RECOVERY)[step - 1]) - 0.002, "native swing holds recovery pose " + str(step))
+
+
+func _verify_weapon_contacts(player, enemies) -> void:
+	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
+	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
+	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi", "pso_f_fi"]:
+		for target in enemies:
+			target.reveal()
+			target.hurtbox.monitorable = true
+
+
+func _fixture_sections() -> Array:
+	var sections := ColiseumRoster.make_sections("pso_booma")
+	if OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[-3.0,0.0,5.0]})
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[3.0,0.0,5.0]})
+	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber", "spear", "slicer"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[0.0,0.0,7.0]})
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer" and OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[2.0,0.0,7.0]})
+	return sections
+
+
+func _verify_recovery_suite(player, enemies: Array, enemy) -> void:
+	if _pso_prefix in ["pso_la", "pso_f_la"]:
+		_verify_bazooka(player, enemies)
+	else:
+		await _verify_mixed_combos(player)
+		_verify_ready_recovery(player, enemy)
+		await _verify_feedback(player, enemy)
+		_verify_combo_outcomes(player, enemy)
+		await _verify_exchange(player, enemy)
+
+
+func _verify_multi_poses(player, claw: bool, double_saber: bool, spear: bool) -> void:
+	_verify_multi_models(player, claw, double_saber, spear)
+	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "multi-hit weapon uses explicit PSO run donor")
+	_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "multi-hit weapon run")
+	for role in ["run", "walk_ready", "wait", "block", "dam_h", "dam_d_wa", "dam_n", "dam_d", "pb"]:
+		var clip: String = _pso_prefix + "_" + str(role)
+		_check(player.animation_player.has_animation(clip), "explicit donor role exists: " + clip)
+		player.animation_player.stop()
+		player.play_animation(clip, true)
+		player.animation_player.seek(0.3, true)
+		player.animation_player.pause()
+		if spear and role in ["walk_ready", "wait", "run"]:
+			player.skeleton.force_update_all_bone_transforms()
+			var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
+			player._weapon_grip_tween.custom_step(1.0)
+			var tip: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3(0.5, 0, 0.8660254)).normalized()
+			var expected_tip := Vector3(1, 1, 0).normalized() if role == "wait" else Vector3.UP
+			_check(tip.dot(expected_tip) > 0.99, clip + " uses calibrated partisan carry angle")
+		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
+
+	if spear:
+		for clip in [str(Rules.profile(player).walk), _native_prefix + "_wait"]:
+			player._sword_grip_clip = ""
+			player.play_animation(clip, true)
+			player._weapon_grip_tween.custom_step(1.0)
+			_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "owner-saved spear grip applied: " + clip)
+
+
+func _verify_multi_models(player, claw: bool, double_saber: bool, spear: bool) -> void:
+	if double_saber:
+		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber uses owner-saved zero-rotation grip")
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_double_saber").glb_path and player.weapon_node_left == null, "native double saber attaches once at its central grip")
+	elif spear:
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_spear").glb_path and player.weapon_node_left == null, "native spear attaches once to right hand")
+	elif claw:
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")
+		_check(is_equal_approx(player.weapon_node.rotation_degrees.y, -4.0), "claw retains native grip")
+	else:
+		_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "multi-hit weapon attach to both hands")
+		var expected_left := Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0))
+		_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger uses owner-saved grip; right grip unchanged")
+		var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
+		_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
+		_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
+
+
+func _verify_gunblade_pattern(player, enemy, handgun: bool, sequence: int, pattern: int) -> void:
+	var prefix := _native_prefix
+	for projectile in _slicer_projectiles(): projectile.free()
+	player._saber_attack_cooldown = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player.player_rotation = 0
+	enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & 1 else 1.5)
+	if pattern & 1: player._start_strong_attack()
+	else: player._start_attack()
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during preparation")
+	player._handle_attack_state(Rules.READY_PREP)
+	for step in range(3):
+		var mode := 1 if sequence & (1 << step) else 0
+		prefix = _native_prefix + "_shot" if mode == 1 and not handgun else _native_prefix
+		_check(handgun or Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
+		enemy.current_hp = 10000
+		_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")
+		var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(enemy.current_hp == 10000 and _slicer_projectiles().is_empty(), "no early gunblade contact or shot")
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		if mode == 0:
+			_check(enemy.current_hp < 10000 and _slicer_projectiles().is_empty(), "blade mode deals melee damage only")
+		else:
+			var shots := _slicer_projectiles()
+			_check(shots.size() == 1 and enemy.current_hp == 10000, "gun mode releases exactly one shot without melee damage")
+			if shots.size() == 1:
+				var shot: Projectile = shots[0]
+				shot.set_physics_process(false)
+				_check(bool(shot.attack_packet.prototype_strong) == bool(pattern & (1 << step)), "gunblade snapshots normal or strong state")
+				shot._on_area_entered(enemy.hurtbox)
+				_check(enemy.current_hp < 10000, "gunblade shot deals damage at impact")
+				shot.free()
+		player._update_attack_contact(contact)
+		_check(_slicer_projectiles().is_empty(), "gunblade does not release duplicate shot")
+		if pattern == 0 and step == 0:
+			player.animation_player.seek(0.3, true)
+			await _snapshot(prefix + "_attack_mode")
+		player._attack_anim_elapsed = player._attack_anim_length * 0.65
+		if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
+		if step < 2: enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & (1 << (step + 1)) else 1.5)
+		player._attack_step_finished()
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during finisher recovery")
+	_check(player.animation_player.current_animation == _pso_prefix + "_wait", "gunblade finisher uses blade ready stance after either action")
+	player._handle_attack_state(Rules.FINISHER_GUARD)
+	_check(Rules.idle_clip(player) == _native_prefix + "_wait", "gunblade defaults to blade idle after shooting")
+	_check(str(Rules.profile(player).run) == _pso_prefix + "_run", "gunblade defaults to blade locomotion")
+	_check(player._queued_combo == player.ComboQueue.NONE, "gunblade ends combo with no stale queued action")

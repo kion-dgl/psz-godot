@@ -45,62 +45,41 @@ const FEMALE_SPEAR_PROFILE := {"library": "res://assets/player/animations/pso_fe
 const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_male_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_m.glb", "prefix": "pso_ds", "native_prefix": "pmds", "walk": "pmsa_walk", "run": "pso_ds_run", "source_count": 5, "class_id": "humar", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
+const WEAPON_PROFILES := {
+	WeaponData.WeaponType.SABER: [MALE_PROFILE, FEMALE_PROFILE],
+	WeaponData.WeaponType.SWORD: [MALE_SWORD_PROFILE, FEMALE_SWORD_PROFILE],
+	WeaponData.WeaponType.DAGGERS: [MALE_DAGGER_PROFILE, FEMALE_DAGGER_PROFILE],
+	WeaponData.WeaponType.CLAW: [MALE_CLAW_PROFILE, FEMALE_CLAW_PROFILE],
+	WeaponData.WeaponType.DOUBLE_SABER: [MALE_DOUBLE_PROFILE, FEMALE_DOUBLE_PROFILE],
+	WeaponData.WeaponType.SPEAR: [MALE_SPEAR_PROFILE, FEMALE_SPEAR_PROFILE],
+	WeaponData.WeaponType.SLICER: [MALE_SLICER_PROFILE, FEMALE_SLICER_PROFILE],
+	WeaponData.WeaponType.GUN_BLADE: [MALE_GUNBLADE_PROFILE, FEMALE_GUNBLADE_PROFILE],
+	WeaponData.WeaponType.HANDGUN: [MALE_HANDGUN_PROFILE, FEMALE_HANDGUN_PROFILE],
+	WeaponData.WeaponType.MECH_GUN: [MALE_MECHGUN_PROFILE, FEMALE_MECHGUN_PROFILE],
+	WeaponData.WeaponType.RIFLE: [MALE_RIFLE_PROFILE, FEMALE_RIFLE_PROFILE],
+	WeaponData.WeaponType.BAZOOKA: [MALE_BAZOOKA_PROFILE, FEMALE_BAZOOKA_PROFILE],
+	WeaponData.WeaponType.LASER_CANNON: [MALE_BAZOOKA_PROFILE, FEMALE_BAZOOKA_PROFILE],
+	WeaponData.WeaponType.ROD: [MALE_ROD_PROFILE, FEMALE_ROD_PROFILE],
+	WeaponData.WeaponType.WAND: [MALE_WAND_PROFILE, FEMALE_WAND_PROFILE],
+}
+
 static func profile(player) -> Dictionary:
 	if player._is_barehanded(): return FEMALE_UNARMED_PROFILE if player._is_female else MALE_UNARMED_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.WAND: return FEMALE_WAND_PROFILE if player._is_female else MALE_WAND_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD: return FEMALE_ROD_PROFILE if player._is_female else MALE_ROD_PROFILE
-	if player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]: return FEMALE_BAZOOKA_PROFILE if player._is_female else MALE_BAZOOKA_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE: return FEMALE_RIFLE_PROFILE if player._is_female else MALE_RIFLE_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN: return FEMALE_MECHGUN_PROFILE if player._is_female else MALE_MECHGUN_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.HANDGUN: return FEMALE_HANDGUN_PROFILE if player._is_female else MALE_HANDGUN_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE:
-		var base: Dictionary = FEMALE_GUNBLADE_PROFILE if player._is_female else MALE_GUNBLADE_PROFILE
-		if gun_mode(player):
-			var shooting := base.duplicate(true)
-			shooting["attack_prefix"] = str(base.native_prefix) + "_shot"
-			shooting["hit_fracs"] = [[0.35], [0.35], [0.35]]
-			return shooting
-		return base
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: return FEMALE_SLICER_PROFILE if player._is_female else MALE_SLICER_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR: return FEMALE_SPEAR_PROFILE if player._is_female else MALE_SPEAR_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER: return FEMALE_DOUBLE_PROFILE if player._is_female else MALE_DOUBLE_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW: return FEMALE_CLAW_PROFILE if player._is_female else MALE_CLAW_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS: return FEMALE_DAGGER_PROFILE if player._is_female else MALE_DAGGER_PROFILE
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD:
-		return FEMALE_SWORD_PROFILE if player._is_female else MALE_SWORD_PROFILE
-	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
+	var pair: Array = WEAPON_PROFILES.get(player._get_equipped_weapon_type(), WEAPON_PROFILES[WeaponData.WeaponType.SABER])
+	var base: Dictionary = pair[1 if player._is_female else 0]
+	if gun_mode(player):
+		var shooting := base.duplicate(true)
+		shooting["attack_prefix"] = str(base.native_prefix) + "_shot"
+		shooting["hit_fracs"] = [[0.35], [0.35], [0.35]]
+		return shooting
+	return base
 
 static func profile_for_library(path: String) -> Dictionary:
-	if path == FEMALE_UNARMED_PROFILE.library: return FEMALE_UNARMED_PROFILE
-	if path == MALE_UNARMED_PROFILE.library: return MALE_UNARMED_PROFILE
-	if path == FEMALE_WAND_PROFILE.library: return FEMALE_WAND_PROFILE
-	if path == MALE_WAND_PROFILE.library: return MALE_WAND_PROFILE
-	if path == FEMALE_ROD_PROFILE.library: return FEMALE_ROD_PROFILE
-	if path == MALE_ROD_PROFILE.library: return MALE_ROD_PROFILE
-	if path == FEMALE_BAZOOKA_PROFILE.library: return FEMALE_BAZOOKA_PROFILE
-	if path == MALE_BAZOOKA_PROFILE.library: return MALE_BAZOOKA_PROFILE
-	if path == FEMALE_RIFLE_PROFILE.library: return FEMALE_RIFLE_PROFILE
-	if path == MALE_RIFLE_PROFILE.library: return MALE_RIFLE_PROFILE
-	if path == FEMALE_MECHGUN_PROFILE.library: return FEMALE_MECHGUN_PROFILE
-	if path == MALE_MECHGUN_PROFILE.library: return MALE_MECHGUN_PROFILE
-	if path == FEMALE_HANDGUN_PROFILE.library: return FEMALE_HANDGUN_PROFILE
-	if path == MALE_HANDGUN_PROFILE.library: return MALE_HANDGUN_PROFILE
-	if path == FEMALE_GUNBLADE_PROFILE.library: return FEMALE_GUNBLADE_PROFILE
-	if path == MALE_GUNBLADE_PROFILE.library: return MALE_GUNBLADE_PROFILE
-	if path == FEMALE_SLICER_PROFILE.library: return FEMALE_SLICER_PROFILE
-	if path == MALE_SLICER_PROFILE.library: return MALE_SLICER_PROFILE
-	if path == FEMALE_SPEAR_PROFILE.library: return FEMALE_SPEAR_PROFILE
-	if path == MALE_SPEAR_PROFILE.library: return MALE_SPEAR_PROFILE
-	if path == FEMALE_DOUBLE_PROFILE.library: return FEMALE_DOUBLE_PROFILE
-	if path == MALE_DOUBLE_PROFILE.library: return MALE_DOUBLE_PROFILE
-	if path == FEMALE_CLAW_PROFILE.library: return FEMALE_CLAW_PROFILE
-	if path == MALE_CLAW_PROFILE.library: return MALE_CLAW_PROFILE
-	if path == FEMALE_DAGGER_PROFILE.library: return FEMALE_DAGGER_PROFILE
-	if path == MALE_DAGGER_PROFILE.library: return MALE_DAGGER_PROFILE
-	if path == FEMALE_SWORD_PROFILE.library: return FEMALE_SWORD_PROFILE
-	if path == MALE_SWORD_PROFILE.library: return MALE_SWORD_PROFILE
-	if path == LIBRARY: return MALE_PROFILE
-	if path == FEMALE_LIBRARY: return FEMALE_PROFILE
+	for candidate in [MALE_UNARMED_PROFILE, FEMALE_UNARMED_PROFILE]:
+		if candidate.library == path: return candidate
+	for pair in WEAPON_PROFILES.values():
+		for candidate in pair:
+			if candidate.library == path: return candidate
 	return {}
 
 static func ready_clip(player) -> String:
@@ -124,24 +103,9 @@ const CHAIN: Array[float] = [0.55, 0.95]
 static func enabled(player) -> bool:
 	if OS.get_environment("PSZ_HUMAR_SABER") != "1": return false
 	var character = CharacterManager.get_active_character()
-	if player._is_barehanded():
-		return character != null and character.get("class_id", "") in ["humar", "humarl"] and SessionManager.get_location() == "field" and SessionManager.get_session().get("quest_id", "") == "debug_coliseum"
-	return SessionManager.get_location() == "field" and character != null and character.get("class_id", "") in ["humar", "humarl"] \
-		and SessionManager.get_session().get("quest_id", "") == "debug_coliseum" \
-		and not player._is_barehanded() and (player._get_equipped_weapon_type() == WeaponData.WeaponType.SABER \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SWORD \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DAGGERS \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.HANDGUN \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE \
-		 or (player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]) \
-		 or (player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD) \
-		 or (player._get_equipped_weapon_type() == WeaponData.WeaponType.WAND))
+	if character == null or character.get("class_id", "") not in ["humar", "humarl"]: return false
+	if SessionManager.get_location() != "field" or SessionManager.get_session().get("quest_id", "") != "debug_coliseum": return false
+	return player._is_barehanded() or WEAPON_PROFILES.has(player._get_equipped_weapon_type())
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
