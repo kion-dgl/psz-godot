@@ -485,3 +485,5 @@ Bazooka PSO 51 launcher-firing rotation saved as a default; no firing position o
 Bazooka PSO 53 block rotation saved as a default, preserving earlier calibrations. Next calibration: light damage, PSO 58.
 
 Bazooka PSO 58 light-damage rotation saved as a default, preserving earlier calibrations. Next calibration: big damage, PSO 56.
+
+Bazooka PSO 56 big-damage grip accepted without adjustment. Next calibration: fall down, using the explicit PSO saber 108 donor.
