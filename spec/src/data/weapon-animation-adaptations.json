@@ -1010,7 +1010,7 @@
           "pmsl_tec"
         ]
       },
-      "status": "Gameplay feel accepted; grip and projectile follow-up pending owner review"
+      "status": "Owner-approved at 419f0c80"
     },
     {
       "id": "A07-F",
@@ -1019,9 +1019,10 @@
       "path": "assets/player/animations/slicer_w.glb",
       "prefix": "pwsls",
       "donors": [
-        "sl"
+        "sl",
+        "sa"
       ],
-      "note": "Thrown blade: preserve projectile release, return and bounce semantics.",
+      "note": "Explicit shared slicer donors 152\u2013164 retargeted to female skeleton; not claimed female source IDs. Female saber 328 casting, 333 block, 342 run; general female walk 412. Native pwsls idle/attacks/dodge/defeat. Approved common grip and traveling four-target blade; release 1=10/33, releases 2/3 provisional .40/.45.",
       "sha256": "a9d532536fd3368c223615ee5cf28bc605326b3a468ae26c7e12e702dbfbf3bc",
       "clips": [
         "dummy1",
@@ -1089,7 +1090,7 @@
           "pwsls_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
     },
     {
       "id": "A08-M",

@@ -43,8 +43,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_pa" if female else "pso_pa"
 		CharacterManager._characters[0].equipment.weapon = "ein_spear"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer":
-		_native_prefix = "pmsl"
-		_pso_prefix = "pso_sl"
+		_native_prefix = "pwsls" if female else "pmsl"
+		_pso_prefix = "pso_f_sl" if female else "pso_sl"
 		CharacterManager._characters[0].equipment.weapon = "ein_slicer"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -91,7 +91,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -120,7 +120,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl"]:
+	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -172,7 +172,7 @@ func _verify(player) -> void:
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
-	if _native_prefix == "pmsl": await _verify_slicer(player, enemies)
+	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -347,7 +347,7 @@ func _verify_mixed_combos(player) -> void:
 		for step in range(1, 4):
 			var clip := (_native_prefix + "_atk") + str(step)
 			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
-			if _native_prefix == "pmsl":
+			if _native_prefix in ["pmsl", "pwsls"]:
 				player._weapon_grip_tween.custom_step(1.0)
 				_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.SLICER_GRIP.orthonormalized()), "slicer combo preserves shared grip")
 			if _native_prefix in ["pmsp", "pwsp"]:

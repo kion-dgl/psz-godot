@@ -37,9 +37,8 @@ def main():
         library = 'pso_female_spear.glb' if args.gender == 'female' else 'pso_male_spear.glb'
         bake_flag = '--female-spear' if args.gender == 'female' else '--male-spear'
     if args.weapon == 'slicer':
-        if args.gender == 'female':
-            parser.error('Female slicer is not adapted yet')
-        library, bake_flag = 'pso_male_slicer.glb', '--male-slicer'
+        library = 'pso_female_slicer.glb' if args.gender == 'female' else 'pso_male_slicer.glb'
+        bake_flag = '--female-slicer' if args.gender == 'female' else '--male-slicer'
         if not (ROOT / 'assets/weapons/wslc01/wslc01/wslc01_3_o/wslc01_3_o.glb').exists():
             parser.error('Fetch projectile asset: sh scripts/tools/fetch_slicer_projectile.sh, then import with Godot')
     if not (ROOT / 'assets/player/animations' / library).exists():
@@ -58,7 +57,7 @@ def main():
         env["PSZ_DAGGER_GRIP_PATH"] = str(ROOT / ".godot" / ("dagger-female-left-grip.json" if args.gender == "female" else "dagger-left-grip.json"))
         env["PSZ_DOUBLE_SABER_GRIP_PATH"] = str(ROOT / ".godot" / ("double-saber-female-grip.json" if args.gender == "female" else "double-saber-grip.json"))
         env["PSZ_SPEAR_GRIP_PATH"] = str(ROOT / ".godot" / ("spear-female-grips.json" if args.gender == "female" else "spear-male-grips.json"))
-        env["PSZ_SLICER_GRIP_PATH"] = str(ROOT / ".godot" / "slicer-male-grips.json")
+        env["PSZ_SLICER_GRIP_PATH"] = str(ROOT / ".godot" / ("slicer-female-grips.json" if args.gender == "female" else "slicer-male-grips.json"))
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
             command += ['--headless']

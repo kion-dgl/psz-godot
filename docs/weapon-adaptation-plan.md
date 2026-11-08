@@ -356,3 +356,21 @@ The prototype equips Ein Slicer (`wslc01_1_o`) and uses the alternate `wslc01_3_
 The new prototype-only `slicer_projectile.gd` follows physical travel between targets, retains released strong-hit state, excludes already-hit/dead/hidden enemies, and respects the total range budget. Five-enemy checks simulate the projectile sweep between impacts and reject instant area damage and fifth-target hits.
 
 The owner-saved slicer relaxed-idle grip is now the common fixture grip for all slicer animations, including spawn, movement, ready, attacks and reactions. The attachment and attack/idle transition paths preserve it. Per-pose panel overrides remain available for future exceptions.
+
+## Female — Slicer playtest
+
+Male slicer owner-approved at `419f0c80`. Launch `python3 scripts/tools/run_humar_saber.py --weapon slicer --gender female --group --no-grip-controls` for five-enemy gameplay. Omit `--no-grip-controls` for adjustment controls; female saves are isolated in `.godot/slicer-female-grips.json`. Bake via `cd web && node scripts/bake-retarget.mjs --female-slicer`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks / dodge / defeated hold | Female native `pwsls_wait`, `pwsls_atk1/2/3`, `pwsls_esc_f`, `pwsls_dam_d_lp` |
+| Normal walk / run | General female 412 (`pwsa_walk`) / female saber 342 |
+| Casting / block | Female saber 328 / 333 |
+| Caution / ready | Shared male slicer 152 / 156, retargeted to HUmarl |
+| Light / heavy / fall / get up / photon blast | Shared slicer 162 / 160 / 163 / 161 / 164 |
+
+Shared slicer donor IDs are explicit, not claimed female source discoveries. The runtime prefix is `pso_f_sl`, with `source_prefix: pso_sl` for the audited mapping. Native female source data also provides only the first release marker (10/33); attacks 2/3 retain the approved provisional 0.40/0.45 timings.
+
+The approved common hand grip applies to every female pose and combo. Traveling blade, four-target maximum, impact-only damage, strong feedback and interrupted-release cancellation are shared with the approved male behavior. Five-enemy checks and male regression passed; rendered ready/attack poses reviewed. Owner playtest and asset publication remain pending.
+
+Female slicer library SHA-256: `f3ba1d06c998e51ad2e2db21580adcb2e891d46faa27ba35675cde0c09a0b05b`.

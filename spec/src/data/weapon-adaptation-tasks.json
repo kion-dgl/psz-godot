@@ -88,7 +88,7 @@
       "Attach hit feedback to actual projectile damage, not release or swing end."
     ],
     "acceptance": "No double release or phantom impact; interruption does not emit a delayed blade.",
-    "status": "Male implemented; focused checks passed; owner playtest pending. Female planned."
+    "status": "Male owner-approved at 419f0c80; female implemented; focused checks passed, owner playtest pending"
   },
   {
     "id": "A08",
