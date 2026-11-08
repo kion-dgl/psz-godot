@@ -2538,7 +2538,7 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
@@ -3270,7 +3270,7 @@ func _fire_projectile(atk: Dictionary) -> void:
 			forward = aim.normalized()
 
 	for _i in range(int(atk.get("hits", 1))):
-		var proj := Projectile.new()
+		var proj: Projectile = preload("res://scripts/3d/combat/slicer_projectile.gd").new() if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SLICER else Projectile.new()
 		proj.attack_packet = atk.duplicate(true)
 		proj.attack_packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
 		proj.attack_packet["element"] = _current_attack_element if _is_special_attack else ""

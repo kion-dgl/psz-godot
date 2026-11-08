@@ -91,7 +91,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -172,7 +172,7 @@ func _verify(player) -> void:
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
-	if _native_prefix == "pmsl": _verify_slicer(player, enemies)
+	if _native_prefix == "pmsl": await _verify_slicer(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -679,7 +679,7 @@ func _verify_slicer(player, enemies: Array) -> void:
 	for step in range(3):
 		for projectile in _slicer_projectiles(): projectile.free()
 		for i in enemies.size():
-			enemies[i].global_position = player.global_position + Vector3(0, 0, 3.0 + 0.2 * i)
+			enemies[i].global_position = player.global_position + Vector3(0.8 * (i % 2), 0, 3.0 + 0.65 * i)
 			enemies[i].current_hp = 10000
 		player._saber_attack_cooldown = 0
 		player._recovery_left = 0
@@ -700,11 +700,22 @@ func _verify_slicer(player, enemies: Array) -> void:
 		if projectiles.size() != 1: continue
 		var projectile: Projectile = projectiles[0]
 		projectile.set_physics_process(false)
+		_check(is_instance_valid(projectile._blade), "slicer projectile uses alternate native model")
+		if step == 0: await _snapshot("slicer_projectile_model")
 		_check(enemies[0].current_hp == 10000, "slicer release does not cause phantom melee damage")
 		_check(projectile.pierce and projectile.max_hits == 4 and is_equal_approx(projectile.bounce_radius, 3.0), "slicer preserves piercing and four-target bounce budget")
 		player._update_attack_contact(contact)
 		_check(_slicer_projectiles().size() == 1, "slicer release cannot repeat next frame")
+		await get_tree().physics_frame
+		projectile.global_position = enemies[0].global_position + Vector3.UP
 		projectile._on_area_entered(enemies[0].hurtbox)
+		if enemies.size() > 1: _check(enemies[1].current_hp == 10000, "slicer bounce does not apply instant area damage")
+		var impact_hp: int = enemies[0].current_hp
+		projectile._on_area_entered(enemies[0].hurtbox)
+		_check(enemies[0].current_hp == impact_hp, "slicer cannot damage same enemy twice")
+		for tick in range(180):
+			if projectile._spent: break
+			projectile._physics_process(1.0 / 60.0)
 		var hit_count := 0
 		for enemy in enemies:
 			if enemy.current_hp < 10000: hit_count += 1

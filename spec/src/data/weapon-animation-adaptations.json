@@ -942,7 +942,7 @@
         "sl",
         "sa"
       ],
-      "note": "PSO slicer 152 caution, 156 ready, 160 heavy, 161 get up, 162 light, 163 fall, 164 photon blast; explicit saber 98 casting, 103 block, 111 run; general male walk 200. Native pmsl idle/attacks/dodge/defeat. Projectile release 1 uses 10/33; releases 2/3 provisional at .40/.45. Existing pierce/bounce limit four targets preserved.",
+      "note": "PSO slicer 152 caution, 156 ready, 160 heavy, 161 get up, 162 light, 163 fall, 164 photon blast; explicit saber 98 casting, 103 block, 111 run; general male walk 200. Native pmsl idle/attacks/dodge/defeat. Projectile release 1 uses 10/33; releases 2/3 provisional at .40/.45. Prototype blade now travels between up to four targets; alternate wslc01_3_o model. Per-animation grip panel available.",
       "sha256": "d2268f51a56efd2f2ea6faf0e5a226b11795f25dd6bfaf699d599ff4b76dce8e",
       "clips": [
         "dummy1",
@@ -1010,7 +1010,7 @@
           "pmsl_tec"
         ]
       },
-      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
+      "status": "Gameplay feel accepted; grip and projectile follow-up pending owner review"
     },
     {
       "id": "A07-F",

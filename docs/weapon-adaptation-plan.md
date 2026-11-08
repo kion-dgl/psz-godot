@@ -333,8 +333,24 @@ Female spear owner-approved at `d1a2cfa5`. Launch `python3 scripts/tools/run_hum
 
 Native PSZ Ein Slicer is equipped. One projectile releases per swing. Step 1 uses decoded `16_slicer_m` frame 10/33; steps 2 and 3 have no decoded release marker and use provisional fractions 0.40 / 0.45 for owner tuning. Holds remain 0.14 / 0.16 / 0.22 seconds, with the shared normal/strong continuation window.
 
-Preserve existing projectile speed 20, reach 8, piercing, bounce radius 3 and four-target maximum. Existing projectile behavior does not include a returning blade; this adaptation does not add one. Strong feedback is snapshotted into the projectile and occurs at impact. Release does not cause melee damage.
+Prototype projectile speed remains 20, total travel budget 8, bounce radius 3 and four-target maximum. The blade now travels to the nearest eligible enemy after each impact instead of immediately damaging neighbors. It stops when there is no eligible next target or its hit/range budget is exhausted. Existing campaign projectile behavior is unchanged; no returning blade is added. Strong feedback is snapshotted into the projectile and occurs at impact. Release does not cause melee damage.
 
 Focused checks cover one release per swing, no early/duplicate release, impact-only damage, four-target cap against five enemies, no repeated damage to one enemy, strong impact flinch and interrupted-swing cancellation. Owner playtest and asset publication remain pending.
 
 Local male slicer library SHA-256: `f70cbd88cc34b9410dc4df586305afe8ef2ae3bd9b26520c3e7e5a6ebca7ede0`.
+
+### Slicer grip and projectile follow-up
+
+The interactive slicer fixture now offers the per-animation grip panel; saves go to `.godot/slicer-male-grips.json`. Use `--group` to test against five enemies, then uncheck Preview to resume combat. Gameplay feel was accepted, but male slicer remains unchecked until grip/projectile review is complete.
+
+The published [weapon storybook](https://kion-dgl.github.io/psz-godot/tools/storybook/weapons/) lists these alternate variants:
+
+| Family | Listed variants |
+| --- | --- |
+| wslc01 / wslc02 / wsln01 | `_1_o`, `_3_o` |
+| wslr01 / wslr02 / wslr03 | `_1_o`, `_2_o` |
+| wslr04 / wslr05 | `_1_o` only |
+
+The prototype equips Ein Slicer (`wslc01_1_o`) and uses the alternate `wslc01_3_o` mesh as its spinning thrown blade. Other families are inventoried, not yet wired or verified as projectile models. Fetch the ignored GLB and PNG with `sh scripts/tools/fetch_slicer_projectile.sh`, then import with Godot. GLB SHA-256: `ddbfb0b411174de47b23e2e0a6c3206a178b6def106cf900f1d809c4ff3743dc`; PNG: `33cb37ed51c858759db4d39bed0bf8b0ed11f52f341a407376ebae921ecdb4c8`.
+
+The new prototype-only `slicer_projectile.gd` follows physical travel between targets, retains released strong-hit state, excludes already-hit/dead/hidden enemies, and respects the total range budget. Five-enemy checks simulate the projectile sweep between impacts and reject instant area damage and fifth-target hits.

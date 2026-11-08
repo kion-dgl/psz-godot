@@ -16,10 +16,12 @@ var _clips := ["pmsp_wait", "pmsa_walk", "pso_pa_walk_ready", "pso_pa_wait", "ps
 
 func setup(player: Node3D) -> void:
 	_player = player
+	var slicer: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER
+	if slicer: _clips = ["pmsl_wait", "pmsa_walk", "pso_sl_walk_ready", "pso_sl_wait", "pso_sl_run", "pmsl_atk1", "pmsl_atk2", "pmsl_atk3", "pso_sl_block"]
 	if player._is_female:
 		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa")
 	_blade = player.weapon_node
-	_path = OS.get_environment("PSZ_SPEAR_GRIP_PATH")
+	_path = OS.get_environment("PSZ_SLICER_GRIP_PATH" if slicer else "PSZ_SPEAR_GRIP_PATH")
 	if FileAccess.file_exists(_path):
 		var data = JSON.parse_string(FileAccess.get_file_as_string(_path))
 		if data is Dictionary:
@@ -36,10 +38,11 @@ func setup(player: Node3D) -> void:
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	var title := Label.new()
-	title.text = "Spear grip — separate rotation for each animation"
+	title.text = ("Slicer" if slicer else "Spear") + " grip — separate rotation for each animation"
 	box.add_child(title)
 	_selector = OptionButton.new()
 	var labels := ["Relaxed idle — PSZ pmsp_wait", "Normal walk — pmsa_walk", "Caution walk — PSO 145", "Weapon ready — PSO 143", "Run — PSO 151", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 144", "Source walk — PSO 145 (comparison)"]
+	if slicer: labels = ["Relaxed idle — PSZ", "Normal walk", "Caution walk — PSO 152", "Weapon ready — PSO 156", "Run — PSO 111", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 103"]
 	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)
