@@ -2573,6 +2573,9 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 	"pwsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
 }
 
+const BAZOOKA_SAVED_GRIPS := {"pso_la_wait": Basis(Vector3(0.968235611916, -0.212356060743, -0.132005557418), Vector3(0.216287791729, 0.976198792458, 0.0160293448716), Vector3(0.125459432602, -0.0440712608397, 0.991119503975))}
+const BAZOOKA_SAVED_POSITIONS := {"pso_la_wait": Vector3(0.179999992251, -0.10000000149, 0)}
+
 const RIFLE_SAVED_GRIPS := {
 	"pso_ri_walk": Basis(Vector3(-0.00575462682173, 0.0842527225614, 0.0311185922474), Vector3(-0.0873582139611, -0.0124950716272, 0.0176753010601), Vector3(0.0208669006824, -0.0290749985725, 0.0825785547495)),
 	"pmar_atk1": Basis(Vector3(0.00515774590895, 0.0865135490894, 0.024265255779), Vector3(-0.085670851171, -0.00259306188673, 0.0274550616741), Vector3(0.0270906314254, -0.0246714632958, 0.0822035074234)),
@@ -2606,6 +2609,8 @@ func _set_sword_pose_hold(clip: String) -> void:
 		var degrees: Vector3 = hold.rot
 		native = Quaternion.from_euler(degrees * PI / 180.0)
 		weapon_node.position = hold.pos
+		if BAZOOKA_SAVED_GRIPS.has(clip): native = BAZOOKA_SAVED_GRIPS[clip].get_rotation_quaternion()
+		if BAZOOKA_SAVED_POSITIONS.has(clip): weapon_node.position = BAZOOKA_SAVED_POSITIONS[clip]
 		var positions: Dictionary = get_meta("fixture_grip_positions", {})
 		if positions.has(clip): weapon_node.position = positions[clip]
 	var rifle_grip_key := clip.replace("pwars_", "pmar_").replace("pso_f_ri_", "pso_ri_")
