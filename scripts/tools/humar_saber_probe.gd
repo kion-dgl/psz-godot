@@ -1051,6 +1051,7 @@ func _verify_bazooka(player, enemies: Array) -> void:
 			shot.free()
 		player._attack_step_finished()
 		_check(player._saber_phase == "guard_recovery", "single bazooka shot completes into ready recovery")
+		_check(player.animation_player.current_animation == Rules.ready_clip(player), "bazooka recovery uses selected shot-ready role")
 		player._handle_attack_state(Rules.FINISHER_GUARD)
 		_check(player.current_state == player.PlayerState.IDLE, "bazooka returns to idle")
 	player._start_attack()

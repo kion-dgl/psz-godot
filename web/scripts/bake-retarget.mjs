@@ -430,11 +430,13 @@ async function main() {
   if (maleSlicer) targets[0].anims.push(...[[98, 'tec'], [103, 'block'], [111, 'run']].map(([index, role]) => ({ index, name: 'pso_sl_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
   if (femaleSlicer) targets[0].anims.push(...[[328, 'tec'], [333, 'block'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_sl_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
   if (femaleBazooka) {
+    targets[0].anims.find(clip => clip.name === 'pso_f_la_wait').index = 276;
     targets[0].anims.find(clip => clip.name === 'pso_f_la_walk').index = 278;
     targets[0].anims.find(clip => clip.name === 'pso_f_la_run').index = 285;
     targets[0].anims.push({ index: 339, name: 'pso_f_la_dam_d', offsets: F_WALK_OFFSETS });
   }
   if (maleBazooka) {
+    targets[0].anims.find(clip => clip.name === 'pso_la_wait').index = 39;
     // Heavy two-handed locomotion: owner-selected shot donors, retaining role aliases.
     targets[0].anims.find(clip => clip.name === 'pso_la_walk').index = 41;
     targets[0].anims.find(clip => clip.name === 'pso_la_run').index = 48;

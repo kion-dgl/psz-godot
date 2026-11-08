@@ -507,3 +507,5 @@ Male bazooka owner-approved for this pass at `23bffd41`; remaining small grip ad
 Female bazooka uses native female rifle `pwars` idle/fire/dodge/defeat as the same explicit donor approach. PSO female launcher 286–298 supplies stances/reactions, with shot walk 278 and run 285 replacing launcher locomotion, and saber fall 339 filling the missing fall role. Saved male grips map onto female role names as initial defaults; independent female adjustment files are supported. Existing single-shot/splash behavior is retained. Run `python3 scripts/tools/run_humar_saber.py --weapon bazooka --gender female --group --no-grip-controls`. Bake with `--female-bazooka`. Female owner approval pending.
 
 Female library SHA-256: `7e70838e57f5a9aab97acc377eb80592d0c6c2b340b0fffe8bd372edf250aa47`.
+
+Bazooka ready stance revised for both genders: male PSO shot 39 and female shot 276 replace launcher 52/289 under the existing ready-role aliases. Both start from the approved idle rotation and default idle position. This changes both pre-shot preparation and post-shot guard recovery while retaining their timing; relaxed idle is unchanged. Re-bake both bazooka libraries before testing.
