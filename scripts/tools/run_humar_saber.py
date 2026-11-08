@@ -42,9 +42,7 @@ def main():
         if not (ROOT / 'assets/weapons/wslc01/wslc01/wslc01_3_o/wslc01_3_o.glb').exists():
             parser.error('Fetch projectile asset: sh scripts/tools/fetch_slicer_projectile.sh, then import with Godot')
     if args.weapon == 'gunblade':
-        if args.gender == 'female':
-            parser.error('Female gunblade is not adapted yet')
-        library, bake_flag = 'pso_male_gunblade.glb', '--male-gunblade'
+        library, bake_flag = 'pso_' + args.gender + '_gunblade.glb', '--' + args.gender + '-gunblade'
     if not (ROOT / 'assets/player/animations' / library).exists():
         parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:

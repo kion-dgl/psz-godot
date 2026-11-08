@@ -101,7 +101,7 @@
       "Test all eight slash/shot sequences with every normal/strong combination; commit each action through its windup and cancel releases on interruption."
     ],
     "acceptance": "No stale-mode shot, wrong pose or doubled damage; M/F grip and shooting alignment approved.",
-    "status": "Male owner-approved at 762e6e5e, including automatic mixed combos and common grip. Female planned."
+    "status": "Male owner-approved at 762e6e5e. Female implemented; owner playtest pending."
   },
   {
     "id": "A09",

@@ -47,8 +47,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_sl" if female else "pso_sl"
 		CharacterManager._characters[0].equipment.weapon = "ein_slicer"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "gunblade":
-		_native_prefix = "pmgb"
-		_pso_prefix = "pso_gb"
+		_native_prefix = "pwgbs" if female else "pmgb"
+		_pso_prefix = "pso_f_gb" if female else "pso_gb"
 		CharacterManager._characters[0].equipment.weapon = "axeon"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -95,7 +95,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -121,7 +121,7 @@ func _launch() -> void:
 					_check(enemy.is_physics_processing(), "save resumes enemy")
 				print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
 				get_tree().quit(0 if _ok else 1)
-		if _native_prefix == "pmgb":
+		if _native_prefix in ["pmgb", "pwgbs"]:
 			var controls = preload("res://scripts/tools/gunblade_mode_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -134,7 +134,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls", "pmgb"]:
+	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -187,7 +187,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
-	if _native_prefix == "pmgb": await _verify_gunblade(player, enemies)
+	if _native_prefix in ["pmgb", "pwgbs"]: await _verify_gunblade(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -312,7 +312,7 @@ func _verify_movement(player, enemies: Array) -> void:
 	var direction := Vector3(sin(movement_yaw), 0, cos(movement_yaw))
 	player.player_rotation = movement_yaw
 	var outside_reach: float = float(player._weapon_combat_config(player._get_equipped_weapon_type()).hit_h_dist) + 2.0
-	if _native_prefix == "pmgb": outside_reach = 10.0
+	if _native_prefix in ["pmgb", "pwgbs"]: outside_reach = 10.0
 	for enemy in enemies: enemy.global_position = player.global_position + direction * outside_reach
 	player._update_combat_targets()
 	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
@@ -776,9 +776,9 @@ func _verify_gunblade(player, enemies: Array) -> void:
 		player._saber_attack_cooldown = 0
 		player._recovery_left = 0
 		player.transition_to(player.PlayerState.IDLE)
-		var prefix := "pmgb"
+		var prefix := _native_prefix
 		if sequence == 7:
-			for clip in ["pso_gb_gun_wait", "pso_gb_gun_walk_ready", "pso_gb_gun_run"]:
+			for clip in [_pso_prefix + "_gun_wait", _pso_prefix + "_gun_walk_ready", _pso_prefix + "_gun_run"]:
 				player.play_animation(clip, true)
 				player.animation_player.seek(0.3, true)
 				await _snapshot(clip)
@@ -794,7 +794,7 @@ func _verify_gunblade(player, enemies: Array) -> void:
 			player._handle_attack_state(Rules.READY_PREP)
 			for step in range(3):
 				var mode := 1 if sequence & (1 << step) else 0
-				prefix = "pmgb_shot" if mode == 1 else "pmgb"
+				prefix = _native_prefix + "_shot" if mode == 1 else _native_prefix
 				_check(Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
 				enemy.current_hp = 10000
 				_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")

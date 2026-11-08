@@ -21,7 +21,7 @@ func setup(player: Node3D) -> void:
 	if slicer: _clips = ["pmsl_wait", "pmsa_walk", "pso_sl_walk_ready", "pso_sl_wait", "pso_sl_run", "pmsl_atk1", "pmsl_atk2", "pmsl_atk3", "pso_sl_block"]
 	if gunblade: _clips = ["pmgb_wait", "pmsa_walk", "pso_gb_walk_ready", "pso_gb_wait", "pso_gb_run", "pmgb_atk1", "pmgb_atk2", "pmgb_atk3", "pso_gb_block", "pmgb_wait_sht", "pso_gb_gun_walk_ready", "pso_gb_gun_wait", "pso_gb_gun_run", "pmgb_shot_atk1", "pmgb_shot_atk2", "pmgb_shot_atk3"]
 	if player._is_female:
-		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl")
+		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb")
 	_blade = player.weapon_node
 	_path = OS.get_environment("PSZ_GUNBLADE_GRIP_PATH" if gunblade else ("PSZ_SLICER_GRIP_PATH" if slicer else "PSZ_SPEAR_GRIP_PATH"))
 	if FileAccess.file_exists(_path):

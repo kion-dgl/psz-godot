@@ -15,6 +15,7 @@ const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_
 const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
 const MALE_GUNBLADE_PROFILE := {"library": "res://assets/player/animations/pso_male_gunblade.glb", "native_library": "res://assets/player/animations/shotgun_m.glb", "prefix": "pso_gb", "source_prefix": "pso_sa", "native_prefix": "pmgb", "walk": "pmsa_walk", "run": "pso_gb_run", "source_count": 15, "class_id": "humar", "hit_fracs": [[0.25], [0.282051], [0.372093]], "recovery": [0.14, 0.16, 0.22]}
+const FEMALE_GUNBLADE_PROFILE := {"library": "res://assets/player/animations/pso_female_gunblade.glb", "native_library": "res://assets/player/animations/shotgun_w.glb", "prefix": "pso_f_gb", "source_prefix": "pso_f_sa", "native_prefix": "pwgbs", "walk": "pwsa_walk", "run": "pso_f_gb_run", "source_count": 16, "class_id": "humarl", "hit_fracs": [[0.25], [0.282051], [0.372093]], "recovery": [0.14, 0.16, 0.22]}
 
 const MALE_SLICER_PROFILE := {"library": "res://assets/player/animations/pso_male_slicer.glb", "native_library": "res://assets/player/animations/slicer_m.glb", "prefix": "pso_sl", "native_prefix": "pmsl", "walk": "pmsa_walk", "run": "pso_sl_run", "source_count": 12, "class_id": "humar", "hit_fracs": [[0.30303], [0.40], [0.45]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_SLICER_PROFILE := {"library": "res://assets/player/animations/pso_female_slicer.glb", "native_library": "res://assets/player/animations/slicer_w.glb", "prefix": "pso_f_sl", "source_prefix": "pso_sl", "native_prefix": "pwsls", "walk": "pwsa_walk", "run": "pso_f_sl_run", "source_count": 12, "class_id": "humarl", "hit_fracs": [[0.30303], [0.40], [0.45]], "recovery": [0.14, 0.16, 0.22]}
@@ -26,17 +27,18 @@ const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_mal
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
 static func profile(player) -> Dictionary:
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE and not player._is_female:
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE:
+		var base: Dictionary = FEMALE_GUNBLADE_PROFILE if player._is_female else MALE_GUNBLADE_PROFILE
 		if gun_mode(player):
-			var shooting := MALE_GUNBLADE_PROFILE.duplicate(true)
-			shooting["attack_prefix"] = "pmgb_shot"
-			shooting["ready"] = "pso_gb_gun_wait"
-			shooting["caution"] = "pso_gb_gun_walk_ready"
-			shooting["run"] = "pso_gb_gun_run"
-			shooting["idle"] = "pmgb_wait_sht"
+			var shooting := base.duplicate(true)
+			shooting["attack_prefix"] = str(base.native_prefix) + "_shot"
+			shooting["ready"] = str(base.prefix) + "_gun_wait"
+			shooting["caution"] = str(base.prefix) + "_gun_walk_ready"
+			shooting["run"] = str(base.prefix) + "_gun_run"
+			shooting["idle"] = str(base.native_prefix) + "_wait_sht"
 			shooting["hit_fracs"] = [[0.35], [0.35], [0.35]]
 			return shooting
-		return MALE_GUNBLADE_PROFILE
+		return base
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: return FEMALE_SLICER_PROFILE if player._is_female else MALE_SLICER_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR: return FEMALE_SPEAR_PROFILE if player._is_female else MALE_SPEAR_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER: return FEMALE_DOUBLE_PROFILE if player._is_female else MALE_DOUBLE_PROFILE
@@ -47,6 +49,7 @@ static func profile(player) -> Dictionary:
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == FEMALE_GUNBLADE_PROFILE.library: return FEMALE_GUNBLADE_PROFILE
 	if path == MALE_GUNBLADE_PROFILE.library: return MALE_GUNBLADE_PROFILE
 	if path == FEMALE_SLICER_PROFILE.library: return FEMALE_SLICER_PROFILE
 	if path == MALE_SLICER_PROFILE.library: return MALE_SLICER_PROFILE
@@ -94,7 +97,7 @@ static func enabled(player) -> bool:
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER \
-		 or (character.get("class_id", "") == "humar" and player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE))
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE)
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
