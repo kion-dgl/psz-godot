@@ -1,0 +1,30 @@
+stateDiagram-v2
+    [*] --> Active
+    Active --> Block: eligible idle or walk frontal melee
+    Active --> LightDamage: accepted light hit
+    Active --> HeavyDamage: accepted medium hit
+    Active --> Knockdown: heavy or knockdown-flagged hit
+    Active --> Dodge: eligible input / no committed attack recovery
+    Dodge --> Active: committed dodge duration expires
+    Dodge --> LightDamage: accepted light hit
+    Dodge --> HeavyDamage: accepted medium hit
+    Dodge --> Knockdown: accepted knockdown
+    Block --> Active: animation completes
+    Block --> LightDamage: accepted unblocked hit
+    LightDamage --> Active: reaction finishes
+    HeavyDamage --> Active: reaction finishes
+    Knockdown --> GetUp: fall finishes and HP above zero
+    GetUp --> Active: recovery completes
+    Active --> Defeated: lethal hit / no auto-revive
+    LightDamage --> Defeated: lethal hit
+    HeavyDamage --> Defeated: lethal hit
+    Knockdown --> Defeated: HP depleted
+    Defeated --> DefeatedHold: fall completes
+    DefeatedHold --> Respawn: revive or return-to-city transaction
+    Respawn --> Active: reset transient combat state
+    note right of Active
+        Includes locomotion and combo phases in companion diagrams.
+        Damage cancels queued attacks, preparation and charge effects.
+        Existing immunity and enemy exposure checks still apply.
+        Guard eligibility is further restricted in the cross-state table.
+    end note

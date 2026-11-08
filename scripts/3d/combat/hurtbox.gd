@@ -43,4 +43,16 @@ func take_attack(packet: Dictionary, knockback: Vector3, source: Node3D = null) 
 	if packet.has("base_attack") and owner_node is EnemyBase:
 		var math = preload("res://scripts/utils/combat_math.gd")
 		power = int(math.attribute_attack(int(packet.base_attack), int(packet.weapon_attack), packet.attributes, owner_node.enemy_data.element) * float(packet.power_multiplier))
-	take_hit(power, knockback, int(packet.get("accuracy", 100)), str(packet.get("element", "")), int(packet.get("element_level", 0)), bool(packet.get("charge_pb", true)), str(packet.get("kind", "physical")), source)
+	var before_hp: int = owner_node.current_hp if owner_node is EnemyBase else 0
+	var fixture_contact := false
+	var accuracy := int(packet.get("accuracy", 100))
+	if is_instance_valid(source) and source.has_method("try_prototype_guard") and owner_node is EnemyBase and str(packet.get("kind", "physical")) == "physical":
+		var prototype = preload("res://scripts/3d/player/humar_saber_prototype.gd")
+		if prototype.enabled(source):
+			fixture_contact = true
+			accuracy = prototype.contact_accuracy(owner_node.current_evasion)
+	take_hit(power, knockback, accuracy, str(packet.get("element", "")), int(packet.get("element_level", 0)), bool(packet.get("charge_pb", true)), str(packet.get("kind", "physical")), source)
+
+	if fixture_contact and is_instance_valid(owner_node) and owner_node.current_hp < before_hp:
+		var feedback = preload("res://scripts/3d/player/humar_saber_prototype.gd")
+		feedback.contact_feedback(owner_node, source, bool(packet.get("prototype_strong", false)))

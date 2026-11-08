@@ -33,7 +33,7 @@
       "area": "Character select + create",
       "grade": "A",
       "assessment": "Faithful to the game and good overall; a few small improvements remain.",
-      "next": "Preserve the current quality while addressing specific playtest observations.",
+      "next": "Preserve the current quality while addressing specific playtest observations. Review the #790 PSO saber retarget on the current HUmar VRM, especially foot planting, saber attachment and transitions; broader roster migration is outside this prototype.",
       "label": "score:character"
     },
     {
@@ -84,7 +84,7 @@
       "area": "Combat",
       "grade": "C",
       "assessment": "Basic mechanics exist; lock-on and better enemy behavior are still needed.",
-      "next": "Implement lock-on (#775) and continue enemy-family attack-rhythm review. Kion approved the #773 collision, obstacle-detour, Ghowl reach and post-hit protection changes in local Mac playtesting on 2026-11-05; recheck the final small Helion radius increase to 1.4 and crowded narrow passages. Playtest the shorter, model-sized box and wall destruction bursts.",
+      "next": "Implement lock-on (#775) and continue enemy-family attack-rhythm review. Kion approved the #773 collision, obstacle-detour, Ghowl reach and post-hit protection changes in local Mac playtesting on 2026-11-05; recheck the final small Helion radius increase to 1.4 and crowded narrow passages. Playtest the shorter, model-sized box and wall destruction bursts. Playtest the opt-in #790 HUmar saber Coliseum prototype: PSO animation set, caution walking, automatic frontal guard and provisional combo/contact timing. Owner assessment pending; grade unchanged.",
       "label": "score:combat"
     },
     {

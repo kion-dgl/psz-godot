@@ -1,0 +1,1096 @@
+extends "res://scripts/tools/probe_checks.gd"
+## #790 fixture. Launch through run_humar_saber.py; scene changes preserve this observer.
+const Rules := preload("res://scripts/3d/player/humar_saber_prototype.gd")
+
+const FIXTURE_PROFILES := {
+	"sword": [Rules.MALE_SWORD_PROFILE, Rules.FEMALE_SWORD_PROFILE, "sword"],
+	"daggers": [Rules.MALE_DAGGER_PROFILE, Rules.FEMALE_DAGGER_PROFILE, "dagger"],
+	"claw": [Rules.MALE_CLAW_PROFILE, Rules.FEMALE_CLAW_PROFILE, "ein_claw"],
+	"double-saber": [Rules.MALE_DOUBLE_PROFILE, Rules.FEMALE_DOUBLE_PROFILE, "ein_double_saber"],
+	"spear": [Rules.MALE_SPEAR_PROFILE, Rules.FEMALE_SPEAR_PROFILE, "ein_spear"],
+	"slicer": [Rules.MALE_SLICER_PROFILE, Rules.FEMALE_SLICER_PROFILE, "ein_slicer"],
+	"gunblade": [Rules.MALE_GUNBLADE_PROFILE, Rules.FEMALE_GUNBLADE_PROFILE, "axeon"],
+	"handgun": [Rules.MALE_HANDGUN_PROFILE, Rules.FEMALE_HANDGUN_PROFILE, "handgun"],
+	"mechgun": [Rules.MALE_MECHGUN_PROFILE, Rules.FEMALE_MECHGUN_PROFILE, "mechgun"],
+	"rifle": [Rules.MALE_RIFLE_PROFILE, Rules.FEMALE_RIFLE_PROFILE, "rifle"],
+	"bazooka": [Rules.MALE_BAZOOKA_PROFILE, Rules.FEMALE_BAZOOKA_PROFILE, "ein_bazooka"],
+	"laser-cannon": [Rules.MALE_BAZOOKA_PROFILE, Rules.FEMALE_BAZOOKA_PROFILE, "ein_cannon"],
+	"rod": [Rules.MALE_ROD_PROFILE, Rules.FEMALE_ROD_PROFILE, "pole"],
+	"wand": [Rules.MALE_WAND_PROFILE, Rules.FEMALE_WAND_PROFILE, "wand"],
+	"unarmed": [Rules.MALE_UNARMED_PROFILE, Rules.FEMALE_UNARMED_PROFILE, ""],
+}
+
+var _native_prefix := "pmsa"
+var _pso_prefix := "pso_sa"
+
+func _run() -> void:
+	probe_label = "humar-saber"
+	DisplayServer.window_set_title("PSZ Combat Test — Guard flash v2")
+	if ProjectSettings.get_setting("application/config/name") != "PSZ Saber Prototype":
+		push_error("Use scripts/tools/run_humar_saber.py to isolate saves")
+		get_tree().quit(1)
+		return
+	get_tree().current_scene = null
+	await _launch()
+
+func _launch() -> void:
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	var female := OS.get_environment("PSZ_SABER_GENDER") == "female"
+	_native_prefix = "pwsa" if female else "pmsa"
+	_pso_prefix = "pso_f_sa" if female else "pso_sa"
+	CharacterManager.create_character(0, "humarl" if female else "humar", "Saber Test")
+	var selected: Array = FIXTURE_PROFILES.get(OS.get_environment("PSZ_MELEE_WEAPON"), [Rules.MALE_PROFILE, Rules.FEMALE_PROFILE, "saber"])
+	var selected_profile: Dictionary = selected[1 if female else 0]
+	_native_prefix = str(selected_profile.native_prefix)
+	_pso_prefix = str(selected_profile.prefix)
+	CharacterManager._characters[0].equipment.weapon = str(selected[2])
+	CharacterManager.set_active_slot(0)
+	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
+	DebugConfig.invincible = false
+	DebugConfig.show_combo_timing = true
+	ColiseumRoster.selected_enemy_level = 1
+	SessionManager.enter_quest("debug_coliseum", "normal")
+	var sections := _fixture_sections()
+	SessionManager.set_field_sections(sections)
+	ColiseumRoster.apply_level_override()
+	await SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", ColiseumRoster.warp_data())
+	var player = get_tree().get_first_node_in_group("player")
+	_check(player != null, "real Coliseum player spawned")
+	if player == null:
+		get_tree().quit(1)
+		return
+	_check(Rules.enabled(player), "prototype is scoped to selected saber profile in Coliseum")
+	_check(player._is_female == female, "avatar gender matches selected profile")
+	_check(Rules.profile(player).class_id == ("humarl" if female else "humar"), "explicit class profile selected")
+	if not player.animation_player or not player.animation_player.has_animation((_pso_prefix + "_wait")):
+		push_error("Import the baked saber library before launching")
+		get_tree().quit(1)
+		return
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy is EnemyBase:
+			enemy.enemy_data = enemy.enemy_data.duplicate(true)
+			enemy.enemy_data.exp_reward = 0 # Fixed-stat fixture, never registry tuning.
+	if OS.get_environment("PSZ_SABER_CHECK") == "1":
+		for enemy in get_tree().get_nodes_in_group("enemies"): enemy.set_physics_process(false)
+		for frame in range(30): await get_tree().physics_frame
+		await _verify(player)
+		print("[humar-saber] DONE " + ("ok" if _ok else "FAIL"))
+		get_tree().quit(0 if _ok else 1)
+	else:
+		await _setup_fixture_controls(player)
+
+func _verify(player) -> void:
+	_check(player.is_on_floor() and absf(player.global_position.y) < 1.0, "player settles on actual Coliseum floor")
+	player.set_physics_process(false)
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	_check(not enemies.is_empty(), "real opponents spawned")
+	if enemies.is_empty(): return
+	for enemy in enemies:
+		enemy.set_physics_process(false)
+		enemy.reveal()
+		enemy.hurtbox.monitorable = true
+	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs"]:
+		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
+	var enemy = enemies[0]
+	enemy.target = player
+	_check(enemy.enemy_level == 1, "fixed enemy level")
+	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
+	if _native_prefix in ["pmbn", "pwbn"]:
+		_check(player._is_barehanded() and player.weapon_node == null, "unarmed uses empty equipment with no weapon model")
+		var expected_sound: String = player.BAREHANDED_SFX if ResourceLoader.exists(player.BAREHANDED_SFX) else ""
+		_check(player._weapon_attack_sound(player._get_equipped_weapon_type()) == expected_sound, "unarmed delayed release uses fist swing instead of saber sound")
+	else:
+		_check(player.weapon_node != null, "saber attached")
+	_verify_weapon_materials(player)
+	await _verify_animation_inventory(player)
+	for evasion in [0, 50, 200]:
+		for attempt in range(30):
+			var result := CombatManager.apply_damage_to_enemy(30, 5, evasion, Rules.contact_accuracy(evasion))
+			_check(result.hit, "fixture contact ignores accuracy RNG")
+	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
+	await _verify_weapon_contacts(player, enemies)
+	_verify_booma_detour(enemies[0])
+	_verify_lock_sound(player, enemies)
+	_verify_movement(player, enemies)
+	await _verify_recovery_suite(player, enemies, enemy)
+	var saved_evasion: int = enemy.current_evasion
+	var saved_hp: int = enemy.current_hp
+	enemy.current_evasion = 500
+	var all_connected := true
+	for attempt in range(20):
+		enemy.current_hp = 10000
+		enemy.hurtbox.take_attack(player._get_attack_damage(), Vector3.ZERO, player)
+		all_connected = all_connected and enemy.current_hp < 10000
+	_check(all_connected, "real hurtbox bypasses evasion for every fixture contact")
+	enemy.current_evasion = saved_evasion
+	enemy.current_hp = saved_hp
+
+func _verify_exchange(player, enemy) -> void:
+	player.player_rotation = 0.0
+	enemy.global_position = player.global_position + Vector3(0,0,2)
+	player.transition_to(player.PlayerState.IDLE)
+	var hp := GameState.hp
+	var block_bursts := get_tree().get_nodes_in_group("prototype_block_feedback").size()
+	enemy._deal_damage_for({"kind":"melee_arc", "damage_mult":1.0})
+	_check(GameState.hp == hp and player.animation_player.current_animation == (_pso_prefix + "_block"), "real frontal melee is blocked")
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").size() == block_bursts + 1, "successful block emits guard spark")
+	_check(not get_tree().get_nodes_in_group("prototype_block_flash").is_empty(), "successful block emits visible guard flash")
+	await get_tree().create_timer(0.08).timeout
+	await _snapshot("successful_block")
+	await get_tree().create_timer(0.3).timeout
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").is_empty() and get_tree().get_nodes_in_group("prototype_block_flash").is_empty(), "guard sparks and flash clean themselves up")
+	player._start_attack()
+	_check(Rules.guarding(player), "block commits recovery and refuses attack cancel")
+	player._hit_invulnerability_left = 0
+	player.take_damage(1, Vector3.ZERO, false, true)
+	_check(GameState.hp == hp - 1, "guard does not grant status-tick immunity")
+	GameState.set_hp(hp)
+	player._recovery_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	enemy.global_position = player.global_position - Vector3(0,0,2)
+	_check(not player.try_prototype_guard(enemy), "rear attack cannot guard")
+	_check(get_tree().get_nodes_in_group("prototype_block_feedback").is_empty(), "rejected block emits no guard spark")
+	enemy.global_position = player.global_position + Vector3(0,0,2)
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	_check(player.animation_player.current_animation == (_native_prefix + "_atk1"), "real attack uses native PSZ clip")
+	_check(not player.try_prototype_guard(enemy), "guard cannot cancel attack")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.65
+	player._try_queue_combo(false)
+	_check(player._queued_combo != player.ComboQueue.NONE, "prototype chain window accepts deliberate input")
+	player._attack_step_finished()
+	_check(player.combo_state == 2 and player.animation_player.current_animation == (_native_prefix + "_atk2"), "queued second native swing starts")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.65
+	player._try_queue_combo(false)
+	player._attack_step_finished()
+	_check(player.combo_state == 3 and player.animation_player.current_animation == (_native_prefix + "_atk3"), "queued third native swing starts")
+	player._hit_invulnerability_left = 0
+	player.take_damage(5)
+	_check(GameState.hp == hp - 5 and player.current_state == player.PlayerState.DAMAGED, "committed attack takes damage and interrupts")
+	_check(player._queued_combo == player.ComboQueue.NONE, "interruption clears chain")
+	await get_tree().create_timer(0.8).timeout
+	_check(player.current_state == player.PlayerState.IDLE, "damage animation recovers")
+	await _verify_player_swing(player, enemy)
+	await _verify_enemy_swing(player, enemy)
+
+func _verify_enemy_swing(player, enemy) -> void:
+	player._recovery_left = 0
+	player._hit_invulnerability_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player.player_rotation = 0.0
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	enemy.target = player
+	enemy._attack_def = {}
+	enemy._start_attack()
+	var before := GameState.hp
+	var blocked := false
+	for frame in range(180):
+		enemy._process_attacking(1.0 / 60.0)
+		await get_tree().physics_frame
+		blocked = blocked or player.animation_player.current_animation == (_pso_prefix + "_block")
+		if enemy._attack_hit_resolved: break
+	_check(enemy._attack_hit_resolved and blocked and GameState.hp == before, "actual Booma animation/contact reaches guard")
+
+
+func _verify_player_swing(player, enemy) -> void:
+	seed(790)
+	player._recovery_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player.player_rotation = 0.0
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.2)
+	var before: int = enemy.current_hp
+	player._start_attack()
+	for frame in range(90):
+		if player.current_state != player.PlayerState.ATTACKING: break
+		player._handle_attack_state(1.0 / 60.0)
+		await get_tree().physics_frame
+	_check(enemy.current_hp < before, "PSZ swing delivers real saber damage")
+	_check(player.current_state == player.PlayerState.IDLE and player._saber_attack_cooldown > 0.0, "unchained swing releases movement before attack cooldown")
+	player._tick_saber_attack_cooldown(Rules.STOPPED_ATTACK_COOLDOWN)
+
+func _verify_root(animation: Animation, clip: String) -> void:
+	var aligned := true
+	for track in animation.get_track_count():
+		if animation.track_get_type(track) != Animation.TYPE_POSITION_3D: continue
+		if not str(animation.track_get_path(track)).ends_with(":000_Root"): continue
+		for key in animation.track_get_key_count(track):
+			var position: Vector3 = animation.track_get_key_value(track, key)
+			aligned = aligned and position.is_finite() and is_zero_approx(position.x) and is_zero_approx(position.z)
+	_check(aligned, clip + " keeps root aligned with collision body")
+
+func _verify_movement(player, enemies: Array) -> void:
+	var positions: Array[Vector3] = []
+	for enemy in enemies: positions.append(enemy.global_position)
+	player._saber_caution_active = false
+	player._saber_retreat_elapsed = 0.0
+	player._targeted_enemies.clear()
+	player.transition_to(player.PlayerState.RUNNING)
+	Input.action_press("move_forward")
+	var movement_yaw: float = player._held_movement_yaw()
+	var direction := Vector3(sin(movement_yaw), 0, cos(movement_yaw))
+	player.player_rotation = movement_yaw
+	var outside_reach: float = float(player._weapon_combat_config(player._get_equipped_weapon_type()).hit_h_dist) + 2.0
+	if _native_prefix in ["pmgb", "pwgbs"]: outside_reach = 10.0
+	for enemy in enemies: enemy.global_position = player.global_position + direction * outside_reach
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
+	player._handle_movement(0.1)
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == str(Rules.profile(player).walk), "proximity without cursor does not trigger caution")
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
+	player._update_combat_targets()
+	_check(not player._targeted_enemies.is_empty(), "close enemy acquires cursor")
+	player._handle_movement(0.1)
+	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == (_pso_prefix + "_walk_ready"), "cursor acquisition engages caution")
+	for enemy in enemies: enemy.global_position = player.global_position - direction * 1.2
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "retreat loses cursor")
+	player._handle_movement(0.25)
+	player._handle_movement(0.24)
+	_check(player.current_state == player.PlayerState.WALKING and player._walk_anim == (_pso_prefix + "_walk_ready"), "retreat keeps caution for first 490 ms despite cursor loss")
+	player._handle_movement(0.02)
+	_check(player.current_state == player.PlayerState.RUNNING and player._walk_anim == str(Rules.profile(player).walk), "500 ms caution hold transitions directly to run")
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
+	player._update_combat_targets()
+	player._handle_movement(0.1)
+	_check(player.current_state == player.PlayerState.WALKING, "reacquiring cursor restores caution")
+	for enemy in enemies: enemy.global_position = player.global_position - direction * 1.2
+	player._update_combat_targets()
+	player._handle_movement(0.25)
+	for enemy in enemies: enemy.global_position = player.global_position + direction * 1.2
+	player._update_combat_targets()
+	player._handle_movement(0.1)
+	_check(is_zero_approx(player._saber_retreat_elapsed), "reacquiring target cancels pending retreat")
+	Input.action_release("move_forward")
+	player._handle_movement(0.1)
+	_check(player.animation_player.current_animation == (_native_prefix + "_wait"), "stopping remains relaxed even with cursor")
+	for i in enemies.size(): enemies[i].global_position = positions[i]
+	player._targeted_enemies.clear()
+	player._saber_caution_active = false
+	player._saber_retreat_elapsed = 0.0
+	player.transition_to(player.PlayerState.IDLE)
+
+func _verify_mixed_combos(player) -> void:
+	_check(ResourceLoader.exists(Rules.CHARGE_SOUND) and ResourceLoader.exists(Rules.LOCK_SOUND), "named charge and lock sounds imported")
+	for pattern in range(8):
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		if pattern & 1: player._start_strong_attack()
+		else: player._start_attack()
+		_check(player._saber_phase == "prepare" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "fresh combo briefly readies weapon")
+		player._handle_attack_state(Rules.READY_PREP)
+		for step in range(1, 4):
+			var clip := (_native_prefix + "_atk") + str(step)
+			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
+			if _native_prefix in ["pmsl", "pwsls"]:
+				player._weapon_grip_tween.custom_step(1.0)
+				_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.SLICER_GRIP.orthonormalized()), "slicer combo preserves shared grip")
+			if _native_prefix in ["pmsp", "pwsp"]:
+				player._weapon_grip_tween.custom_step(1.0)
+				_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "saved spear attack grip survives combo transition: " + clip)
+			_check(is_equal_approx(player._attack_anim_length, player.animation_player.get_animation(clip).length), "normal and strong use identical step duration")
+			if step < 3:
+				player._attack_anim_elapsed = player._attack_anim_length * 0.65
+				if pattern & (1 << step): player._start_strong_attack()
+				else: player._start_attack()
+				_check(player._queued_combo != player.ComboQueue.NONE, "same timing accepts normal or strong continuation")
+			player._attack_step_finished()
+		_check(player._saber_phase == "guard_recovery" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "completed combo enters ready recovery")
+		player._handle_attack_state(Rules.FINISHER_GUARD)
+		_check(player.current_state == player.PlayerState.IDLE and not player._charge_active, "mixed combo finishes cleanly")
+		if _native_prefix in ["pmds", "pwdss"]:
+			_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber grip survives completed combo and return to idle")
+	# Interrupt strong windup: no delayed callback may restart the swing.
+	player._start_strong_attack()
+	player._hit_invulnerability_left = 0
+	player.take_damage(1)
+	_check(not player._charge_active, "interruption clears strong charge feedback")
+	await get_tree().create_timer(0.8).timeout
+	_check(player.current_state == player.PlayerState.IDLE, "interrupted strong attack never restarts")
+
+func _verify_lock_sound(player, enemies: Array) -> void:
+	player._saber_lock_last_id = 0
+	player._saber_lock_last_seen = 0
+	var original := SfxManager._load(Rules.LOCK_SOUND) as AudioStreamWAV
+	var soft := SfxManager._load_soft_edges(Rules.LOCK_SOUND) as AudioStreamWAV
+	_check(original != soft and is_equal_approx(original.get_length(), soft.get_length()), "soft lock cue preserves original asset and duration")
+	_check(soft.format == AudioStreamWAV.FORMAT_16_BITS and absi(soft.data.decode_s16(4)) < 1000 and soft.data.decode_s16(0) == 0, "lock cue start spike is softened")
+	var positions: Array[Vector3] = []
+	for enemy in enemies:
+		positions.append(enemy.global_position)
+		enemy.global_position = player.global_position + Vector3(0, 0, 50)
+	player.player_rotation = 0.0
+	player._update_combat_targets()
+	var before: int = SfxManager._next_idx
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 1.2)
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == (before + 1) % SfxManager.POOL_SIZE, "acquiring enemy plays lock sound")
+	before = SfxManager._next_idx
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == before, "held cursor does not repeat lock sound")
+	enemies[0].global_position += Vector3(0, 0, 50)
+	player._update_combat_targets()
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 1.2)
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == before, "brief same-target cursor flicker is silent")
+	if enemies.size() > 1:
+		enemies[0].global_position += Vector3(0, 0, 50)
+		enemies[1].global_position = player.global_position + Vector3(0, 0, 1.2)
+		player._update_combat_targets()
+		_check(SfxManager._next_idx == (before + 1) % SfxManager.POOL_SIZE, "switching enemy plays lock sound")
+		before = SfxManager._next_idx
+	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 50)
+	player._update_combat_targets()
+	_check(SfxManager._next_idx == before, "losing cursor is silent")
+	for i in enemies.size(): enemies[i].global_position = positions[i]
+
+func _verify_feedback(player, enemy) -> void:
+	player._recovery_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	_check(Rules.palette_cue(player).is_empty(), "palette cue hidden while idle")
+	player._start_strong_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player._update_combo_ring(0.01)
+	_check(player._combo_ring == null or not player._combo_ring.visible, "prototype has no ground combo ring")
+	_check(player._charge_ring == null or not player._charge_ring.visible, "prototype has no ground charge ring")
+	_check(player._charge_particles.amount == 8 and player._charge_particles.emitting, "strong windup emits small weapon sparks")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.2
+	_check(not Rules.palette_cue(player).ready, "palette countdown precedes valid window")
+	player._attack_anim_elapsed = player._attack_anim_length * 0.65
+	_check(Rules.palette_cue(player).ready, "palette ready matches accepted chain window")
+	player._start_attack()
+	_check(Rules.palette_cue(player).queued, "palette confirms queued follow-up")
+	player.animation_player.pause()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await _snapshot("palette_chain_cue")
+	player.transition_to(player.PlayerState.IDLE)
+	_check(Rules.palette_cue(player).is_empty() and not player._charge_active, "interruption clears palette and charge feedback")
+	var saved_hp: int = enemy.current_hp
+	enemy.current_hp = 10000
+	var packet: Dictionary = player._get_attack_damage()
+	packet["prototype_strong"] = true
+	var before: int = SfxManager._next_3d_idx
+	enemy.hurtbox.take_attack(packet, Vector3.ZERO, player)
+	_check(enemy.current_state == enemy.EnemyState.HURT and enemy.hurt_timer >= 0.45, "strong contact produces extended flinch")
+	_check(SfxManager._next_3d_idx != before, "strong contact plays impact sound")
+	_check(not get_tree().get_nodes_in_group("saber_contact_feedback").is_empty(), "actual damage emits subtle contact spark")
+	enemy.current_hp = saved_hp
+	await get_tree().create_timer(0.4).timeout
+	_check(get_tree().get_nodes_in_group("saber_contact_feedback").is_empty(), "contact sparks clean themselves up")
+
+func _verify_ready_recovery(player, enemy) -> void:
+	player._recovery_left = 0
+	player._hit_invulnerability_left = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player.player_rotation = 0.0
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	player._start_attack()
+	_check(not player.try_prototype_guard(enemy), "first-attack preparation is vulnerable")
+	player._handle_attack_state(0.05)
+	_check(player._saber_phase == "prepare" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "ready stance persists beyond 50 ms")
+	_check(is_equal_approx(player.animation_player.get_blend_time((_native_prefix + "_wait"), (_pso_prefix + "_wait")), Rules.READY_BLEND), "idle blends into ready stance")
+	_check(is_equal_approx(player.animation_player.get_blend_time((_pso_prefix + "_wait"), (_native_prefix + "_atk1")), Rules.READY_BLEND), "ready blends into first swing")
+	player._handle_attack_state(Rules.READY_PREP)
+	player._attack_anim_elapsed = player._attack_anim_length * 0.1
+	player._try_queue_combo(false)
+	player._attack_step_finished()
+	_check(player._saber_phase == "open_recovery" and not player.try_prototype_guard(enemy), "fumbled combo recovery cannot block")
+	player._start_attack()
+	_check(player._saber_phase == "open_recovery", "attack cannot cancel failed-combo recovery")
+	player._handle_attack_state(Rules.BROKEN_RECOVERY)
+	_check(player.current_state == player.PlayerState.IDLE, "failed recovery expires")
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	for step in range(2):
+		player._attack_anim_elapsed = player._attack_anim_length * 0.65
+		player._try_queue_combo(false)
+		player._attack_step_finished()
+	player._attack_step_finished()
+	_check(player._saber_phase == "guard_recovery", "third swing earns guarded cooldown")
+	enemy.global_position = player.global_position - Vector3(0, 0, 1.5)
+	_check(not player.try_prototype_guard(enemy), "ready cooldown still exposes rear")
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	_check(player.try_prototype_guard(enemy), "ready cooldown blocks frontal retaliation")
+	_check(player._saber_phase.is_empty(), "block consumes the ready phase")
+	player.transition_to(player.PlayerState.IDLE)
+
+func _verify_combo_outcomes(player, enemy) -> void:
+	player._recovery_left = 0
+	player._saber_attack_cooldown = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player._attack_step_finished()
+	_check(player.current_state == player.PlayerState.IDLE and player._saber_attack_cooldown > 0, "intentional stop frees movement but starts attack cooldown")
+	Input.action_press("move_forward")
+	player._handle_movement(0.1)
+	Input.action_release("move_forward")
+	_check(player.current_state in [player.PlayerState.WALKING, player.PlayerState.RUNNING], "stopped combo can move during attack cooldown")
+	player._start_attack()
+	player._start_strong_attack()
+	_check(player.current_state != player.PlayerState.ATTACKING, "stopped cooldown rejects normal and strong attacks")
+	_check(not player.try_prototype_guard(enemy), "stopped combo does not earn finisher guard")
+	player._tick_saber_attack_cooldown(Rules.STOPPED_ATTACK_COOLDOWN)
+	player._start_attack()
+	_check(player._saber_phase == "prepare", "attack becomes available after stopped cooldown")
+	player._handle_attack_state(Rules.READY_PREP)
+	player._attack_anim_elapsed = player._attack_anim_length * 0.99
+	player._try_queue_combo(true)
+	player._attack_step_finished()
+	_check(player._saber_phase == "open_recovery", "late press fails rather than counting as an intentional stop")
+	player._start_dodge()
+	_check(player._saber_phase == "open_recovery", "failed combo cannot dodge out of exposure")
+	player._handle_attack_state(Rules.BROKEN_RECOVERY)
+	_check(player.current_state == player.PlayerState.IDLE, "failed recovery releases player after its delay")
+
+func _verify_sword_contacts(player, enemies: Array) -> void:
+	var saved: Array = []
+	for enemy in enemies:
+		saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
+	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "sword explicitly shares gender-matched PSO saber run")
+	if player.animation_player.has_animation(_pso_prefix + "_run"):
+		_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "shared sword run")
+	for role in ["run", "walk_ready", "wait"]:
+		var clip: String = _pso_prefix + "_" + str(role)
+		player.animation_player.stop()
+		player.play_animation(clip, true)
+		player.animation_player.seek(0.3, true)
+		player.skeleton.force_update_all_bone_transforms()
+		var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
+		player._weapon_grip_tween.custom_step(1.0)
+		var blade_direction: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3.BACK).normalized()
+		_check(blade_direction.dot(Vector3.UP) > 0.99, clip + " carries sword tip vertically upward")
+		player.animation_player.pause()
+		await _snapshot(clip + "_grip")
+
+	var config: Dictionary = CombatManager.get_weapon_type_config(WeaponData.WeaponType.SWORD)
+	_check(config.max_targets == 3 and config.turn_limit_deg == [60, 60], "sword keeps three-target cap and 60 degree chain turns")
+	for step in range(3):
+		for i in enemies.size():
+			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.2 + i * 0.25)
+			enemies[i].current_hp = 10000
+		player._recovery_left = 0
+		player._saber_attack_cooldown = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		player._start_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		player.combo_state = step + 1
+		player._play_attack_animation(step + 1, true)
+		player._weapon_grip_tween.custom_step(1.0)
+		_check(player.weapon_node.quaternion.is_equal_approx(Quaternion(Vector3.UP, PI / 2.0)), "sword swing restores native grip")
+		var contact: float = Rules.profile(player).contact[step] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(enemies[0].current_hp == 10000, "sword step %d has no early contact" % (step + 1))
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		var hit_count := 0
+		for enemy in enemies:
+			if enemy.current_hp < 10000: hit_count += 1
+		_check(hit_count == mini(3, enemies.size()), "sword step %d hits exactly its target budget" % (step + 1))
+		var hp: int = enemies[0].current_hp
+		player._update_attack_contact(contact)
+		_check(enemies[0].current_hp == hp, "sword contact cannot repeat next frame")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i].position
+		enemies[i].current_hp = saved[i].hp
+
+func _verify_multi_contacts(player, enemies: Array) -> void:
+	var saved: Array = []
+	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
+	var claw := _native_prefix in ["pmcl", "pwcl"]
+	var double_saber := _native_prefix in ["pmds", "pwdss"]
+	var spear := _native_prefix in ["pmsp", "pwsp"]
+	var weapon_type: int = player._get_equipped_weapon_type()
+	var target_cap := 3 if double_saber else 1
+	await _verify_multi_poses(player, claw, double_saber, spear)
+	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
+	player.player_rotation = 0
+	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 10)
+	enemies[0].global_position = player.global_position + Vector3(0.8, 0, 2.2)
+	_check(player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon reach an offset enemy at practical melee distance")
+	player._update_combat_targets()
+	_check(player._targeted_enemies.has(enemies[0]), "multi-hit cursor agrees with widened contact geometry")
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 6)
+	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon cannot hit distant enemies")
+	enemies[0].global_position = player.global_position + Vector3(0, 0, -1.5)
+	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon cannot hit behind the player")
+	player.combo_state = 3
+	player._is_special_attack = false
+	seed(791)
+	var normal: Dictionary = player._get_attack_damage()
+	player._is_special_attack = true
+	seed(791)
+	var strong: Dictionary = player._get_attack_damage()
+	_check(is_equal_approx(float(strong.power_multiplier), float(normal.power_multiplier) * 1.5), "finisher snapshots strong power for every contact")
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	_check(config.max_targets == target_cap and config.turn_limit_deg == ([75, 75] if spear else [180, 180] if double_saber else [120, 120]), "multi-hit target cap and turn limits preserved")
+	for step in range(3):
+		if spear: target_cap = 3
+		for i in enemies.size():
+			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.1 + i * 0.2)
+			enemies[i].current_hp = 10000
+		player._recovery_left = 0
+		player._saber_attack_cooldown = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		player._start_strong_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		player.combo_state = step + 1
+		player._play_attack_animation(step + 1, true)
+		var hits: Array = Rules.profile(player).hit_fracs[step]
+		var motion_length: float = player._attack_anim_length - Rules.profile(player).recovery[step]
+		for fraction in hits:
+			var contact: float = float(fraction) * motion_length
+			enemies[0].remove_meta("dagger_feedback_ms")
+			var hp: int = enemies[0].current_hp
+			player._attack_anim_elapsed = contact - 0.001
+			player._update_attack_contact(0)
+			_check(enemies[0].current_hp == hp, "multi-hit contact never fires early")
+			player._attack_anim_elapsed = contact + 0.001
+			player._update_attack_contact(contact - 0.001)
+			_check(enemies[0].current_hp < hp, "multi-hit authored contact lands on step %d" % (step + 1))
+			_check(enemies[0].hurt_timer >= 0.45, "every strong contact gets extended strong flinch")
+			hp = enemies[0].current_hp
+			player._update_attack_contact(contact)
+			_check(enemies[0].current_hp == hp, "multi-hit contact never repeats next frame")
+		_check(player._attack_hit_step == (1 if spear else [1, 1, 2][step] if claw else [2, 1, 3][step]) and player._attack_hit_done, "multi-hit weapon preserves decoded contact count")
+		for i in range(1, enemies.size()):
+			_check(enemies[i].current_hp < 10000 if i < target_cap else enemies[i].current_hp == 10000, "multi-hit respects per-impact target cap")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i].position
+		enemies[i].current_hp = saved[i].hp
+
+func _slicer_projectiles() -> Array:
+	return get_tree().current_scene.get_children().filter(func(node): return node is Projectile and not node.is_queued_for_deletion())
+
+func _verify_slicer(player, enemies: Array) -> void:
+	for clip in player.animation_player.get_animation_list():
+		player._sword_grip_clip = ""
+		player.play_animation(clip, true)
+		player._weapon_grip_tween.custom_step(1.0)
+		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.SLICER_GRIP.orthonormalized()), "shared slicer grip: " + clip)
+	# These fixture enemies start dormant; projectile contact correctly ignores hidden hurtboxes.
+	for enemy in enemies:
+		enemy.reveal()
+		enemy.hurtbox.monitorable = true
+	var saved: Array = []
+	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
+	_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_slicer").glb_path, "slicer uses native PSZ model")
+	for step in range(3):
+		for projectile in _slicer_projectiles(): projectile.free()
+		for i in enemies.size():
+			enemies[i].global_position = player.global_position + Vector3(0.8 * (i % 2), 0, 3.0 + 0.65 * i)
+			enemies[i].current_hp = 10000
+		player._saber_attack_cooldown = 0
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		player._start_strong_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		player.combo_state = step + 1
+		player._play_attack_animation(step + 1, true)
+		var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(_slicer_projectiles().is_empty(), "slicer does not release early")
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		var projectiles := _slicer_projectiles()
+		_check(projectiles.size() == 1, "one slicer projectile per step")
+		if projectiles.size() != 1: continue
+		var projectile: Projectile = projectiles[0]
+		projectile.set_physics_process(false)
+		_check(is_instance_valid(projectile._blade), "slicer projectile uses alternate native model")
+		if step == 0: await _snapshot("slicer_projectile_model")
+		_check(enemies[0].current_hp == 10000, "slicer release does not cause phantom melee damage")
+		_check(projectile.pierce and projectile.max_hits == 4 and is_equal_approx(projectile.bounce_radius, 3.0), "slicer preserves piercing and four-target bounce budget")
+		player._update_attack_contact(contact)
+		_check(_slicer_projectiles().size() == 1, "slicer release cannot repeat next frame")
+		await get_tree().physics_frame
+		projectile.global_position = enemies[0].global_position + Vector3.UP
+		projectile._on_area_entered(enemies[0].hurtbox)
+		if enemies.size() > 1: _check(enemies[1].current_hp == 10000, "slicer bounce does not apply instant area damage")
+		var impact_hp: int = enemies[0].current_hp
+		projectile._on_area_entered(enemies[0].hurtbox)
+		_check(enemies[0].current_hp == impact_hp, "slicer cannot damage same enemy twice")
+		for tick in range(180):
+			if projectile._spent: break
+			projectile._physics_process(1.0 / 60.0)
+		var hit_count := 0
+		for enemy in enemies:
+			if enemy.current_hp < 10000: hit_count += 1
+		_check(hit_count == mini(4, enemies.size()), "slicer impact and bounce respect four-target budget")
+		_check(enemies[0].hurt_timer >= 0.45, "strong slicer feedback occurs at impact")
+		var hp: int = enemies[0].current_hp
+		projectile._on_area_entered(enemies[0].hurtbox)
+		_check(enemies[0].current_hp == hp, "slicer cannot damage same enemy twice")
+		projectile.free()
+	player.transition_to(player.PlayerState.IDLE)
+	player._saber_attack_cooldown = 0
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interrupted slicer swing cannot release later")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i].position
+		enemies[i].current_hp = saved[i].hp
+
+func _verify_gunblade(player, enemies: Array) -> void:
+	var handgun := _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"]
+	var positions: Array = []
+	for target in enemies: positions.append(target.global_position)
+	var enemy = enemies[0]
+	var position: Vector3 = enemy.global_position
+	var hp: int = enemy.current_hp
+	enemy.reveal()
+	enemy.hurtbox.monitorable = true
+	for other in enemies: other.global_position = player.global_position + Vector3(0, 0, 20)
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	player.player_rotation = 0
+	enemy.dormant = true
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "dormant enemy cannot acquire cursor")
+	enemy.dormant = false
+	enemy.hide()
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "hidden enemy cannot acquire cursor")
+	enemy.show()
+	player._update_combat_targets()
+	_check(enemy in player._targeted_enemies, "revealed enemy acquires cursor")
+	for sequence in ([7] if handgun else range(8)):
+		player._saber_attack_cooldown = 0
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		if sequence == 7 and not handgun:
+			for clip in [_pso_prefix + "_gun_wait", _pso_prefix + "_gun_walk_ready", _pso_prefix + "_gun_run"]:
+				player.play_animation(clip, true)
+				player.animation_player.seek(0.3, true)
+				await _snapshot(clip)
+		for pattern in range(8):
+			await _verify_gunblade_pattern(player, enemy, handgun, sequence, pattern)
+	player.transition_to(player.PlayerState.IDLE)
+	player._saber_attack_cooldown = 0
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interrupted gunblade shot never releases later")
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during hit recovery")
+	player.transition_to(player.PlayerState.IDLE)
+	player._saber_attack_cooldown = Rules.STOPPED_ATTACK_COOLDOWN
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot bypass stopped-combo cooldown by switching")
+	player._saber_attack_cooldown = 0
+	player.set_meta("prototype_gun_mode", false)
+	for i in enemies.size(): enemies[i].global_position = positions[i]
+	enemy.global_position = position
+	enemy.current_hp = hp
+
+
+func _verify_shield_retirement() -> void:
+	var old_debug: bool = DebugConfig.equip_all
+	DebugConfig.equip_all = true
+	for id in WeaponRegistry.get_all_weapon_ids():
+		var weapon = WeaponRegistry.get_weapon(id)
+		if weapon.weapon_type == WeaponData.WeaponType.SHIELD:
+			_check(not EquipmentUtils.item_fits_slot(str(id) + "#2", "weapon"), "shield cannot equip even with debug bypass: " + str(id))
+	DebugConfig.equip_all = old_debug
+	var shop = preload("res://scripts/2d/shops/weapon_shop.gd").new()
+	shop._generate_inventory()
+	for item in shop._weapons:
+		_check(int(item.weapon_type) != WeaponData.WeaponType.SHIELD, "shop excludes shields")
+	shop.free()
+	var character = CharacterManager.get_active_character()
+	var original: String = str(character.equipment.weapon)
+	Inventory.add_item("shield", 1)
+	character.equipment.weapon = "shield"
+	CharacterManager.set_active_slot(0)
+	_check(str(character.equipment.weapon).is_empty(), "legacy shield is unequipped on activation")
+	_check(Inventory.get_item_count("shield") == 1, "legacy shield stays in inventory")
+	character.equipment.weapon = original
+
+
+func _verify_booma_detour(enemy) -> void:
+	var old_state = enemy.current_state
+	var old_basis: Basis = enemy.basis
+	var old_velocity: Vector3 = enemy.velocity
+	var old_position: Vector3 = enemy.global_position
+	enemy.global_position = Vector3(0, 0, 5)
+	enemy.current_state = enemy.EnemyState.CHASING
+	enemy._detour_left = 0.6
+	enemy._detour_direction = Vector3.RIGHT
+	enemy.velocity = Vector3(0, 0, 2)
+	enemy._face_direction(Vector3.BACK)
+	enemy._apply_obstacle_detour(0.1)
+	_check(enemy.velocity.x > 1.9, "Booma obstacle detour changes travel direction")
+	_check(enemy.global_basis.z.normalized().dot(Vector3.RIGHT) > 0.99, "Booma faces travel direction during detour")
+	enemy._detour_left = 0
+	enemy.current_state = old_state
+	enemy.basis = old_basis
+	enemy.velocity = old_velocity
+	enemy.global_position = old_position
+
+
+func _verify_mechgun(player, enemy) -> void:
+	_check(is_instance_valid(player.weapon_node_left), "mechgun equips both hands")
+	for weapon in [player.weapon_node, player.weapon_node_left]:
+		_check(weapon.get_parent().get_node_or_null("PhotonLight") == null, "mechgun has no wrist light")
+		var surfaces: Array = []
+		player._collect_surfaces(weapon, surfaces)
+		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "both mechgun photon inserts emit tier color")
+		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "mechgun photon insert keeps solid color")
+		var casing: StandardMaterial3D = surfaces[0][0].get_active_material(surfaces[0][1])
+		_check(not casing.emission_enabled and casing.albedo_texture != null, "mechgun casing stays textured")
+	var old_position: Vector3 = enemy.global_position
+	var old_hp: int = enemy.current_hp
+	enemy.reveal()
+	enemy.hurtbox.monitorable = true
+	enemy.global_position = player.global_position + Vector3(0, 0, 4)
+	for pattern in range(8):
+		player._saber_attack_cooldown = 0
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		if pattern & 1: player._start_strong_attack()
+		else: player._start_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		for step in range(3):
+			var hits: Array = Rules.profile(player).hit_fracs[step]
+			var motion: float = player._attack_anim_length - Rules.profile(player).recovery[step]
+			_check(player.animation_player.current_animation == _native_prefix + "_atk" + str(step + 1), "native mechgun combo clip")
+			for hit in range(hits.size()):
+				var at: float = hits[hit] * motion
+				player._attack_anim_elapsed = at - 0.001
+				player._update_attack_contact(0)
+				_check(_slicer_projectiles().is_empty(), "mechgun does not fire early")
+				player._attack_anim_elapsed = at + 0.001
+				player._update_attack_contact(at - 0.001)
+				var shots := _slicer_projectiles()
+				_check(shots.size() == 1, "one mechgun shot per decoded event")
+				for shot in shots:
+					_check(bool(shot.attack_packet.prototype_strong) == bool(pattern & (1 << step)), "each mechgun bullet retains strong state")
+					enemy.current_hp = 10000
+					shot._on_area_entered(enemy.hurtbox)
+					_check(enemy.current_hp < 10000, "mechgun bullet deals damage on impact")
+					shot.free()
+			player._update_attack_contact(0)
+			_check(_slicer_projectiles().is_empty(), "no duplicate mechgun release")
+			player._attack_anim_elapsed = player._attack_anim_length * 0.65
+			if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
+			player._attack_step_finished()
+		player._handle_attack_state(Rules.FINISHER_GUARD)
+	player._saber_attack_cooldown = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interrupted mechgun burst cancels unreleased shots")
+	player.transition_to(player.PlayerState.IDLE)
+	enemy.global_position = old_position
+	enemy.current_hp = old_hp
+
+
+func _verify_bazooka(player, enemies: Array) -> void:
+	var surfaces: Array = []
+	player._collect_surfaces(player.weapon_node, surfaces)
+	for surface in surfaces:
+		var material: StandardMaterial3D = surface[0].get_active_material(surface[1])
+		_check(material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR, "bazooka uses binary cutout instead of blended rear faces")
+		_check(material.depth_draw_mode == BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY, "bazooka solid surfaces write depth")
+	var saved: Array = []
+	for i in enemies.size():
+		var enemy = enemies[i]
+		saved.append([enemy.global_position, enemy.current_hp])
+		enemy.reveal()
+		enemy.hurtbox.monitorable = true
+		enemy.global_position = player.global_position + Vector3(float(i) * 0.7, 0, 4)
+	for strong in [false, true]:
+		for enemy in enemies: enemy.current_hp = 10000
+		player._recovery_left = 0
+		player._saber_attack_cooldown = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		if strong: player._start_strong_attack()
+		else: player._start_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		var contact: float = Rules.profile(player).hit_fracs[0][0] * (player._attack_anim_length - Rules.profile(player).recovery[0])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(_slicer_projectiles().is_empty(), "bazooka does not release early")
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		var shots := _slicer_projectiles()
+		_check(shots.size() == 1, "bazooka releases exactly one shell")
+		for shot in shots:
+			_check(bool(shot.attack_packet.prototype_strong) == strong, "bazooka retains strong state")
+			_check(enemies[0].current_hp == 10000, "bazooka damage waits for impact")
+			shot._on_area_entered(enemies[0].hurtbox)
+			for enemy in enemies: _check(enemy.current_hp < 10000, "bazooka splash damages nearby targets")
+			var hp: int = enemies[0].current_hp
+			shot._on_area_entered(enemies[0].hurtbox)
+			_check(enemies[0].current_hp == hp, "bazooka cannot explode twice")
+			shot.free()
+		player._attack_step_finished()
+		_check(player._saber_phase == "guard_recovery", "single bazooka shot completes into ready recovery")
+		_check(player.animation_player.current_animation == Rules.ready_clip(player), "bazooka recovery uses selected shot-ready role")
+		player._handle_attack_state(Rules.FINISHER_GUARD)
+		_check(player.current_state == player.PlayerState.IDLE, "bazooka returns to idle")
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interruption cancels unreleased bazooka shell")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i][0]
+		enemies[i].current_hp = saved[i][1]
+
+func _setup_fixture_controls(player) -> void:
+	if _native_prefix in ["pmda", "pwda", "pmds", "pwdss"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
+		add_child(controls)
+		controls.setup(player, _native_prefix in ["pmds", "pwdss"])
+		await get_tree().process_frame
+		await _snapshot("weapon_grip_controls")
+	if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro", "pwro", "pmwa", "pwwa"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
+		add_child(controls)
+		controls.setup(player)
+		if OS.get_environment("PSZ_SPEAR_CONTROLS_CHECK") == "1":
+			controls._selector.select(0)
+			controls._select(0)
+			var initial: Basis = player.weapon_node.basis
+			controls._rotate(1, 90)
+			var adjusted: Basis = player.weapon_node.basis
+			controls._select(1)
+			controls._select(0)
+			_check(player.weapon_node.basis.is_equal_approx(adjusted), "grip survives animation selection")
+			controls._toggle_preview(false)
+			player._weapon_grip_tween.custom_step(1.0)
+			_check(player.weapon_node.basis.is_equal_approx(adjusted), "gameplay applies selected idle grip")
+			controls._toggle_preview(true)
+			controls._action("Reset selected")
+			_check(player.weapon_node.basis.is_equal_approx(initial), "reset restores selected grip")
+			controls._move(0, 0.05)
+			var adjusted_position: Vector3 = player.weapon_node.position
+			controls._select(1)
+			controls._select(0)
+			_check(player.weapon_node.position.is_equal_approx(adjusted_position), "position survives pose selection")
+			controls._path = "user://grip-controls-test.json"
+			controls._action("Save all")
+			_check(not controls.visible and player.is_physics_processing(), "save hides controls and resumes gameplay")
+			_check(not player.get_meta("fixture_grip_preview", true), "save exits preview")
+			_check(FileAccess.file_exists(controls._path), "save writes rotations")
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				_check(enemy.is_physics_processing(), "save resumes enemy")
+			print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
+			get_tree().quit(0 if _ok else 1)
+	if _native_prefix in ["pmgb", "pwgbs"]:
+		var controls = preload("res://scripts/tools/gunblade_mode_controls.gd").new()
+		add_child(controls)
+		controls.setup(player)
+	print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
+
+
+func _verify_weapon_materials(player) -> void:
+	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]:
+		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
+		var surfaces: Array = []
+		player._collect_surfaces(player.weapon_node, surfaces)
+		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "handgun photon insert is solid colored, not additive white")
+		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
+		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
+	if _native_prefix in ["pmro", "pwro"]:
+		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "rod has no wrist glow")
+		var surfaces: Array = []
+		player._collect_surfaces(player.weapon_node, surfaces)
+		var tip: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(tip.emission_enabled and tip.emission.g > tip.emission.r and tip.vertex_color_use_as_albedo, "rod tip emits green and preserves vertex coloring")
+		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled, "rod shaft remains non-emissive")
+
+
+func _verify_animation_inventory(player) -> void:
+	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
+	for clip in player.animation_player.get_animation_list():
+		_check(not str(clip).begins_with(wrong_prefix), "no opposite-gender native clip: " + str(clip))
+	var mapping: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/retarget/pso_animation_map.json"))
+	if DisplayServer.get_name() != "headless":
+		var camera := Camera3D.new()
+		add_child(camera)
+		camera.global_position = player.global_position + Vector3(3, 2, 4)
+		camera.look_at(player.global_position + Vector3.UP)
+		camera.current = true
+	var count := 0
+	for source_clip in mapping.mappings.values():
+		var source_prefix: String = str(Rules.profile(player).get("source_prefix", _pso_prefix))
+		if not str(source_clip).begins_with(source_prefix + "_"): continue
+		var clip: String = str(source_clip).replace(source_prefix, _pso_prefix)
+		count += 1
+		_check(player.animation_player.has_animation(clip), "clip " + clip)
+		if player.animation_player.has_animation(clip):
+			_verify_root(player.animation_player.get_animation(clip), clip)
+			player.animation_player.stop()
+			player.play_animation(clip, false)
+			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
+			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or str(clip).begins_with("pso_f_cl_") or str(clip).begins_with("pso_f_ds_") or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
+	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
+	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
+	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
+	for step in range(1, 4):
+		var clip := (_native_prefix + "_atk") + str(step)
+		var animation: Animation = player.animation_player.get_animation(clip)
+		player.animation_player.stop()
+		player.play_animation(clip, false)
+		player.animation_player.seek(animation.length * 0.35, true)
+		if OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _snapshot(clip)
+		var last_key := 0.0
+		for track in animation.get_track_count():
+			for key in animation.track_get_key_count(track):
+				last_key = maxf(last_key, animation.track_get_key_time(track, key))
+		_check(animation.length - last_key >= float(Rules.profile(player).get("recovery", Rules.RECOVERY)[step - 1]) - 0.002, "native swing holds recovery pose " + str(step))
+
+
+func _verify_weapon_contacts(player, enemies) -> void:
+	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
+	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
+	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi", "pso_f_fi"]:
+		for target in enemies:
+			target.reveal()
+			target.hurtbox.monitorable = true
+
+
+func _fixture_sections() -> Array:
+	var sections := ColiseumRoster.make_sections("pso_booma")
+	if OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[-3.0,0.0,5.0]})
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[3.0,0.0,5.0]})
+	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber", "spear", "slicer"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[0.0,0.0,7.0]})
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer" and OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[2.0,0.0,7.0]})
+	return sections
+
+
+func _verify_recovery_suite(player, enemies: Array, enemy) -> void:
+	if _pso_prefix in ["pso_la", "pso_f_la"]:
+		_verify_bazooka(player, enemies)
+	else:
+		await _verify_mixed_combos(player)
+		_verify_ready_recovery(player, enemy)
+		await _verify_feedback(player, enemy)
+		_verify_combo_outcomes(player, enemy)
+		await _verify_exchange(player, enemy)
+
+
+func _verify_multi_poses(player, claw: bool, double_saber: bool, spear: bool) -> void:
+	_verify_multi_models(player, claw, double_saber, spear)
+	_check(player._run_anim == _pso_prefix + "_run" and player.animation_player.has_animation(_pso_prefix + "_run"), "multi-hit weapon uses explicit PSO run donor")
+	_verify_root(player.animation_player.get_animation(_pso_prefix + "_run"), "multi-hit weapon run")
+	for role in ["run", "walk_ready", "wait", "block", "dam_h", "dam_d_wa", "dam_n", "dam_d", "pb"]:
+		var clip: String = _pso_prefix + "_" + str(role)
+		_check(player.animation_player.has_animation(clip), "explicit donor role exists: " + clip)
+		player.animation_player.stop()
+		player.play_animation(clip, true)
+		player.animation_player.seek(0.3, true)
+		player.animation_player.pause()
+		if spear and role in ["walk_ready", "wait", "run"]:
+			player.skeleton.force_update_all_bone_transforms()
+			var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
+			player._weapon_grip_tween.custom_step(1.0)
+			var tip: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3(0.5, 0, 0.8660254)).normalized()
+			var expected_tip := Vector3(1, 1, 0).normalized() if role == "wait" else Vector3.UP
+			_check(tip.dot(expected_tip) > 0.99, clip + " uses calibrated partisan carry angle")
+		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
+
+	if spear:
+		for clip in [str(Rules.profile(player).walk), _native_prefix + "_wait"]:
+			player._sword_grip_clip = ""
+			player.play_animation(clip, true)
+			player._weapon_grip_tween.custom_step(1.0)
+			_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "owner-saved spear grip applied: " + clip)
+
+
+func _verify_multi_models(player, claw: bool, double_saber: bool, spear: bool) -> void:
+	if double_saber:
+		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber uses owner-saved zero-rotation grip")
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_double_saber").glb_path and player.weapon_node_left == null, "native double saber attaches once at its central grip")
+	elif spear:
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_spear").glb_path and player.weapon_node_left == null, "native spear attaches once to right hand")
+	elif claw:
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")
+		_check(is_equal_approx(player.weapon_node.rotation_degrees.y, -4.0), "claw retains native grip")
+	else:
+		_check(player.skeleton.has_node("WeaponAttachment_R") and player.skeleton.has_node("WeaponAttachment_L"), "multi-hit weapon attach to both hands")
+		var expected_left := Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0))
+		_check(player.weapon_node_left.basis.orthonormalized().is_equal_approx(expected_left) and is_equal_approx(player.weapon_node.rotation_degrees.y, 90.0), "left dagger uses owner-saved grip; right grip unchanged")
+		var native_model: String = WeaponRegistry.get_weapon("ein_dagger").glb_path
+		_check(player.weapon_node.scene_file_path == native_model and player.weapon_node_left.scene_file_path == native_model, "both daggers use native PSZ Ein Dagger model")
+		_check(player._get_equipped_weapon_data().id == "dagger", "visual swap preserves equipped dagger combat stats")
+
+
+func _verify_gunblade_pattern(player, enemy, handgun: bool, sequence: int, pattern: int) -> void:
+	var prefix := _native_prefix
+	for projectile in _slicer_projectiles(): projectile.free()
+	player._saber_attack_cooldown = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player.player_rotation = 0
+	enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & 1 else 1.5)
+	if pattern & 1: player._start_strong_attack()
+	else: player._start_attack()
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during preparation")
+	player._handle_attack_state(Rules.READY_PREP)
+	for step in range(3):
+		var mode := 1 if sequence & (1 << step) else 0
+		prefix = _native_prefix + "_shot" if mode == 1 and not handgun else _native_prefix
+		_check(handgun or Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
+		enemy.current_hp = 10000
+		_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")
+		var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(enemy.current_hp == 10000 and _slicer_projectiles().is_empty(), "no early gunblade contact or shot")
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		if mode == 0:
+			_check(enemy.current_hp < 10000 and _slicer_projectiles().is_empty(), "blade mode deals melee damage only")
+		else:
+			var shots := _slicer_projectiles()
+			_check(shots.size() == 1 and enemy.current_hp == 10000, "gun mode releases exactly one shot without melee damage")
+			if shots.size() == 1:
+				var shot: Projectile = shots[0]
+				shot.set_physics_process(false)
+				_check(bool(shot.attack_packet.prototype_strong) == bool(pattern & (1 << step)), "gunblade snapshots normal or strong state")
+				shot._on_area_entered(enemy.hurtbox)
+				_check(enemy.current_hp < 10000, "gunblade shot deals damage at impact")
+				shot.free()
+		player._update_attack_contact(contact)
+		_check(_slicer_projectiles().is_empty(), "gunblade does not release duplicate shot")
+		if pattern == 0 and step == 0:
+			player.animation_player.seek(0.3, true)
+			await _snapshot(prefix + "_attack_mode")
+		player._attack_anim_elapsed = player._attack_anim_length * 0.65
+		if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
+		if step < 2: enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & (1 << (step + 1)) else 1.5)
+		player._attack_step_finished()
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during finisher recovery")
+	_check(player.animation_player.current_animation == _pso_prefix + "_wait", "gunblade finisher uses blade ready stance after either action")
+	player._handle_attack_state(Rules.FINISHER_GUARD)
+	_check(Rules.idle_clip(player) == _native_prefix + "_wait", "gunblade defaults to blade idle after shooting")
+	_check(str(Rules.profile(player).run) == _pso_prefix + "_run", "gunblade defaults to blade locomotion")
+	_check(player._queued_combo == player.ComboQueue.NONE, "gunblade ends combo with no stale queued action")

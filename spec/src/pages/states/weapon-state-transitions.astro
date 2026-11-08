@@ -1,0 +1,30 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import { siteUrl } from '../../utils/site';
+import movement from '../../diagrams/weapon-locomotion.mmd?raw';
+import combo from '../../diagrams/weapon-combo.mmd?raw';
+import reactions from '../../diagrams/weapon-reactions.mmd?raw';
+import context from '../../diagrams/weapon-casting-context.mmd?raw';
+---
+<Concept title="Weapon combat UML state transitions" section="States">
+<p>UML-style state diagrams describe the approved saber behavior and the intended shared weapon contract. They are logical states, not a claim that all are separate runtime enum values. All-weapon adaptation is planned. The current prototype encodes preparation/recovery inside ATTACKING, block/get-up inside DAMAGED, and stopped attack cooldown alongside locomotion.</p>
+<p><a href={siteUrl('/states/weapon-animation-mappings/')}>Animation mapping matrix</a> · <a href={siteUrl('/states/weapon-adaptation-plan/')}>Implementation and test plan</a> · <a href={siteUrl('/states/player-state/')}>Existing campaign state machine</a></p>
+<h2>Locomotion and cursor engagement</h2><div class="diagram"><Mermaid chart={movement}/></div>
+<h2>Attack, queue and three distinct outcomes</h2><div class="diagram"><Mermaid chart={combo}/></div>
+<p>Numbers are the current saber baseline, not final tuning for every weapon. Contact fractions exclude appended held recovery. The acceptance window uses the full step duration. Adaptations must define both explicitly; changing animation speed must not desynchronize the cue or normal/strong input.</p>
+<h2>Guard, damage, dodge and defeat</h2><div class="diagram"><Mermaid chart={reactions}/></div>
+<h2>Techniques, equipment and scene context</h2><div class="diagram"><Mermaid chart={context}/></div>
+<h2>Cross-state events and invariants</h2>
+<table><thead><tr><th>Event</th><th>Applicable states</th><th>Required transition / cleanup</th><th>Status</th></tr></thead><tbody>
+<tr><td>Early/late follow-up</td><td>Non-final active swing; queue empty</td><td>Mark failure, finish committed swing, enter stationary exposed recovery. Never turn a late press into an intentional stop.</td><td>Saber tested</td></tr>
+<tr><td>No follow-up</td><td>Non-final swing</td><td>Finish swing, release movement, keep attack/guard cooldown independent of movement.</td><td>Saber tested</td></tr>
+<tr><td>Frontal melee</td><td>Eligible idle/walk or completed-combo ready</td><td>Block and consume ready phase. Running, preparation, swings, failed/stopped cooldown, frozen or menu-blocked actors cannot start guard.</td><td>Saber deterministic; broader policy pending</td></tr>
+<tr><td>Accepted damage</td><td>All damageable phases</td><td>Cancel queued attack, pending preparation, charge and active hit delivery; use light/heavy/knockdown path. Preserve post-hit immunity rules.</td><td>Saber tested; all profiles pending</td></tr>
+<tr><td>Status damage</td><td>Alive actors</td><td>Do not turn status ticks into physical stagger or guard. Lethal status follows defeat handling.</td><td>Existing path; regression required</td></tr>
+<tr><td>Freeze/stun/other control effects</td><td>Applicable gameplay states</td><td>Preserve status-controller gates; no latent buffered release on recovery. STUNNED enum is currently unused; do not invent an animation transition from it.</td><td>Shared rollout validation required</td></tr>
+<tr><td>Menu, cutscene, weapon swap, area change, revive</td><td>Context boundaries</td><td>Use existing authority for the event; clear or explicitly suspend pending actions. Never fire an old-weapon projectile after a swap or resurrect a canceled swing.</td><td>Planned integration gates</td></tr>
+<tr><td>Enemy actually loses HP</td><td>Resolved physical hit</td><td>Contact spark and impact sound; strong may extend an allowed generic hurt reaction. No effects for whiff, immunity or rejected hit; no boss stagger override.</td><td>Saber tested; projectile/multi-hit throttling pending</td></tr>
+</tbody></table>
+<p>Raw diagram sources live in <code>spec/src/diagrams/weapon-*.mmd</code> and remain reviewable without the site renderer. Broader rollout must test these transitions without replacing the campaign state machine merely because the diagram uses clearer logical names.</p>
+</Concept>

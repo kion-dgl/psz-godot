@@ -353,8 +353,41 @@ function buildRetargetedClip(clip, psoRest, pszRest, boneMap, posScale, outputNa
 // ── Main ──────────────────────────────────────────────────────────
 
 async function main() {
+  const femaleSaber = process.argv.includes('--female-saber');
+  const maleSaber = process.argv.includes('--humar-saber');
+  const femaleDouble = process.argv.includes('--female-double-saber');
+  const femaleSpear = process.argv.includes('--female-spear');
+  const femaleSlicer = process.argv.includes('--female-slicer');
+  const femaleBazooka = process.argv.includes('--female-bazooka');
+  const femaleRod = process.argv.includes('--female-rod');
+  const femaleWand = process.argv.includes('--female-wand');
+  const femaleUnarmed = process.argv.includes('--female-unarmed');
+  const maleUnarmed = process.argv.includes('--male-unarmed');
+  const maleWand = process.argv.includes('--male-wand');
+  const maleRod = process.argv.includes('--male-rod');
+  const maleBazooka = process.argv.includes('--male-bazooka');
+  const femaleRifle = process.argv.includes('--female-rifle');
+  const maleRifle = process.argv.includes('--male-rifle');
+  const femaleMechgun = process.argv.includes('--female-mechgun');
+  const maleMechgun = process.argv.includes('--male-mechgun');
+  const femaleHandgun = process.argv.includes('--female-handgun');
+  const maleHandgun = process.argv.includes('--male-handgun');
+  const femaleGunblade = process.argv.includes('--female-gunblade');
+  const maleGunblade = process.argv.includes('--male-gunblade');
+  const maleSlicer = process.argv.includes('--male-slicer');
+  const maleSpear = process.argv.includes('--male-spear');
+  const maleDouble = process.argv.includes('--male-double-saber');
+  const femaleClaw = process.argv.includes('--female-claw');
+  const maleClaw = process.argv.includes('--male-claw');
+  const femaleDagger = process.argv.includes('--female-daggers');
+  const maleDagger = process.argv.includes('--male-daggers');
+  const femaleSword = process.argv.includes('--female-sword');
+  const female = femaleSaber || femaleSword || femaleDagger || femaleClaw || femaleDouble || femaleSpear || femaleSlicer || femaleGunblade || femaleHandgun || femaleMechgun || femaleRifle || femaleBazooka || femaleRod || femaleWand || femaleUnarmed;
+  const maleSword = process.argv.includes('--male-sword');
+  if ([femaleSaber, maleSaber, maleSword, femaleSword, maleDagger, femaleDagger, maleClaw, femaleClaw, maleDouble, femaleDouble, maleSpear, femaleSpear, maleSlicer, femaleSlicer, maleGunblade, femaleGunblade, maleHandgun, femaleHandgun, maleMechgun, femaleMechgun, maleRifle, femaleRifle, maleBazooka, femaleBazooka, maleRod, femaleRod, maleWand, femaleWand, maleUnarmed, femaleUnarmed].filter(Boolean).length > 1) throw new Error('Choose one profile per bake');
   const psoPath = path.resolve('../data/retarget/Humar_body.glb');
-  const pszPath = path.resolve('../assets/player/pc_000/pc_000_000.glb');
+  // The source archive includes both motion sets on its common PSO skeleton.
+  const pszPath = path.resolve(female ? '../assets/player/pc_010/pc_010_000.glb' : '../assets/player/pc_000/pc_000_000.glb');
 
   console.log('Loading PSO and PSZ models...');
   const [psoGltf, pszGltf] = await Promise.all([
@@ -381,12 +414,56 @@ async function main() {
   pszModel.updateMatrixWorld(true);
   const pszRest = captureRestPose(pszModel);
 
-  // Process each bake target
-  for (const { targetGlb, anims } of BAKE_TARGETS) {
+  // Isolated complete saber library for the Coliseum prototype (#790).
+  const saberPrototype = maleSaber || femaleSaber || maleSword || femaleSword || maleDagger || femaleDagger || maleClaw || femaleClaw || maleDouble || femaleDouble || maleSpear || femaleSpear || maleSlicer || femaleSlicer || maleGunblade || femaleGunblade || maleHandgun || femaleHandgun || maleMechgun || femaleMechgun || maleRifle || femaleRifle || maleBazooka || femaleBazooka || maleRod || femaleRod || maleWand || femaleWand || maleUnarmed || femaleUnarmed;
+  const mapping = JSON.parse(fs.readFileSync('../data/retarget/pso_animation_map.json')).mappings;
+  const targets = saberPrototype ? [{
+    targetGlb: femaleUnarmed ? '../assets/player/animations/pso_female_unarmed.glb' : maleUnarmed ? '../assets/player/animations/pso_male_unarmed.glb' : femaleWand ? '../assets/player/animations/pso_female_wand.glb' : maleWand ? '../assets/player/animations/pso_male_wand.glb' : femaleRod ? '../assets/player/animations/pso_female_rod.glb' : maleRod ? '../assets/player/animations/pso_male_rod.glb' : femaleBazooka ? '../assets/player/animations/pso_female_bazooka.glb' : maleBazooka ? '../assets/player/animations/pso_male_bazooka.glb' : femaleRifle ? '../assets/player/animations/pso_female_rifle.glb' : maleRifle ? '../assets/player/animations/pso_male_rifle.glb' : femaleMechgun ? '../assets/player/animations/pso_female_mechgun.glb' : maleMechgun ? '../assets/player/animations/pso_male_mechgun.glb' : femaleHandgun ? '../assets/player/animations/pso_female_handgun.glb' : maleHandgun ? '../assets/player/animations/pso_male_handgun.glb' : femaleGunblade ? '../assets/player/animations/pso_female_gunblade.glb' : maleGunblade ? '../assets/player/animations/pso_male_gunblade.glb' : femaleSlicer ? '../assets/player/animations/pso_female_slicer.glb' : maleSlicer ? '../assets/player/animations/pso_male_slicer.glb' : femaleSpear ? '../assets/player/animations/pso_female_spear.glb' : maleSpear ? '../assets/player/animations/pso_male_spear.glb' : femaleDouble ? '../assets/player/animations/pso_female_double_saber.glb' : maleDouble ? '../assets/player/animations/pso_male_double_saber.glb' : femaleClaw ? '../assets/player/animations/pso_female_claw.glb' : maleClaw ? '../assets/player/animations/pso_male_claw.glb' : femaleDagger ? '../assets/player/animations/pso_female_dagger.glb' : maleDagger ? '../assets/player/animations/pso_male_dagger.glb' : femaleSword ? '../assets/player/animations/pso_female_sword.glb' : maleSword ? '../assets/player/animations/pso_male_sword.glb' : femaleSaber ? '../assets/player/animations/pso_female_saber.glb' : '../assets/player/animations/pso_humar_saber.glb',
+    anims: Object.entries(mapping).filter(([, name]) => name.startsWith(maleUnarmed || femaleUnarmed ? 'pso_fi_' : femaleWand ? 'pso_f_wn_' : maleWand ? 'pso_wn_' : femaleRod ? 'pso_f_ro_' : maleRod ? 'pso_ro_' : femaleBazooka ? 'pso_f_la_' : maleBazooka ? 'pso_la_' : femaleRifle ? 'pso_f_ri_' : maleRifle ? 'pso_ri_' : femaleMechgun ? 'pso_f_mg_' : maleMechgun ? 'pso_mg_' : femaleHandgun ? 'pso_f_hg_' : maleHandgun ? 'pso_hg_' : femaleGunblade ? 'pso_f_sa_' : maleGunblade ? 'pso_sa_' : maleSlicer || femaleSlicer ? 'pso_sl_' : maleSpear || femaleSpear ? 'pso_pa_' : femaleDouble ? 'pso_f_ds_' : maleDouble ? 'pso_ds_' : femaleClaw ? 'pso_f_cl_' : maleClaw ? 'pso_cl_' : femaleDagger ? 'pso_f_da_' : maleDagger ? 'pso_da_' : femaleSword ? 'pso_f_sw_' : maleSword ? 'pso_sw_' : femaleSaber ? 'pso_f_sa_' : 'pso_sa_'))
+      .map(([index, name]) => ({ index: Number(index), name: femaleUnarmed ? name.replace('pso_fi_', 'pso_f_fi_') : femaleGunblade ? name.replace('pso_f_sa_', 'pso_f_gb_') : maleGunblade ? name.replace('pso_sa_', 'pso_gb_') : femaleSlicer ? name.replace('pso_sl_', 'pso_f_sl_') : femaleSpear ? name.replace('pso_pa_', 'pso_f_pa_') : name,
+        offsets: name.endsWith('_run') ? (female ? F_RUN_OFFSETS : RUN_OFFSETS) : (female ? F_WALK_OFFSETS : WALK_OFFSETS) })),
+  }] : BAKE_TARGETS;
+  if (saberPrototype && targets[0].anims.length !== (maleUnarmed || femaleUnarmed ? 15 : femaleWand ? 7 : maleWand ? 12 : femaleRod ? 10 : maleRod ? 14 : femaleBazooka || maleBazooka || femaleRifle || maleRifle ? 13 : femaleMechgun ? 10 : maleMechgun ? 11 : femaleHandgun ? 11 : maleHandgun ? 8 : femaleGunblade ? 16 : maleGunblade ? 15 : maleSlicer || femaleSlicer ? 12 : maleSpear || femaleSpear ? 14 : maleClaw || femaleClaw || maleDouble || femaleDouble ? 5 : femaleDagger ? 8 : maleSword || femaleSword || maleDagger ? 13 : femaleSaber ? 16 : 15)) throw new Error('Incomplete saber source inventory');
+  // Sword shares the saber run; keep the donor ID explicit.
+  if (maleSword) targets[0].anims.push({ index: 111, name: 'pso_sw_run', offsets: RUN_OFFSETS });
+  if (femaleSword) targets[0].anims.push({ index: 342, name: 'pso_f_sw_run', offsets: F_RUN_OFFSETS });
+  if (maleDagger) targets[0].anims.push({ index: 111, name: 'pso_da_run', offsets: RUN_OFFSETS });
+  if (femaleDagger) targets[0].anims.push({ index: 342, name: 'pso_f_da_run', offsets: F_RUN_OFFSETS });
+  if (maleClaw) targets[0].anims.push(...[[98, 'tec'], [103, 'block'], [105, 'dam_h'], [106, 'dam_d_wa'], [107, 'dam_n'], [108, 'dam_d'], [110, 'pb'], [111, 'run']].map(([index, role]) => ({ index, name: 'pso_cl_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
+  if (femaleClaw) targets[0].anims.push(...[[328, 'tec'], [333, 'block'], [336, 'dam_h'], [337, 'dam_d_wa'], [338, 'dam_n'], [339, 'dam_d'], [341, 'pb'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_cl_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
+  if (maleDouble) targets[0].anims.push(...[[113, 'tec'], [118, 'block'], [120, 'dam_h'], [121, 'dam_d_wa'], [122, 'dam_n'], [123, 'dam_d'], [124, 'pb'], [111, 'run']].map(([index, role]) => ({ index, name: 'pso_ds_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
+  if (femaleDouble) targets[0].anims.push(...[[344, 'tec'], [349, 'block'], [351, 'dam_h'], [352, 'dam_d_wa'], [353, 'dam_n'], [354, 'dam_d'], [355, 'pb'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_ds_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
+  if (maleSlicer) targets[0].anims.push(...[[98, 'tec'], [103, 'block'], [111, 'run']].map(([index, role]) => ({ index, name: 'pso_sl_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
+  if (femaleSlicer) targets[0].anims.push(...[[328, 'tec'], [333, 'block'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_sl_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
+  if (femaleRod) targets[0].anims.push(...[[336, 'dam_h'], [337, 'dam_d_wa'], [338, 'dam_n'], [339, 'dam_d'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_ro_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
+  if (femaleWand) targets[0].anims.push(...[[332, 'wait'], [338, 'dam_n'], [339, 'dam_d'], [342, 'run']].map(([index, role]) => ({ index, name: 'pso_f_wn_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
+  if (maleWand) targets[0].anims.push({ index: 111, name: 'pso_wn_run', offsets: RUN_OFFSETS });
+  if (maleRod) targets[0].anims.push({ index: 111, name: 'pso_ro_run', offsets: RUN_OFFSETS });
+  if (femaleBazooka) {
+    targets[0].anims.find(clip => clip.name === 'pso_f_la_wait').index = 276;
+    targets[0].anims.find(clip => clip.name === 'pso_f_la_walk').index = 278;
+    targets[0].anims.find(clip => clip.name === 'pso_f_la_run').index = 285;
+    targets[0].anims.push({ index: 339, name: 'pso_f_la_dam_d', offsets: F_WALK_OFFSETS });
+  }
+  if (maleBazooka) {
+    targets[0].anims.find(clip => clip.name === 'pso_la_wait').index = 39;
+    // Heavy two-handed locomotion: owner-selected shot donors, retaining role aliases.
+    targets[0].anims.find(clip => clip.name === 'pso_la_walk').index = 41;
+    targets[0].anims.find(clip => clip.name === 'pso_la_run').index = 48;
+    targets[0].anims.push({ index: 108, name: 'pso_la_dam_d', offsets: WALK_OFFSETS });
+  }
+  if (maleRifle) targets[0].anims.push({ index: 110, name: 'pso_ri_pb', offsets: WALK_OFFSETS });
+  if (femaleMechgun) targets[0].anims.push(...[[328, 'tec'], [341, 'pb']].map(([index, role]) => ({ index, name: 'pso_f_mg_' + role, offsets: F_WALK_OFFSETS })));
+  if (maleMechgun) targets[0].anims.push(...[[105, 'dam_h'], [106, 'dam_d_wa']].map(([index, role]) => ({ index, name: 'pso_mg_' + role, offsets: WALK_OFFSETS })));
+  if (femaleHandgun) targets[0].anims.push({ index: 342, name: 'pso_f_hg_run', offsets: F_RUN_OFFSETS });
+  if (maleHandgun) targets[0].anims.push(...[[107, 'dam_n'], [108, 'dam_d'], [111, 'run']].map(([index, role]) => ({ index, name: 'pso_hg_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
+  if (femaleGunblade) targets[0].anims.push(...[[250, 'walk_ready'], [253, 'wait'], [262, 'run']].map(([index, role]) => ({ index, name: 'pso_f_gb_gun_' + role, offsets: role === 'run' ? F_RUN_OFFSETS : F_WALK_OFFSETS })));
+  if (maleGunblade) targets[0].anims.push(...[[10, 'walk_ready'], [13, 'wait'], [22, 'run']].map(([index, role]) => ({ index, name: 'pso_gb_gun_' + role, offsets: role === 'run' ? RUN_OFFSETS : WALK_OFFSETS })));
+  for (const { targetGlb, anims } of targets) {
     const targetPath = path.resolve(targetGlb);
     console.log(`\n── Baking into: ${targetGlb} ──`);
 
-    const targetGltf = await loadGLB(targetPath);
+    const targetGltf = saberPrototype ? pszGltf : await loadGLB(targetPath);
 
     // Retarget animations
     const newClips = [];
@@ -394,11 +471,24 @@ async function main() {
       const clipName = `plymotiondata_${String(index).padStart(3, '0')}`;
       const srcClip = psoGltf.animations.find((c) => c.name === clipName);
       if (!srcClip) {
+        if (saberPrototype) throw new Error(`Missing source clip: ${clipName}`);
         console.warn(`Animation ${clipName} not found, skipping ${name}`);
         continue;
       }
       const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, posScale, name, offsets);
       if (retargeted) {
+        // PSO chains contain cumulative travel (atk3 starts ~2.65m forward).
+        // The gameplay body owns movement; retain vertical pose, never let the
+        // visible rig walk away from its collider or drift on loop boundaries.
+        if (saberPrototype) {
+          for (const track of retargeted.tracks) {
+            if (track.name !== '000_Root.position') continue;
+            for (let i = 0; i < track.values.length; i += 3) {
+              track.values[i] = 0;
+              track.values[i + 2] = 0;
+            }
+          }
+        }
         newClips.push(retargeted);
         console.log(`  Retargeted: ${clipName} -> ${name} (${retargeted.duration.toFixed(2)}s, ${retargeted.tracks.length} tracks)`);
       }
@@ -411,7 +501,7 @@ async function main() {
 
     // Merge with existing animations (deduplicate by name)
     const newNames = new Set(newClips.map((c) => c.name));
-    const existing = targetGltf.animations.filter((a) => !newNames.has(a.name));
+    const existing = saberPrototype ? [] : targetGltf.animations.filter((a) => !newNames.has(a.name));
     const allAnims = [...existing, ...newClips];
     console.log(`  Existing: ${targetGltf.animations.length}, adding: ${newClips.length}, total: ${allAnims.length}`);
 

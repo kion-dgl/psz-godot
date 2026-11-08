@@ -147,10 +147,12 @@ Verified via `retarget-test.mjs`: this produces identical results to the correct
 
 Animations are grouped per weapon. The pattern repeats: each weapon set starts with attacks, then idle/block/walk/damage/utility/run/tech.
 
-### Saber (indices 99–113)
+### Saber (indices 97–111; authoritative mapping: data/retarget/pso_animation_map.json)
 
 | Index | Name | Description |
 |-------|------|-------------|
+| 097 | pso_sa_walk_ready | Saber Caution Walk |
+| 098 | pso_sa_tec | Saber Cast Tech |
 | 099 | pso_sa_atk1 | Saber Attack 1 |
 | 100 | pso_sa_atk2 | Saber Attack 2 |
 | 101 | pso_sa_atk3 | Saber Attack 3 |
@@ -164,10 +166,10 @@ Animations are grouped per weapon. The pattern repeats: each weapon set starts w
 | 109 | pso_sa_press | Saber Press Button |
 | 110 | pso_sa_pb | Saber Photon Blast |
 | 111 | pso_sa_run | Saber Run |
-| 112 | pso_sa_walk_ready | Saber Walk Ready |
-| 113 | pso_sa_tec | Saber Cast Tech |
 
-**Note:** Index 114 likely starts the sword weapon set following the same pattern.
+**Note:** Sword starts at 112 (walk_ready), 113 (tec), then 114 (atk1).
+
+Bake the isolated 15-clip saber prototype with `cd web && node scripts/bake-retarget.mjs --humar-saber`. It does not rewrite existing weapon libraries.
 
 ## Remaining Issues
 

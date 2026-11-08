@@ -1,0 +1,50 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import { siteUrl } from '../../utils/site';
+import audit from '../../data/weapon-animation-adaptations.json';
+import source from '../../../../data/retarget/pso_animation_map.json';
+const roles = [['walk_ready','Caution'],['wait','Ready'],['walk','Walk donor'],['run','Run donor'],['block','Block'],['dam_n','Light damage'],['dam_h','Heavy damage'],['dam_d','Fall'],['dam_d_wa','Get up'],['tec','Cast'],['pb','Photon Blast'],['press','Interact'],['stand','Stand donor']];
+const nativeRoles = [['wait','Idle'],['atk1','Attack 1'],['atk2','Attack 2'],['atk3','Attack 3'],['run','Native run'],['esc_f','Dodge'],['dam_d_lp','Defeated hold']];
+const entries = Object.entries(source.mappings);
+function donorClips(row: (typeof audit.rows)[number], role: string) {
+  const names = row.donors.map(d => `pso_${row.gender === 'female' ? 'f_' : ''}${d}_${role}`);
+  return entries.filter(([,name]) => names.includes(name)).map(([id,name]) => `${id} · ${name}`);
+}
+function nativeClips(row: (typeof audit.rows)[number], role: string) {
+  return (row.exact_native as Record<string,string[]>)[role]?.join(', ') || '— resolve explicitly';
+}
+const overrides = entries.filter(([,name]) => /hucaseal|fomarl|ramarl/.test(name));
+---
+<Concept title="Weapon animation mapping inventory" section="States">
+<p><strong>Planning baseline, 7 November 2026.</strong> This covers all 16 weapon enum families plus unarmed, male and female. Only the male HUmar/saber fixture has owner approval. A source name or a clip in a GLB is evidence of availability, not approval of its retarget, pose, attachment or timing. Missing entries are explicit blockers, not permission to guess.</p>
+<p><a href={siteUrl('/states/weapon-state-transitions/')}>UML state transitions</a> · <a href={siteUrl('/states/weapon-adaptation-plan/')}>Adaptation plans and test protocol</a> · <a href={siteUrl('/states/humar-saber-prototype/')}>Current saber contract</a></p>
+<h2>Source policy</h2>
+<table><thead><tr><th>Role</th><th>Selection policy</th></tr></thead><tbody>
+<tr><td>Relaxed idle / attack sequence</td><td>Keep PSZ clips. Retain the weapon's actual step count; do not substitute a PSO single-shot gun animation for a PSZ sequence.</td></tr>
+<tr><td>Caution / ready / block / reactions</td><td>Use the matching PSO weapon and gender donor where visually verified; otherwise choose and document an explicit PSZ fallback.</td></tr>
+<tr><td>Normal walk / run</td><td>Verify separately. Approved male saber uses general pmsa_walk (PSO source 200, baked in saber_m.glb) and saber run 111; saber walk 104 was rejected. General female bake uses sources 412/416, but 412 is absent from the named map and needs provenance review.</td></tr>
+<tr><td>Dodge / defeated hold</td><td>Preserve PSZ behavior and explicit native fallbacks; no broad suffix search may silently choose another weapon/gender.</td></tr>
+<tr><td>Cast / Photon Blast / interact</td><td>Inventory and preserve these utility roles; do not replace technique logic with weapon combo logic. Source availability alone does not authorize a new behavior.</td></tr>
+</tbody></table>
+<p>Numbers below are zero-based <code>plymotiondata_NNN</code> IDs; the legacy CSV index is one higher. Male and female numbering is not a fixed offset. A dash means no matching entry in the current map, not proof that the original game has no animation. Spear uses partisan. Gunblade, bazooka and laser donor choices are proposals. Shield has no assigned donor.</p>
+<h2>PSZ libraries and attack mappings</h2>
+<p>Paths are relative to the repository. These are exact current-prefix matches in the inspected local GLB. Missing matches must be resolved from the full inventory, not silently normalized. Some libraries already contain PSO retargets, especially the bazooka fallback; verify provenance before calling a clip native.</p>
+<div class="wide"><table><thead><tr><th>ID / weapon</th><th>Gender</th><th>Current library / prefix</th>{nativeRoles.map(([,label]) => <th>{label}</th>)}<th>Status / caveat</th></tr></thead><tbody>
+{audit.rows.map(row => <tr id={row.id.toLowerCase()}><td>{row.id}<br/>{row.weapon}</td><td>{row.gender}</td><td><code>{row.path ?? 'Unassigned'}</code><br/><code>{row.prefix ?? 'Unassigned'}</code></td>{nativeRoles.map(([role]) => <td>{nativeClips(row, role)}</td>)}<td>{row.status}<br/>{row.note}</td></tr>)}
+</tbody></table></div>
+<h2>PSO role candidates by weapon and gender</h2>
+<p>Every populated cell below is joined against the checked-in source map. Multiple gunblade donors are alternatives to evaluate, not an instruction to mix clips arbitrarily. For approved saber, use 097 caution, 102 ready, 103 block, 105/107 damage, 108 fall, 106 get-up, 111 run, with native idle/attacks. The walk-donor column is inventory only.</p>
+<div class="wide"><table><thead><tr><th>Profile</th><th>Donor family</th>{roles.map(([,label]) => <th>{label}</th>)}</tr></thead><tbody>
+{audit.rows.map(row => <tr><td>{row.id}<br/>{row.weapon} / {row.gender}</td><td>{row.donors.join(' / ') || 'Unassigned'}</td>{roles.map(([role]) => <td>{donorClips(row, role).map(clip => <div><code>{clip}</code></div>)}{donorClips(row, role).length === 0 && '— discover or approve fallback'}</td>)}</tr>)}
+</tbody></table></div>
+<h2>Character-specific overrides to inspect</h2>
+<p>These entries cannot be treated as universal female defaults. Test body proportions and race variants as well as gender; record an override only after comparison on the actual avatar.</p>
+<table><thead><tr><th>Source ID</th><th>Mapped clip</th><th>Status</th></tr></thead><tbody>{overrides.map(([id,name]) => <tr><td>{id}</td><td><code>{name}</code></td><td>Candidate; visual verification pending</td></tr>)}</tbody></table>
+<h2>Full local clip inventories and provenance</h2>
+<p>{audit.provenance} Audit date: {audit.audited_on}. These hashes identify local inputs, not a promise that the published pack matches them.</p>
+{audit.rows.map(row => <details><summary>{row.id}: {row.weapon} / {row.gender}</summary><p><code>{row.path ?? 'No library'}</code><br/>SHA256: <code>{row.sha256 ?? 'Not available'}</code></p><p class="inventory">{row.clips.join(' · ') || 'No source library assigned.'}</p></details>)}
+<details><summary>Complete checked-in PSO source map (including unused attack and utility clips)</summary><table><thead><tr><th>ID</th><th>Name</th><th>Use</th></tr></thead><tbody>{entries.map(([id,name]) => <tr><td>{id}</td><td><code>{name}</code></td><td>Inventory only; profile selection requires explicit verification</td></tr>)}</tbody></table></details>
+<h2>Evidence</h2>
+<ul><li><code>data/retarget/pso_animation_map.json</code> — exact PSO ID/name mapping.</li><li><code>scripts/3d/player/player.gd</code> — current weapon libraries, prefixes and fallback behavior.</li><li><code>web/scripts/bake-retarget.mjs</code> — existing locomotion bake sources and offsets.</li><li><code>data/re_reference/original_attack_timing.json</code> — extracted step contacts/windows; currently male-derived data, not blanket female timing approval.</li><li><code>spec/src/data/weapon-animation-adaptations.json</code> — local clip inventory and hashes used by this page; planning-only, not runtime configuration.</li></ul>
+</Concept>
+<style>.wide {overflow-x:auto;margin-bottom:24px}.wide table {max-width:none;min-width:1500px}.wide td {min-width:125px}details {margin:12px 0;padding:10px;border:1px solid #30363d;border-radius:6px}summary {cursor:pointer;color:#79c0ff}.inventory {overflow-wrap:anywhere}code {overflow-wrap:anywhere}</style>

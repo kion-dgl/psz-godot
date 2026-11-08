@@ -2,6 +2,16 @@ extends CharacterBody3D
 ## Player controller - handles movement, rotation, and animation states
 ## Ported from psz-sketch PlayerMovementDemo.tsx
 
+var _saber_attack_cooldown := 0.0
+var _saber_lock_last_id := 0
+var _saber_lock_last_seen := 0
+var _saber_caution_active := false
+var _saber_retreat_elapsed := 0.0
+var _saber_phase := ""
+var _saber_phase_left := 0.0
+
+const SaberPrototype := preload("res://scripts/3d/player/humar_saber_prototype.gd")
+
 # Movement settings
 const MOVE_SPEED: float = 6.0
 const WALK_SPEED: float = 2.5
@@ -113,6 +123,8 @@ const STEP_UP_MAX_HEIGHT: float = 0.5
 var animation_player: AnimationPlayer
 var skeleton: Skeleton3D
 var weapon_node: Node3D  # Attached weapon model
+var _weapon_grip_tween: Tween
+var _sword_grip_clip := ""
 
 # Weapon attachment config
 const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
@@ -454,10 +466,17 @@ func _load_weapon_animations() -> void:
 			anim_glb = "res://assets/player/animations/common_w.glb" if _is_female else "res://assets/player/animations/common_m.glb"
 			_anim_prefix = "pwbn" if _is_female else "pmbn"
 
+	if SaberPrototype.enabled(self):
+		anim_glb = str(SaberPrototype.profile(self).library)
+		_anim_prefix = str(SaberPrototype.profile(self).prefix)
+
 	print("[Player] Loading animations: glb=%s, prefix=%s, female=%s" % [anim_glb, _anim_prefix, _is_female])
 
 	# Load animation GLB (fall back to male if female GLB missing)
 	if not ResourceLoader.exists(anim_glb):
+		if SaberPrototype.enabled(self):
+			push_error("Saber prototype requires imported profile library: " + anim_glb)
+			return
 		push_warning("[Player] Animation GLB not found: %s, falling back to male" % anim_glb)
 		anim_glb = DEFAULT_ANIM_GLB_M
 		_anim_prefix = DEFAULT_ANIM_PREFIX_M
@@ -485,12 +504,24 @@ func _load_weapon_animations() -> void:
 	else:
 		_walk_anim = "pmsa_walk"
 		_run_anim = "pmsa_run_pso"
+	if SaberPrototype.enabled(self):
+		_walk_anim = str(SaberPrototype.profile(self).walk)
+		_run_anim = str(SaberPrototype.profile(self).get("run", _anim_prefix + "_run"))
 	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
 
 	# Replace existing library
 	if animation_player.has_animation_library(""):
 		animation_player.remove_animation_library("")
 	animation_player.add_animation_library("", lib)
+	if SaberPrototype.enabled(self):
+		# Ease into the authored stance and out into swing/idle instead of
+		# flashing a single unrelated pose between native animations.
+		var ready_clip := SaberPrototype.ready_clip(self)
+		for clip in lib.get_animation_list():
+			if clip != ready_clip:
+				animation_player.set_blend_time(clip, ready_clip, SaberPrototype.READY_BLEND)
+		animation_player.set_blend_time(ready_clip, SaberPrototype.native_clip(self, "atk1"), SaberPrototype.READY_BLEND)
+		animation_player.set_blend_time(ready_clip, SaberPrototype.native_clip(self, "wait"), SaberPrototype.READY_BLEND)
 
 	var anim_list := animation_player.get_animation_list()
 	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
@@ -514,7 +545,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		return null
 
 	# Looping animations: weapon-specific idle/wait + shared locomotion
-	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr"]
+	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr", "_walk_ready"]
 
 	# Build new library from the weapon animation GLB
 	var lib := AnimationLibrary.new()
@@ -539,17 +570,13 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 
 		lib.add_animation(anim_name, new_anim)
 
-	# Also load shared PSO locomotion from the scene-baked Animations node
-	var scene_anims_node := $PlayerModel/Animations
-	if scene_anims_node:
-		var scene_player: AnimationPlayer = NodeUtils.first_of_type(scene_anims_node, "AnimationPlayer") as AnimationPlayer
-		if scene_player:
-			for anim_name in ["pmsa_walk", "pmsa_run_pso"]:
-				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
-					var source_anim := scene_player.get_animation(anim_name)
-					var new_anim := _remap_animation(source_anim, skeleton.name)
-					new_anim.loop_mode = Animation.LOOP_LINEAR
-					lib.add_animation(anim_name, new_anim)
+	var prototype_profile := SaberPrototype.profile_for_library(anim_glb)
+	_add_scene_locomotion(lib, anim_glb)
+	# Keep native PSZ poses for the low-bone-count avatar; PSO supplies
+	# locomotion/readiness/reactions, not the three saber swings.
+	if not prototype_profile.is_empty() and not _add_prototype_animations(lib, anim_glb, prototype_profile):
+		anim_scene.queue_free()
+		return null
 
 	anim_scene.queue_free()
 	return lib
@@ -649,6 +676,22 @@ func _setup_weapon() -> void:
 		weapon_data.id, weapon_data.name, weapon_data.weapon_type,
 		weapon_data.glb_path, weapon_data.glb_scale, weapon_data.tint_color])
 
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.GUN_BLADE:
+		weapon_data = weapon_data.duplicate() as WeaponData
+		weapon_data.glb_path = "res://assets/weapons/wgbr02/wgbr02/wgbr02_1_o/wgbr02_1_o.glb"
+		weapon_data.glb_scale = 1.0
+	# Use the native PSZ dagger geometry for this fixture. Keep equipped
+	# combat stats unchanged; only the attachment's visual resource is copied.
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS:
+		var native_dagger: WeaponData = WeaponRegistry.get_weapon("ein_dagger")
+		if native_dagger == null:
+			push_error("Dagger prototype requires the PSZ Ein Dagger model")
+			return
+		weapon_data = weapon_data.duplicate() as WeaponData
+		weapon_data.glb_path = native_dagger.glb_path
+		weapon_data.glb_scale = native_dagger.glb_scale
+		weapon_data.tint_color = native_dagger.tint_color
+
 	# Attach to right hand
 	weapon_node = _attach_weapon_to_bone(WEAPON_BONE_NAME, weapon_data)
 
@@ -721,10 +764,18 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	node.position = idle_hold.get("pos", Vector3(0.31, 0, 0))
 	node.rotation_degrees = idle_hold.get("rot", Vector3(0, 90, 0))
 	node.scale = Vector3(s, s, s)
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.SLICER:
+		node.basis = SLICER_GRIP.scaled(Vector3.ONE * s)
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type in [WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.GUN_BLADE]:
+		# Owner-calibrated central grip from the live rotation controls.
+		node.basis = Basis.IDENTITY.scaled(Vector3.ONE * s)
 
 	# Mirror left-hand weapon on X axis
 	if mirror:
 		node.scale.x = -s
+		if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS:
+			# Owner-calibrated PSZ left grip, promoted from the live adjustment panel.
+			node.basis = Basis(Vector3(0, 0, -1), Vector3(0, -1, 0), Vector3(1, 0, 0)).scaled(Vector3.ONE * s)
 
 	# Apply tint and additive blending to blade materials
 	_apply_weapon_materials(node, weapon_data)
@@ -732,7 +783,7 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	# Photon light (#646): a tinted weapon reads as a light source — a small
 	# omni so the blade tints the player and nearby ground at night. Attached
 	# to the bone attachment (unscaled) so range isn't shrunk by weapon scale.
-	if weapon_data.tint_color != Color.WHITE:
+	if weapon_data.tint_color != Color.WHITE and weapon_data.glb_path not in PHOTON_INSERT_MODELS:
 		var photon := OmniLight3D.new()
 		photon.name = "PhotonLight"
 		photon.light_color = weapon_data.tint_color
@@ -750,6 +801,8 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 
 # Weapon type → global material indices that get additive blending (blade/energy surfaces)
 # Indices count across all mesh children in order (matching web preview)
+const PHOTON_INSERT_MODELS := ["res://assets/weapons/basic/Handgun.glb", "res://assets/weapons/basic/Mechgun.glb", "res://assets/weapons/basic/Rifle.glb", "res://assets/weapons/basic/Rod.glb"]
+
 const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
 	WeaponData.WeaponType.SABER: [1, 2],
 	WeaponData.WeaponType.SWORD: [1, 3],
@@ -768,6 +821,9 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 	if has_tint:
 		# Basic weapons: additive blending on blade/energy surfaces
 		var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
+		# Basic firearm surface 0 is the casing; surface 1 is its photon insert.
+		var photon_insert: bool = weapon_data.glb_path in PHOTON_INSERT_MODELS
+		if photon_insert: additive_indices = [1]
 		for global_idx in additive_indices:
 			if global_idx >= surfaces.size():
 				continue
@@ -778,9 +834,20 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 			if mat is StandardMaterial3D:
 				var new_mat := mat.duplicate() as StandardMaterial3D
 				new_mat.albedo_color = tint
-				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+				if photon_insert:
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+					new_mat.emission_enabled = true
+					new_mat.emission = tint
+					new_mat.emission_energy_multiplier = 1.2
+					if weapon_data.glb_path == "res://assets/weapons/basic/Rod.glb":
+						# Tip surface is green in COLOR_0; preserve it rather than applying Pole blue tint.
+						new_mat.albedo_color = Color.WHITE
+						new_mat.vertex_color_use_as_albedo = true
+						new_mat.emission = Color(0.498, 1.0, 0.498)
+						new_mat.emission_texture = new_mat.albedo_texture
+				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX if photon_insert else BaseMaterial3D.BLEND_MODE_ADD
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY if photon_insert else BaseMaterial3D.DEPTH_DRAW_DISABLED
 				mesh_inst.set_surface_override_material(surf_idx, new_mat)
 	else:
 		# Unique weapons: normal textures, double-sided faces
@@ -791,6 +858,12 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 			if mat is StandardMaterial3D:
 				var new_mat := mat.duplicate() as StandardMaterial3D
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				if weapon_data.glb_path == "res://assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.glb" or (SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.LASER_CANNON):
+					# This texture has binary alpha, not translucent surfaces.
+					# Alpha blending sorts whole surfaces and exposes rear faces.
+					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					new_mat.alpha_scissor_threshold = 0.5
+					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY
 				mesh_inst.set_surface_override_material(surf_idx, new_mat)
 
 
@@ -1011,14 +1084,7 @@ func _sync_dodge_body_collisions() -> void:
 
 func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_start")
-	_tick_hit_invulnerability(delta)
-	if dodge_cooldown > 0.0:
-		dodge_cooldown = maxf(0.0, dodge_cooldown - delta)
-	if _recovery_left > 0.0:
-		_recovery_left = maxf(0.0, _recovery_left - delta)
-		if _recovery_left <= 0.0 and current_state == PlayerState.DAMAGED:
-			transition_to(PlayerState.IDLE) # Missing stand-up clips cannot strand recovery.
-	_revival.tick(self, delta)
+	_tick_recovery_timers(delta)
 	# Check for fall and respawn
 	if global_position.y < fall_respawn_y:
 		_respawn()
@@ -1271,13 +1337,17 @@ func _handle_movement(delta: float) -> void:
 			rot_diff += TAU
 		player_rotation += rot_diff * ROTATE_SPEED * delta
 
+		var cautious := SaberPrototype.enabled(self) and SaberPrototype.update_caution(self, target_rotation, delta)
+		if SaberPrototype.enabled(self): SaberPrototype.select_walk(self, cautious)
+		if cautious and current_state == PlayerState.RUNNING:
+			transition_to(PlayerState.WALKING)
 		# State transitions: IDLE → WALKING → RUNNING
 		if current_state == PlayerState.IDLE:
 			walk_timer = 0.0
 			transition_to(PlayerState.WALKING)
 		elif current_state == PlayerState.WALKING:
-			walk_timer += delta
-			if walk_timer >= WALK_TO_RUN_DELAY:
+			walk_timer = 0.0 if cautious else walk_timer + delta
+			if walk_timer >= WALK_TO_RUN_DELAY and not cautious:
 				transition_to(PlayerState.RUNNING)
 
 		# Speed based on current state
@@ -1318,6 +1388,7 @@ func _handle_movement(delta: float) -> void:
 				velocity.x = 0
 				velocity.z = 0
 	else:
+		_saber_retreat_elapsed = 0.0
 		# Stop horizontal movement
 		velocity.x = 0
 		velocity.z = 0
@@ -1326,6 +1397,11 @@ func _handle_movement(delta: float) -> void:
 		if current_state in [PlayerState.WALKING, PlayerState.RUNNING]:
 			walk_timer = 0.0
 			transition_to(PlayerState.IDLE)
+
+		if current_state == PlayerState.IDLE and SaberPrototype.enabled(self):
+			var idle_clip := SaberPrototype.idle_clip(self)
+			if animation_player and animation_player.current_animation != idle_clip:
+				play_animation(idle_clip, true)
 
 
 func _can_move_to(move_dir: Vector3) -> bool:
@@ -1443,6 +1519,7 @@ func _apply_step_up() -> void:
 
 
 func _start_dodge() -> void:
+	if SaberPrototype.guarding(self): return
 	if _freeze.remaining > 0.0 or _ailments.blocks_movement() or _is_defeated or _recovery_left > 0.0:
 		return
 	# Action commitment (spec /states/player-state, #377): a swing must fully
@@ -1531,7 +1608,13 @@ func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> vo
 			return
 
 
+func _tick_saber_attack_cooldown(delta: float) -> void:
+	_saber_attack_cooldown = maxf(0.0, _saber_attack_cooldown - delta)
+
+
 func _start_attack() -> void:
+	if _saber_attack_cooldown > 0.0: return
+	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
@@ -1572,7 +1655,7 @@ func _attack_frac() -> float:
 func _try_queue_combo(special: bool) -> void:
 	if _attack_anim_length <= 0.0:
 		return  # Strong windup: committed, neither buffer nor fumble.
-	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+	var max_combo: int = int(_weapon_combat_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if combo_state <= 0 or combo_state >= max_combo:
 		return  # technique cast or finisher — nothing to chain
 	if _queued_combo != ComboQueue.NONE:
@@ -1587,6 +1670,7 @@ func _try_queue_combo(special: bool) -> void:
 	var open := window[0]
 	var close := window[1]
 	if close >= 0.0 and frac > close:
+		if SaberPrototype.enabled(self): _combo_fumbled = true
 		return
 	if frac >= open:
 		_queued_combo = ComboQueue.NORMAL
@@ -1606,11 +1690,12 @@ func _try_queue_combo(special: bool) -> void:
 ## step — _attack_step_ended guard).
 func _attack_step_finished() -> void:
 	_deactivate_attack_hitbox()
+	if SaberPrototype.enabled(self): _end_charge_visual()
 	if combo_state == 0:
 		# Technique cast finished (no combo)
 		transition_to(PlayerState.IDLE)
 		return
-	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+	var max_combo: int = int(_weapon_combat_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	if _queued_combo != ComboQueue.NONE and combo_state < max_combo:
 		combo_state += 1
 		player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), combo_state, player_rotation, _queued_combo_yaw)
@@ -1619,6 +1704,20 @@ func _attack_step_finished() -> void:
 		_queued_combo_yaw = null
 		_queued_combo_special = false
 		_play_attack_animation(combo_state)
+		return
+	if SaberPrototype.enabled(self):
+		var completed := combo_state == max_combo
+		if not completed and not _combo_fumbled:
+			# Choosing not to chain releases movement, but not another attack.
+			_saber_attack_cooldown = SaberPrototype.STOPPED_ATTACK_COOLDOWN
+			combo_state = 0
+			transition_to(PlayerState.IDLE)
+			return
+		_saber_phase = "guard_recovery" if completed else "open_recovery"
+		_saber_phase_left = SaberPrototype.FINISHER_GUARD if completed else SaberPrototype.BROKEN_RECOVERY
+		_attack_step_ended = true
+		_attack_anim_length = 0.0
+		if completed: play_animation(SaberPrototype.ready_clip(self), true)
 		return
 	if combo_state < max_combo:
 		_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Chain broken mid-combo
@@ -1702,6 +1801,7 @@ func _execute_palette_action(slot: int) -> void:
 
 
 func _cast_technique(technique_id: String) -> void:
+	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
 	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
@@ -2175,6 +2275,8 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
+	if _saber_attack_cooldown > 0.0: return
+	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0:
@@ -2248,6 +2350,19 @@ func _spawn_heal_number(heal_type: String, amount: int) -> void:
 
 
 func _handle_attack_state(delta: float) -> void:
+	if not _saber_phase.is_empty():
+		velocity.x = 0
+		velocity.z = 0
+		_saber_phase_left = maxf(0.0, _saber_phase_left - delta)
+		if _saber_phase_left <= 0.0:
+			var phase := _saber_phase
+			_saber_phase = ""
+			if phase == "prepare":
+				_play_attack_animation(1, true)
+			else:
+				combo_state = 0
+				transition_to(PlayerState.IDLE)
+		return
 	var previous_elapsed := _attack_anim_elapsed
 	_attack_anim_elapsed += delta
 	_update_attack_contact(previous_elapsed)
@@ -2282,7 +2397,10 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 	if current_state != PlayerState.ATTACKING or _attack_hit_done or combo_state <= 0 or _attack_anim_length <= 0:
 		return
 	var weapon_type := _get_equipped_weapon_type()
-	var config := CombatManager.get_weapon_type_config(weapon_type)
+	var config := _weapon_combat_config(weapon_type)
+	if SaberPrototype.enabled(self):
+		_update_prototype_contacts(weapon_type)
+		return
 	var timing_steps: Array = config.get("original_timing_steps", [])
 	if not timing_steps.is_empty():
 		var step: Dictionary = timing_steps[clampi(combo_state - 1, 0, timing_steps.size() - 1)]
@@ -2323,21 +2441,156 @@ func _handle_damaged(_delta: float) -> void:
 func _set_weapon_hold(mode: String) -> void:
 	if not weapon_node or not is_instance_valid(weapon_node):
 		return
+	if _weapon_grip_tween: _weapon_grip_tween.kill()
+	_sword_grip_clip = ""
 	var wtype: int = _get_equipped_weapon_type()
 	var hold: Dictionary = WEAPON_HOLD.get(wtype, WEAPON_HOLD_DEFAULT)
 	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
 	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
-	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
+	# Keep the calibrated central grip (including live fixture adjustments) across attacks.
+	if not (SaberPrototype.enabled(self) and wtype in [WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE]):
+		weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
+
+
+# Local forearm-space blade directions calibrated against the retargeted
+# carry poses at 0.3 s. Sword.glb points along +Z; keep a fixed hand grip
+# within each animation so the blade retains the authored gait sway.
+const SWORD_CARRY_DIRECTIONS := {
+	"pso_f_sw_run": Vector3(-0.50594, -0.428426, 0.748649),
+	"pso_f_sw_walk_ready": Vector3(-0.404062, -0.682927, 0.60856),
+	"pso_f_sw_wait": Vector3(-0.348917, -0.1503, 0.925023),
+	"pso_sw_run": Vector3(-0.677222, -0.422584, 0.602323),
+	"pso_sw_walk_ready": Vector3(-0.728611, 0.080743, 0.680152),
+	"pso_sw_wait": Vector3(0.031778, -0.316038, 0.948214),
+}
+
+const SLICER_GRIP := Basis(Vector3(0.766045094, 0.000000006, 0.642787755), Vector3(-0.000000007, 1.000000119, 0.000000000), Vector3(-0.642787814, -0.000000005, 0.766045034))
+
+const PARTISAN_CARRY_DIRECTIONS := {
+	"pso_f_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
+	"pso_f_pa_run": Vector3(-0.553328, -0.381034, 0.740703),
+	"pso_f_pa_wait": Vector3(0.421957, -0.874271, -0.240005),
+	"pso_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
+	"pso_pa_run": Vector3(-0.553328, -0.381034, 0.740703),
+	"pso_pa_wait": Vector3(0.421957, -0.874271, -0.240005), # 143: tip up across the torso at 45 degrees.
+}
+
+# Owner-saved per-pose grips; keep walk and relaxed idle independent.
+const PARTISAN_SAVED_GRIPS := {
+	"pmsa_walk": Basis(Vector3(-0.000000060, -1.000000000, 0.000000016), Vector3(0.866025507, -0.000000044, 0.500000060), Vector3(-0.500000060, 0.000000044, 0.866025507)),
+	"pmsp_atk1": Basis(Vector3(0.559926212, -0.049990490, -0.827033162), Vector3(0.496731937, 0.819152355, 0.286788255), Vector3(0.663129270, -0.571393907, 0.483496726)),
+	"pmsp_atk2": Basis(Vector3(0.383022368, -0.422618419, -0.821394145), Vector3(0.178606227, 0.906308174, -0.383022308), Vector3(0.906308055, 0.000000000, 0.422618449)),
+	"pmsp_atk3": Basis(Vector3(0.819152296, -0.000000007, -0.573576868), Vector3(0.000000004, 1.000000358, 0.000000000), Vector3(0.573576629, 0.000000003, 0.819152355)),
+	"pmsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
+}
+
+const FEMALE_PARTISAN_SAVED_GRIPS := {
+	"pwsa_walk": Basis(Vector3(-0.000000060, -1.000000000, 0.000000016), Vector3(0.866025507, -0.000000044, 0.500000060), Vector3(-0.500000060, 0.000000044, 0.866025507)),
+	"pwsp_atk1": Basis(Vector3(0.559926212, -0.049990490, -0.827033162), Vector3(0.496731937, 0.819152355, 0.286788255), Vector3(0.663129270, -0.571393907, 0.483496726)),
+	"pwsp_atk2": Basis(Vector3(0.383022368, -0.422618419, -0.821394145), Vector3(0.178606227, 0.906308174, -0.383022308), Vector3(0.906308055, 0.000000000, 0.422618449)),
+	"pwsp_atk3": Basis(Vector3(0.819152296, -0.000000007, -0.573576868), Vector3(0.000000004, 1.000000358, 0.000000000), Vector3(0.573576629, 0.000000003, 0.819152355)),
+	"pwsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
+}
+
+const WAND_SAVED_GRIPS := {
+	"pmsa_walk": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_atk1": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_atk2": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_atk3": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_wait": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_block": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_d": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_d_wa": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_h": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_n": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_run": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_wait": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_walk_ready": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+}
+
+const ROD_SAVED_GRIPS := {
+	"pso_ro_block": Basis(Vector3(0.0684283152223, -0.0584505051374, -0.00105437077582), Vector3(0.0584531202912, 0.0684340596199, -0.000148255378008), Vector3(0.00089806271717, -0.000571999233216, 0.0899937897921)),
+	"pso_ro_run": Basis(Vector3(0.0416584424675, -0.0696120113134, -0.038971144706), Vector3(0.0531565099955, 0.0570033825934, -0.0449999980628), Vector3(0.0594891794026, -0.0021882308647, 0.0675000175834)),
+	"pso_ro_walk": Basis(Vector3(0.0416584201157, -0.0696119740605, -0.0389711558819), Vector3(0.0531565099955, 0.0570033825934, -0.0449999980628), Vector3(0.0594891905785, -0.00218823039904, 0.067500025034)),
+}
+
+const BAZOOKA_SAVED_GRIPS := {
+	"pmar_atk1": Basis(Vector3(0.911556780338, -0.0973225161433, -0.399492383003), Vector3(0.127156481147, 0.990683078766, 0.0487985163927), Vector3(0.391020685434, -0.0952806025743, 0.91543751955)),
+	"pmar_wait": Basis(Vector3(0.970646798611, 0.13883407414, -0.196392223239), Vector3(-0.121769860387, 0.98785585165, 0.0965038463473), Vector3(0.207405239344, -0.0697564929724, 0.975764870644)),
+	"pso_la_atk1": Basis(Vector3(0.388502418995, 0.91410690546, -0.116085603833), Vector3(-0.187369734049, 0.201719090343, 0.961355090141), Vector3(0.902197062969, -0.351737737656, 0.249644294381)),
+	"pso_la_block": Basis(Vector3(-0.280995458364, 0.726130843163, 0.62751609087), Vector3(-0.959579825401, -0.223318234086, -0.171277359128), Vector3(0.0157660320401, -0.650279700756, 0.759531736374)),
+	"pso_la_dam_d": Basis(Vector3(-0.12176990509, 0.98785585165, 0.0965038537979), Vector3(0.207405284047, -0.0697564855218, 0.975764870644), Vector3(0.970646798611, 0.138834118843, -0.196392267942)),
+	"pso_la_dam_d_wa": Basis(Vector3(-0.18536311388, 0.95213919878, -0.243047252297), Vector3(-0.431205570698, 0.143437057734, 0.890779435635), Vector3(0.883007705212, 0.269920945168, 0.383979648352)),
+	"pso_la_dam_n": Basis(Vector3(0.746981918812, 0.66478151083, -0.00917699933052), Vector3(-0.576828420162, 0.65489333868, 0.488246291876), Vector3(0.330586969852, -0.359417527914, 0.87265765667)),
+	"pso_la_run": Basis(Vector3(0.970646798611, 0.13883407414, -0.196392223239), Vector3(-0.121769860387, 0.98785585165, 0.0965038463473), Vector3(0.207405239344, -0.0697564929724, 0.975764870644)),
+	"pso_la_wait": Basis(Vector3(0.970646798611, 0.13883407414, -0.196392223239), Vector3(-0.121769860387, 0.98785585165, 0.0965038463473), Vector3(0.207405239344, -0.0697564929724, 0.975764870644)),
+	"pso_la_walk": Basis(Vector3(0.970646798611, 0.13883407414, -0.196392223239), Vector3(-0.121769860387, 0.98785585165, 0.0965038463473), Vector3(0.207405239344, -0.0697564929724, 0.975764870644)),
+	"pso_la_walk_ready": Basis(Vector3(0.522997677326, 0.81184142828, -0.2595936656), Vector3(-0.269168913364, 0.446298271418, 0.853444874287), Vector3(0.808717787266, -0.376474618912, 0.451934337616)),
+}
+const BAZOOKA_SAVED_POSITIONS := {
+	"pmar_atk1": Vector3(0.220000013709, -0.0700000077486, 0.10000000149),
+	"pso_la_walk_ready": Vector3(0.300000011921, 0.12999998033, -0.00999999977648),
+}
+
+const RIFLE_SAVED_GRIPS := {
+	"pso_ri_walk": Basis(Vector3(-0.00575462682173, 0.0842527225614, 0.0311185922474), Vector3(-0.0873582139611, -0.0124950716272, 0.0176753010601), Vector3(0.0208669006824, -0.0290749985725, 0.0825785547495)),
+	"pmar_atk1": Basis(Vector3(0.00515774590895, 0.0865135490894, 0.024265255779), Vector3(-0.085670851171, -0.00259306188673, 0.0274550616741), Vector3(0.0270906314254, -0.0246714632958, 0.0822035074234)),
+	"pmar_atk2": Basis(Vector3(0.00438578659669, 0.0894539356232, 0.00887459143996), Vector3(-0.0854547545314, 0.00139149744064, 0.028205467388), Vector3(0.027897130698, -0.00980088207871, 0.0850040689111)),
+	"pmar_atk3": Basis(Vector3(0.00515774637461, 0.0865135416389, 0.0242652539164), Vector3(-0.0829837620258, -0.00473345443606, 0.034515094012), Vector3(0.0344542525709, -0.0243515819311, 0.0794978365302)),
+}
+
+func _set_sword_pose_hold(clip: String) -> void:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON, WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND]:
+		return
+	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
+	_sword_grip_clip = clip
+	if _weapon_grip_tween: _weapon_grip_tween.kill()
+	# Ein Spear mesh shaft lies 30 degrees off local +Z. Align its actual tip axis.
+	var native := Quaternion(Vector3.UP, PI / 3.0 if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else PI / 2.0)
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: native = SLICER_GRIP.get_rotation_quaternion()
+	# Owner-saved gunblade idle grip applies to every blade and gun pose.
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE: native = Quaternion.IDENTITY
+	if _get_equipped_weapon_type() in [WeaponData.WeaponType.WAND, WeaponData.WeaponType.ROD]: native = _caster_pose_hold(clip)
+	native = _ranged_pose_hold(clip, native)
+	var target := native
+	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
+	if directions.has(clip):
+		target = Quaternion(Vector3.RIGHT, directions[clip].normalized()) * native
+	var saved_grips: Dictionary = FEMALE_PARTISAN_SAVED_GRIPS if _is_female else PARTISAN_SAVED_GRIPS
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR and saved_grips.has(clip):
+		target = saved_grips[clip].get_rotation_quaternion()
+	# Only the isolated authoring panel sets these per-animation overrides.
+	var fixture_grips: Dictionary = get_meta("fixture_grips", {})
+	if fixture_grips.has(clip): target = fixture_grips[clip].get_rotation_quaternion()
+	_weapon_grip_tween = create_tween()
+	_weapon_grip_tween.tween_property(weapon_node, "quaternion", target, SaberPrototype.READY_BLEND)
 
 
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
 
-func _play_attack_animation(attack_num: int) -> void:
-	var anim_name := _anim_prefix + "_atk" + str(attack_num)
+func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
+	if not prepared: SaberPrototype.select_gunblade_step(self)
+	var attack_prefix: String = str(SaberPrototype.profile(self).get("attack_prefix", SaberPrototype.profile(self).native_prefix)) if SaberPrototype.enabled(self) else _anim_prefix
+	var anim_name := attack_prefix + "_atk" + str(attack_num)
 	_attack_step_ended = false
 	_attack_anim_elapsed = 0.0
 	_attack_anim_length = 0.0
 	_combo_fumbled = false  # each step gets a clean chain attempt
+
+	if SaberPrototype.enabled(self):
+		if attack_num == 1 and not prepared:
+			_saber_phase = "prepare"
+			_saber_phase_left = SaberPrototype.READY_PREP
+			_attack_step_ended = true
+			play_animation(SaberPrototype.ready_clip(self), true)
+			return
+		# Both inputs share the same timeline. Strong's tell occupies the
+		# existing windup instead of adding a second, delayed attack clock.
+		_play_and_track_attack(anim_name)
+		if _is_special_attack:
+			SfxManager.play_at(SaberPrototype.CHARGE_SOUND, global_position)
+			_start_charge_visual()
+		return
 
 	if _is_special_attack:
 		# Pause before attack — player is exposed during wind-up
@@ -2408,17 +2661,9 @@ func _play_and_track_attack(anim_name: String) -> void:
 	_attack_hit_step = 0
 	_attack_hit_targets.clear()
 	_attack_damage_snapshot.clear()
-	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
-	# Barehanded is discriminated here by the empty weapon_id (NOT by the weapon
-	# type, which falls back to 0 == SABER): map it to BAREHANDED_SFX (common46)
-	# and only play if the asset is actually loadable, so until the pack carries
-	# common46 barehanded is silent rather than playing the wrong saber swing.
-	var sfx_path: String
-	if _is_barehanded():
-		sfx_path = BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
-	else:
-		sfx_path = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
-	if not sfx_path.is_empty():
+	# Shared lookup covers swing start and delayed strong-attack release.
+	var sfx_path := _weapon_attack_sound(_get_equipped_weapon_type())
+	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and (_is_special_attack or _get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN)):
 		SfxManager.play_at(sfx_path, global_position)
 
 
@@ -2445,8 +2690,9 @@ func _ensure_combo_ring() -> void:
 
 
 func _chain_window(timing: Dictionary) -> Array[float]:
+	if SaberPrototype.enabled(self): return SaberPrototype.CHAIN.duplicate()
 	var window: Array[float] = [float(timing.just_start), 1.0]
-	var steps: Array = CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
+	var steps: Array = _weapon_combat_config(_get_equipped_weapon_type()).get("original_timing_steps", [])
 	if not steps.is_empty():
 		var step: Dictionary = steps[clampi(combo_state - 1, 0, steps.size() - 1)]
 		if step.get("chain_open_frac") != null:
@@ -2457,7 +2703,7 @@ func _chain_window(timing: Dictionary) -> Array[float]:
 
 
 func _update_combo_ring(_delta: float) -> void:
-	if not DebugConfig.show_combo_timing:
+	if SaberPrototype.enabled(self) or not DebugConfig.show_combo_timing:
 		if _combo_ring:
 			_combo_ring.visible = false
 		return
@@ -2465,7 +2711,7 @@ func _update_combo_ring(_delta: float) -> void:
 	_ensure_combo_ring()
 
 	# Use the same effective accept window as input, including imported close.
-	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+	var max_combo: int = int(_weapon_combat_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 	var t: Dictionary = {}
 	if combo_state > 0 and combo_state < max_combo:
 		t = CombatManager.get_combo_timing(_get_equipped_weapon_type(), combo_state)
@@ -2487,7 +2733,7 @@ func _update_combo_ring(_delta: float) -> void:
 
 
 func _combo_ring_flash(flash_color: Color) -> void:
-	if not DebugConfig.show_combo_timing:
+	if SaberPrototype.enabled(self) or not DebugConfig.show_combo_timing:
 		return
 	_ensure_combo_ring()
 	_combo_ring.visible = true
@@ -2521,7 +2767,7 @@ func _start_charge_visual() -> void:
 	#    heavy/special-attack charge ring (the green normal-attack combo ring is
 	#    already gated in _update_combo_ring/_combo_ring_flash). The rising
 	#    particles + model glow below are permanent attack VFX and stay regardless.
-	if DebugConfig.show_combo_timing:
+	if DebugConfig.show_combo_timing and not SaberPrototype.enabled(self):
 		if not _charge_ring:
 			_charge_ring = MeshInstance3D.new()
 			var torus := TorusMesh.new()
@@ -2545,6 +2791,7 @@ func _start_charge_visual() -> void:
 
 	# 2. Glow on player model (uses cached material references)
 	for mat in _cached_materials:
+		if SaberPrototype.enabled(self): continue
 		mat.emission_enabled = true
 		mat.emission = _charge_color
 		mat.emission_energy_multiplier = 0.5
@@ -2570,10 +2817,24 @@ func _start_charge_visual() -> void:
 		_charge_particles.explosiveness = 0.3
 		add_child(_charge_particles)
 
+	if SaberPrototype.enabled(self):
+		_charge_particles.amount = 8
+		_charge_particles.lifetime = 0.22
+		var small_mat := _charge_particles.process_material as ParticleProcessMaterial
+		small_mat.initial_velocity_min = 0.15
+		small_mat.initial_velocity_max = 0.45
+		small_mat.scale_min = 0.3
+		small_mat.scale_max = 0.6
+		small_mat.gravity = Vector3(0, 0.3, 0)
+		var spark_material := StandardMaterial3D.new()
+		spark_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		spark_material.albedo_color = Color(1.0, 0.8, 0.35)
+		_charge_particles.draw_pass_1.material = spark_material
+
 	# Set particle color
 	var p_mat: ParticleProcessMaterial = _charge_particles.process_material as ParticleProcessMaterial
 	p_mat.color = _charge_color
-	_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
+	_charge_particles.global_position = weapon_node.global_position if SaberPrototype.enabled(self) and is_instance_valid(weapon_node) else global_position + Vector3(0, 0.8, 0)
 	_charge_particles.visible = true
 	_charge_particles.emitting = true
 
@@ -2616,7 +2877,7 @@ func _update_charge_visual(delta: float) -> void:
 
 	# Update particle position
 	if _charge_particles:
-		_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
+		_charge_particles.global_position = weapon_node.global_position if SaberPrototype.enabled(self) and is_instance_valid(weapon_node) else global_position + Vector3(0, 0.8, 0)
 
 
 ## Cancel an in-progress technique charge WITHOUT casting (#352). Clears the
@@ -2638,10 +2899,15 @@ func _drop_charge() -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
+	if new_state not in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING]:
+		_saber_retreat_elapsed = 0.0
 	# A mid-charge technique drops on damage, knockdown, or dodging
 	# (#273, spec /states/player-state) — rolling releases the charge.
 	if new_state in [PlayerState.DAMAGED, PlayerState.DOWN, PlayerState.DODGING]:
 		_drop_charge()
+	if new_state != PlayerState.ATTACKING:
+		_saber_phase = ""
+		_saber_phase_left = 0.0
 	var was_attacking: bool = current_state == PlayerState.ATTACKING
 	current_state = new_state
 	state_changed.emit(new_state)
@@ -2657,6 +2923,7 @@ func transition_to(new_state: PlayerState) -> void:
 		# anything future) land here. Deactivation clears _hit_targets, so
 		# no "stored" hits carry into the next swing.
 		_deactivate_attack_hitbox()
+		if SaberPrototype.enabled(self): _end_charge_visual()
 		# Combo queue dies with the swing (#155): an interrupted attack must
 		# never fire its queued follow-up after the DAMAGED/DOWN recovery.
 		_queued_combo = ComboQueue.NONE
@@ -2671,7 +2938,7 @@ func transition_to(new_state: PlayerState) -> void:
 			# gravity / falling continues to read correctly.
 			velocity.x = 0
 			velocity.z = 0
-			play_animation(_anim_prefix + "_wait", true)
+			play_animation(SaberPrototype.idle_clip(self) if SaberPrototype.enabled(self) else _anim_prefix + "_wait", true)
 		PlayerState.WALKING:
 			play_animation(_walk_anim, true)
 		PlayerState.RUNNING:
@@ -2685,9 +2952,15 @@ func transition_to(new_state: PlayerState) -> void:
 
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:
+	if SaberPrototype.enabled(self):
+		if _anim_prefix == "pso_f_da" and anim_name == "pso_f_da_tec": anim_name = "pwda_tec"
+		for role in ["esc_f", "dam_d_lp"]:
+			if anim_name == _anim_prefix + "_" + role:
+				anim_name = SaberPrototype.native_clip(self, role)
 	if not animation_player:
 		return
 	if animation_player.has_animation(anim_name):
+		_set_sword_pose_hold(anim_name)
 		animation_player.play(anim_name)
 		return
 	# Try with 's' suffix variant (e.g. pwros_wait for pwro prefix)
@@ -2849,7 +3122,7 @@ func _setup_attack_hitbox() -> void:
 	var box := BoxShape3D.new()
 	# Use weapon-specific hitbox size from config
 	var weapon_type: int = _get_equipped_weapon_type()
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	box.size = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	shape.shape = box
 	var offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
@@ -2860,10 +3133,34 @@ func _setup_attack_hitbox() -> void:
 	model.add_child(attack_hitbox)
 
 
+func _weapon_combat_config(weapon_type: int) -> Dictionary:
+	if SaberPrototype.enabled(self) and _is_barehanded():
+		return {"combo_steps": 3, "hit_h_dist": 1.7, "hit_v_dist": 0.6, "hit_h_angle_deg": 35.0, "hit_v_angle_deg": 45.0, "max_targets": 1, "damaging_frac": [0.4, 0.4, 0.45], "damage_end_frac": [0.55, 0.55, 0.6]}
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.DAGGERS:
+		return config.merged({"hit_h_dist": 2.6, "hit_v_dist": 0.9, "hit_h_angle_deg": 38.0, "hit_v_angle_deg": 45.0}, true)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.CLAW:
+		return config.merged({"hit_h_dist": 2.4, "hit_v_dist": 0.9, "hit_h_angle_deg": 36.0, "hit_v_angle_deg": 45.0}, true)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SPEAR:
+		return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 45.0, "max_targets": 3}, true)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
+		return config.merged({"hit_h_dist": 8.0 if SaberPrototype.gun_mode(self) else 2.4, "hit_h_angle_deg": 15.0 if SaberPrototype.gun_mode(self) else 40.0, "hit_v_dist": 0.9, "max_targets": 1}, true)
+	if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
+		return CombatManager.get_weapon_type_config(WeaponData.WeaponType.BAZOOKA).merged({"combo_steps": 1, "max_targets": 5}, true)
+	return config
+
+
 func _get_attack_damage() -> Dictionary:
 	# Combo timing no longer scales damage (#461): crit and damage bonuses come
 	# from character stats + equipment, not from the chain-accept window.
-	return CombatManager.calculate_attack_damage(combo_state, _is_special_attack)
+	var damage: Dictionary = CombatManager.calculate_attack_damage(combo_state, _is_special_attack)
+	if SaberPrototype.enabled(self) and _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR:
+		damage["max_targets"] = 3
+	if SaberPrototype.enabled(self) and _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE:
+		damage["gunblade_shot"] = SaberPrototype.gun_mode(self)
+		damage["hits"] = 1
+		damage["max_targets"] = 1
+	return damage
 
 
 func _get_equipped_weapon_type() -> int:
@@ -2907,11 +3204,11 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		atk["hits"] = 1
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
-	if weapon_type in RANGED_WEAPON_TYPES:
+	if weapon_type in RANGED_WEAPON_TYPES or bool(atk.get("gunblade_shot", false)) or (SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.LASER_CANNON):
 		_fire_projectile(atk)
 		return
 
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	var in_cone: Array = _enemies_in_hit_cone(config)
 	var element: String = _current_attack_element if _is_special_attack else ""
 	var element_level: int = _current_attack_element_level if _is_special_attack else 0
@@ -2936,6 +3233,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		for _h in range(int(atk.get("hits", 1))):
 			if hb is Hurtbox:
 				var packet := atk.duplicate(true)
+				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
 				packet["element"] = element
 				packet["element_level"] = element_level
 				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)), self)
@@ -2958,16 +3256,19 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 	widened["hit_h_dist"] = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
 	widened["hit_h_angle_deg"] = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	var origin: Vector3 = global_position + Vector3(0, 1.0, 0)
-	var candidates: Array = get_tree().get_nodes_in_group("enemies")
+	var candidates: Array = get_tree().get_nodes_in_group("enemies").filter(func(enemy): return enemy.is_visible_in_tree() and enemy.get("dormant") != true)
 	candidates.append_array(get_tree().get_nodes_in_group("targetable_traps").filter(func(trap): return not trap.has_method("can_receive_hit_from") or trap.can_receive_hit_from(self)))
 	return ConeTargeting.scan_enemies(candidates, origin, player_rotation, widened)
 
 
 func _fire_projectile(atk: Dictionary) -> void:
 	var weapon_type: int = int(atk.get("weapon_type", 0))
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.MECH_GUN:
+		var hand: Node3D = weapon_node if _attack_hit_step % 2 == 0 else weapon_node_left
+		if is_instance_valid(hand): spawn_pos = hand.global_position + forward * 0.2
 	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
 	var candidates := _enemies_in_hit_cone(config)
 	if not candidates.is_empty():
@@ -2982,8 +3283,12 @@ func _fire_projectile(atk: Dictionary) -> void:
 			forward = aim.normalized()
 
 	for _i in range(int(atk.get("hits", 1))):
-		var proj := Projectile.new()
+		var proj: Projectile = preload("res://scripts/3d/combat/slicer_projectile.gd").new() if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SLICER else Projectile.new()
+		if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
+			proj.free()
+			proj = preload("res://scripts/3d/combat/bazooka_projectile.gd").new()
 		proj.attack_packet = atk.duplicate(true)
+		proj.attack_packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
 		proj.attack_packet["element"] = _current_attack_element if _is_special_attack else ""
 		proj.attack_packet["element_level"] = _current_attack_element_level if _is_special_attack else 0
 		proj.damage = int(atk.get("damage", 10))
@@ -3050,6 +3355,9 @@ func _get_technique_targeting() -> Dictionary:
 
 
 func _update_combat_targets() -> void:
+	var previous_primary := 0
+	if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+		previous_primary = _targeted_enemies[0].get_instance_id()
 	# Clear old reticles
 	for enemy in _targeted_enemies:
 		if is_instance_valid(enemy) and enemy.has_method("hide_reticle"):
@@ -3057,7 +3365,9 @@ func _update_combat_targets() -> void:
 	_targeted_enemies.clear()
 
 	var weapon_type: int = _get_equipped_weapon_type()
-	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var config: Dictionary = _weapon_combat_config(weapon_type)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
+		config = config.merged({"hit_h_dist": 8.0, "hit_h_angle_deg": 40.0}, true)
 	var max_targets: int = int(config.get("max_targets", 1))
 
 	# Extend the scan to cover equipped techniques: their box-ish reach maps
@@ -3114,6 +3424,14 @@ func _update_combat_targets() -> void:
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
 		_targeted_enemies.append(enemy)
+
+	if SaberPrototype.enabled(self) and not _targeted_enemies.is_empty():
+		var primary_id: int = _targeted_enemies[0].get_instance_id()
+		var now := Time.get_ticks_msec()
+		if primary_id != previous_primary and (primary_id != _saber_lock_last_id or now - _saber_lock_last_seen >= 350):
+			SfxManager.play(SaberPrototype.LOCK_SOUND, -5.0, true)
+		_saber_lock_last_id = primary_id
+		_saber_lock_last_seen = now
 
 	# Slicer: show secondary reticles for bounce targets near the primary
 	if weapon_type == WeaponData.WeaponType.SLICER and not _targeted_enemies.is_empty():
@@ -3290,8 +3608,11 @@ func _try_interact() -> void:
 			print("[Player] Interacted with: ", target.name)
 
 
-## One guard for hostile contact, ailments and recovery. Dodging does NOT
-## gate hits (spec /mechanics/dodge) — it only passes contact through.
+func try_prototype_guard(source: Node3D) -> bool:
+	return SaberPrototype.try_guard(self, source)
+
+
+## One guard for hostile contact, ailments and recovery. Dodging only passes contact through.
 func can_take_hit() -> bool:
 	return not _is_defeated and GameState.hp > 0 and _recovery_left <= 0.0 and not PhotonBlast.is_presenting(self)
 
@@ -3328,3 +3649,166 @@ func can_photon_blast() -> bool:
 
 func apply_octo_poison(tier: int) -> void:
 	_ailments.apply_octo_poison(self,tier)
+
+func _weapon_attack_sound(weapon_type: int) -> String:
+	# Empty equipment also reports type 0; resolve it before the saber enum.
+	if _is_barehanded(): return BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
+	if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]: return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE]) # Explicit provisional donor.
+	if weapon_type == WeaponData.WeaponType.GUN_BLADE and SaberPrototype.enabled(self):
+		return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE if SaberPrototype.gun_mode(self) else WeaponData.WeaponType.SABER])
+	return str(WEAPON_SFX.get(weapon_type, ""))
+
+func _update_prototype_contacts(weapon_type: int) -> void:
+	var step := clampi(combo_state - 1, 0, 2)
+	var motion_length := _attack_anim_length - float(SaberPrototype.profile(self).get("recovery", SaberPrototype.RECOVERY)[step])
+	var authored_hits: Array = SaberPrototype.profile(self).get("hit_fracs", [])
+	if not authored_hits.is_empty():
+		var hits: Array = authored_hits[step]
+		while _attack_hit_step < hits.size() and _attack_anim_elapsed >= float(hits[_attack_hit_step]) * motion_length:
+			if _is_special_attack and _attack_hit_step == 0:
+				_end_charge_visual()
+				if weapon_type != WeaponData.WeaponType.MECH_GUN: SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
+			if weapon_type == WeaponData.WeaponType.MECH_GUN: SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
+			_execute_attack_hit(true)
+			_attack_hit_step += 1
+		_attack_hit_done = _attack_hit_step >= hits.size()
+		return
+	if _attack_anim_elapsed >= float(SaberPrototype.profile(self).get("contact", SaberPrototype.CONTACT)[step]) * motion_length:
+		if _is_special_attack:
+			_end_charge_visual()
+			SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
+		_execute_attack_hit(true)
+		_attack_hit_done = true
+	return
+
+
+func _add_scene_locomotion(lib: AnimationLibrary, anim_glb: String) -> void:
+	# Also load shared PSO locomotion from the scene-baked Animations node
+	var scene_anims_node := $PlayerModel/Animations
+	if scene_anims_node:
+		var scene_player: AnimationPlayer = NodeUtils.first_of_type(scene_anims_node, "AnimationPlayer") as AnimationPlayer
+		if scene_player:
+			var shared_clips := ["pmsa_walk", "pmsa_run_pso"]
+			if anim_glb == SaberPrototype.LIBRARY:
+				shared_clips.append_array(["pmsa_esc_f", "pmsa_dam_d_lp"])
+			elif anim_glb in [SaberPrototype.FEMALE_LIBRARY, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library, SaberPrototype.FEMALE_WAND_PROFILE.library, SaberPrototype.FEMALE_UNARMED_PROFILE.library]:
+				shared_clips = [] # Female roles come from saver_w, not the male scene.
+			for anim_name in shared_clips:
+				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
+					var source_anim := scene_player.get_animation(anim_name)
+					var new_anim := _remap_animation(source_anim, skeleton.name)
+					new_anim.loop_mode = Animation.LOOP_LINEAR
+					if anim_name.ends_with("_esc_f"):
+						new_anim.loop_mode = Animation.LOOP_NONE
+						_strip_root_translation_track(new_anim, skeleton.name)
+					lib.add_animation(anim_name, new_anim)
+
+
+
+func _add_prototype_animations(lib: AnimationLibrary, anim_glb: String, prototype_profile: Dictionary) -> bool:
+	var native := _build_animation_library(str(prototype_profile.native_library))
+	if native == null:
+		return false
+	var native_roles := _prepare_native_roles(lib, native, anim_glb, prototype_profile)
+	if native_roles.is_empty(): return false
+	for role in native_roles:
+		var clip := str(prototype_profile.native_prefix) + "_" + str(role)
+		if not native.has_animation(clip):
+			push_error("Saber prototype requires native clip: " + clip)
+			return false
+		var native_clip := native.get_animation(clip).duplicate() as Animation
+		if str(role).begins_with("atk"):
+			var step := int(clip.right(1)) - 1
+			native_clip.length += prototype_profile.get("recovery", SaberPrototype.RECOVERY)[step]
+		lib.add_animation(clip, native_clip)
+
+	return true
+
+func _caster_pose_hold(clip: String) -> Quaternion:
+	var wand := _get_equipped_weapon_type() == WeaponData.WeaponType.WAND
+	var key := clip.replace("pwwa_", "pmwa_").replace("pwsa_", "pmsa_").replace("pso_f_wn_", "pso_wn_") if wand else clip.replace("pwro_", "pmro_").replace("pso_f_ro_", "pso_ro_")
+	var mode := "attack" if key.begins_with("pmwa_atk" if wand else "pmro_atk") else "idle"
+	var hold: Dictionary = WEAPON_HOLD.get(_get_equipped_weapon_type(), WEAPON_HOLD_DEFAULT)[mode]
+	weapon_node.position = get_meta("fixture_grip_positions", {}).get(clip, hold.pos)
+	var saved: Dictionary = WAND_SAVED_GRIPS if wand else ROD_SAVED_GRIPS
+	return saved[key].get_rotation_quaternion() if saved.has(key) else Quaternion.from_euler(hold.rot * PI / 180.0)
+
+func _ranged_pose_hold(clip: String, native: Quaternion) -> Quaternion:
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE:
+		var mode := "attack" if clip in ["pmar_atk1", "pmar_atk2", "pmar_atk3", "pwars_atk1", "pwars_atk2", "pwars_atk3"] else "idle"
+		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.RIFLE][mode]
+		var degrees: Vector3 = hold.rot
+		native = Quaternion.from_euler(degrees * PI / 180.0)
+		# Keep the grip at the hand; the legacy attack offset displaced it.
+		weapon_node.position = WEAPON_HOLD[WeaponData.WeaponType.RIFLE].idle.pos
+		var positions: Dictionary = get_meta("fixture_grip_positions", {})
+		if positions.has(clip): weapon_node.position = positions[clip]
+	if _get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
+		var bazooka_grip_key := clip.replace("pwars_", "pmar_").replace("pso_f_la_", "pso_la_")
+		var mode := "attack" if bazooka_grip_key in ["pmar_atk1", "pso_la_atk1"] else "idle"
+		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.BAZOOKA][mode]
+		var degrees: Vector3 = hold.rot
+		native = Quaternion.from_euler(degrees * PI / 180.0)
+		weapon_node.position = hold.pos
+		if BAZOOKA_SAVED_GRIPS.has(bazooka_grip_key): native = BAZOOKA_SAVED_GRIPS[bazooka_grip_key].get_rotation_quaternion()
+		if BAZOOKA_SAVED_POSITIONS.has(bazooka_grip_key): weapon_node.position = BAZOOKA_SAVED_POSITIONS[bazooka_grip_key]
+		var positions: Dictionary = get_meta("fixture_grip_positions", {})
+		if positions.has(clip): weapon_node.position = positions[clip]
+	var rifle_grip_key := clip.replace("pwars_", "pmar_").replace("pso_f_ri_", "pso_ri_")
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE and RIFLE_SAVED_GRIPS.has(rifle_grip_key):
+		native = RIFLE_SAVED_GRIPS[rifle_grip_key].get_rotation_quaternion()
+	return native
+
+
+func _tick_recovery_timers(delta: float) -> void:
+	_tick_hit_invulnerability(delta)
+	_tick_saber_attack_cooldown(delta)
+	if dodge_cooldown > 0.0:
+		dodge_cooldown = maxf(0.0, dodge_cooldown - delta)
+	if _recovery_left > 0.0:
+		_recovery_left = maxf(0.0, _recovery_left - delta)
+		if _recovery_left <= 0.0 and current_state == PlayerState.DAMAGED:
+			transition_to(PlayerState.IDLE) # Missing stand-up clips cannot strand recovery.
+	_revival.tick(self, delta)
+
+
+func _prepare_native_roles(lib: AnimationLibrary, native: AnimationLibrary, anim_glb: String, prototype_profile: Dictionary) -> Array:
+	if anim_glb in [SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library]:
+		var prefix: String = str(prototype_profile.prefix)
+		lib.remove_animation(prefix + "_walk_ready")
+		lib.add_animation(prefix + "_walk_ready", lib.get_animation(prefix + "_walk").duplicate()) # Owner-selected PSO 145.
+	if anim_glb == SaberPrototype.FEMALE_MECHGUN_PROFILE.library:
+		# Female source GLB retains pmmg names for attacks and dodge.
+		for role in ["atk1", "atk2", "atk3", "esc_f"]:
+			native.add_animation("pwmgs_" + role, native.get_animation("pmmg_" + role).duplicate())
+	var native_roles := ["wait", "atk1", "atk2", "atk3"]
+	if anim_glb == SaberPrototype.FEMALE_UNARMED_PROFILE.library:
+		native.add_animation("pwbn_chg", native.get_animation("pwbns_chg").duplicate())
+	if anim_glb == SaberPrototype.MALE_UNARMED_PROFILE.library:
+		native.add_animation("pmbn_esc_f", native.get_animation("pmsa_esc_f").duplicate())
+		native_roles.append_array(["esc_f", "dam_d_lp", "tec"])
+	if anim_glb in [SaberPrototype.MALE_ROD_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library, SaberPrototype.MALE_WAND_PROFILE.library, SaberPrototype.FEMALE_WAND_PROFILE.library, SaberPrototype.FEMALE_UNARMED_PROFILE.library]: native_roles.append_array(["tec", "chg"])
+	if anim_glb == SaberPrototype.FEMALE_WAND_PROFILE.library:
+		native.add_animation("pwwa_chg", native.get_animation("pmwas_chg").duplicate())
+	if anim_glb == SaberPrototype.FEMALE_ROD_PROFILE.library:
+		for role in ["wait", "esc_f", "dam_d_lp"]:
+			native.add_animation("pwro_" + role, native.get_animation("pwros_" + role).duplicate())
+	if anim_glb == SaberPrototype.FEMALE_LIBRARY:
+		native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
+	if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.MALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.MALE_ROD_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library, SaberPrototype.MALE_WAND_PROFILE.library, SaberPrototype.FEMALE_WAND_PROFILE.library, SaberPrototype.FEMALE_UNARMED_PROFILE.library]:
+		native_roles.append_array(["esc_f", "dam_d_lp"])
+	if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library, SaberPrototype.FEMALE_WAND_PROFILE.library, SaberPrototype.FEMALE_UNARMED_PROFILE.library]:
+		var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
+		if female_walk == null or not female_walk.has_animation("pwsa_walk"):
+			push_error("Female sword requires general female walk")
+			return []
+		lib.add_animation("pwsa_walk", female_walk.get_animation("pwsa_walk").duplicate())
+	if anim_glb == SaberPrototype.FEMALE_DAGGER_PROFILE.library: native_roles.append("tec")
+	if anim_glb in [SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library]:
+		lib.add_animation(str(prototype_profile.native_prefix) + "_wait_sht", native.get_animation("pmgb_wait_sht").duplicate())
+		for step in range(3):
+			var shot := native.get_animation("pmgb_sht").duplicate() as Animation
+			shot.loop_mode = Animation.LOOP_NONE
+			shot.length += prototype_profile.recovery[step]
+			lib.add_animation(str(prototype_profile.native_prefix) + "_shot_atk" + str(step + 1), shot)
+	return native_roles

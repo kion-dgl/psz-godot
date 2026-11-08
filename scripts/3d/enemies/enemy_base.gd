@@ -1611,6 +1611,8 @@ func _try_attack_hit() -> void:
 func _deal_damage_for(def: Dictionary) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	if str(def.get("kind", "melee_arc")) == "melee_arc" and target.has_method("try_prototype_guard") and target.try_prototype_guard(self):
+		return
 	if target.has_method("take_damage"):
 		target.take_damage(_attack_damage(def), Vector3.ZERO, bool(def.get("knockdown", false)))
 
@@ -2231,6 +2233,9 @@ func _apply_obstacle_detour(delta: float) -> void:
 		return
 	velocity.x = _detour_direction.x * speed
 	velocity.z = _detour_direction.z * speed
+	# Forward-walking melee rigs must turn with the detour, not keep facing
+	# the player while their feet slide sideways around the obstruction.
+	if _archetype == "simple_melee": _face_direction(_detour_direction)
 
 
 ## move_and_slide modifies velocity on contact. Measure the original intent,

@@ -10,6 +10,12 @@ import Concept from '../../layouts/Concept.astro';
 
   <p>Each behavior page cross-references the <code>.gd</code> script(s) that handle it, so the spec links back to the code — via an <strong>Implemented by</strong> section on most pages, or the <em>"where each behavior lives"</em> module map on <a href={siteUrl('/states/field-lifecycle')}>Field Stage Lifecycle</a>.</p>
 
+  <h2>All-weapon adaptation planning</h2>
+  <ul>
+    <li><a href={siteUrl('/states/weapon-animation-mappings/')}>Animation mappings</a> — all weapon/gender source inventories, verified IDs and explicit gaps.</li>
+    <li><a href={siteUrl('/states/weapon-state-transitions/')}>Weapon UML state transitions</a> — movement, combos, reactions and context boundaries.</li>
+    <li><a href={siteUrl('/states/weapon-adaptation-plan/')}>Adaptation plans and resumable test protocol</a> — shared prerequisites and one plan per weapon family.</li>
+  </ul>
   <h2>Definitions</h2>
   <ul>
     <li><a href={siteUrl('/states/session-model')}>Session Model</a> — the foundational split between <strong>Field Context</strong> (the expedition: map, sections, position — what the telepipe binds to) and <strong>Quest State</strong> (objectives, completion, rewards). Decoupling them is what makes the telepipe a movement primitive and dissolves the quest/free-field confusion.</li>

@@ -25,4 +25,4 @@ model_id = ""
 variant_id = ""
 glb_scale = 1.0
 glb_path = "res://assets/weapons/basic/Handgun.glb"
-tint_color = Color(0.7, 0.3, 0.9, 1)
+tint_color = Color(1.0, 0.85, 0.2, 1)

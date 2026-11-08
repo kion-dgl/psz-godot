@@ -14,7 +14,7 @@ static func item_fits_slot(item_id: String, slot_key: String) -> bool:
 	match slot_key:
 		"weapon":
 			var weapon = WeaponRegistry.get_weapon(base_id)
-			if weapon == null:
+			if weapon == null or weapon.weapon_type == WeaponData.WeaponType.SHIELD:
 				return false
 			var character = CharacterManager.get_active_character()
 			if character:
