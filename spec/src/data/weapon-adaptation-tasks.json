@@ -127,7 +127,7 @@
       "Test muzzle alignment, moving targets and target-cursor sound/caution interaction."
     ],
     "acceptance": "Each accepted step releases the correct shot; no melee-only hit policy leaks into guns.",
-    "status": "Male implemented; focused checks passed, owner playtest pending. Female planned."
+    "status": "Male gameplay owner-approved; photon glow fix ready for visual testing. Female planned."
   },
   {
     "id": "A11",

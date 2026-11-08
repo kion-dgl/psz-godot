@@ -146,6 +146,13 @@ func _verify(player) -> void:
 	_check(enemy.enemy_level == 1, "fixed enemy level")
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
 	_check(player.weapon_node != null, "saber attached")
+	if _native_prefix == "pmhg":
+		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
+		var surfaces: Array = []
+		player._collect_surfaces(player.weapon_node, surfaces)
+		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
+		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
 	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
 	for clip in player.animation_player.get_animation_list():
 		_check(not str(clip).begins_with(wrong_prefix), "no opposite-gender native clip: " + str(clip))
