@@ -67,8 +67,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_la" if female else "pso_la"
 		CharacterManager._characters[0].equipment.weapon = "ein_cannon" if OS.get_environment("PSZ_MELEE_WEAPON") == "laser-cannon" else "ein_bazooka"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "rod":
-		_native_prefix = "pmro"
-		_pso_prefix = "pso_ro"
+		_native_prefix = "pwro" if female else "pmro"
+		_pso_prefix = "pso_f_ro" if female else "pso_ro"
 		CharacterManager._characters[0].equipment.weapon = "pole"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
@@ -116,7 +116,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro", "pwro"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -177,7 +177,7 @@ func _verify(player) -> void:
 		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "handgun photon insert is solid colored, not additive white")
 		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
 		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
-	if _native_prefix == "pmro":
+	if _native_prefix in ["pmro", "pwro"]:
 		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "rod has no wrist glow")
 		var surfaces: Array = []
 		player._collect_surfaces(player.weapon_node, surfaces)
@@ -232,7 +232,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
 	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
-	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro"]:
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro"]:
 		for target in enemies:
 			target.reveal()
 			target.hurtbox.monitorable = true

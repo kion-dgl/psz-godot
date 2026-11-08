@@ -523,3 +523,7 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon rod --group --no-grip-con
 Rod library SHA-256: `7d42968b4a127b0b5fc5e67e38025de43a8a73899f159102476f2ca9db51336c`.
 
 Rod calibration: saved block, run and normal-walk rotations promoted to defaults. No idle or position override was present in this save. Rod controls support per-pose rotations/positions and open on relaxed idle. Basic Rod surface 1 retains its green vertex color and now emits from the tip; shaft remains non-emissive and wrist light is removed. One-Booma gameplay is the current owner test setup.
+
+## Female — Rod playtest
+
+Male rod owner-approved at `4fe3c2cb`. Female uses native `rod_w.glb` attacks/charge/techniques; source idle/dodge/defeat retain `pwros` names and are explicitly aliased to `pwro`. PSO rod 299–308 supplies ten stance clips; female saber 336–339 reactions and run 342 fill the missing roles. Male-approved block/walk/run grips map to female role names. Staff-tip green emission remains shared. Run `python3 scripts/tools/run_humar_saber.py --weapon rod --gender female --no-grip-controls` for one Booma. Owner approval pending. Bake `--female-rod`. Library SHA-256: `52a24c912941cc7a51818b46b30909f478f65ea1c126721cd6129d5595571cd5`.

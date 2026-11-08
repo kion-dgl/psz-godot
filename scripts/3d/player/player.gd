@@ -579,7 +579,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			var shared_clips := ["pmsa_walk", "pmsa_run_pso"]
 			if anim_glb == SaberPrototype.LIBRARY:
 				shared_clips.append_array(["pmsa_esc_f", "pmsa_dam_d_lp"])
-			elif anim_glb in [SaberPrototype.FEMALE_LIBRARY, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library]:
+			elif anim_glb in [SaberPrototype.FEMALE_LIBRARY, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library]:
 				shared_clips = [] # Female roles come from saver_w, not the male scene.
 			for anim_name in shared_clips:
 				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
@@ -607,12 +607,15 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			for role in ["atk1", "atk2", "atk3", "esc_f"]:
 				native.add_animation("pwmgs_" + role, native.get_animation("pmmg_" + role).duplicate())
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
-		if anim_glb == SaberPrototype.MALE_ROD_PROFILE.library: native_roles.append_array(["tec", "chg"])
+		if anim_glb in [SaberPrototype.MALE_ROD_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library]: native_roles.append_array(["tec", "chg"])
+		if anim_glb == SaberPrototype.FEMALE_ROD_PROFILE.library:
+			for role in ["wait", "esc_f", "dam_d_lp"]:
+				native.add_animation("pwro_" + role, native.get_animation("pwros_" + role).duplicate())
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.MALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.MALE_ROD_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.MALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.MALE_ROD_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library]:
+		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_ROD_PROFILE.library]:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
 			if female_walk == null or not female_walk.has_animation("pwsa_walk"):
 				push_error("Female sword requires general female walk")
@@ -2623,10 +2626,11 @@ func _set_sword_pose_hold(clip: String) -> void:
 	# Owner-saved gunblade idle grip applies to every blade and gun pose.
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE: native = Quaternion.IDENTITY
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.ROD:
-		var mode := "attack" if clip.begins_with("pmro_atk") else "idle"
+		var rod_grip_key := clip.replace("pwro_", "pmro_").replace("pso_f_ro_", "pso_ro_")
+		var mode := "attack" if rod_grip_key.begins_with("pmro_atk") else "idle"
 		var hold: Dictionary = WEAPON_HOLD.get(WeaponData.WeaponType.ROD, WEAPON_HOLD_DEFAULT)[mode]
 		native = Quaternion.from_euler(hold.rot * PI / 180.0)
-		if ROD_SAVED_GRIPS.has(clip): native = ROD_SAVED_GRIPS[clip].get_rotation_quaternion()
+		if ROD_SAVED_GRIPS.has(rod_grip_key): native = ROD_SAVED_GRIPS[rod_grip_key].get_rotation_quaternion()
 		weapon_node.position = hold.pos
 		var positions: Dictionary = get_meta("fixture_grip_positions", {})
 		if positions.has(clip): weapon_node.position = positions[clip]
