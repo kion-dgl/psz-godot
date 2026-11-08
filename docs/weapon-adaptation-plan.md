@@ -1,6 +1,6 @@
 # All-weapon adaptation: checkpoint and test handoff
 
-Status: adapting one gender–weapon pair at a time. The approved HUmar/saber prototype remains opt-in; broader campaign behavior has not been enabled. See PR #791 for the persistent checklist and the current **Resume here** record.
+Status: all non-shield gender–weapon pairs are owner-approved. The shared HUmar/HUmarl prototype remains opt-in; broader campaign behavior has not been enabled. See PR #791 for the persistent checklist and the current **Resume here** record.
 
 ## Spec pages
 
@@ -12,7 +12,7 @@ The pages are linked from the spec States index. Their source files are under `s
 
 ## Current runnable fixture
 
-Male — Saber is the approved reference. Female — Saber now uses HUmarl with native `pwsa` idle/attacks/dodge/defeat and female PSO saber clips 327–342. Normal walk uses the existing female general-walk bake (412). Female saber is owner-approved at `cd946912`. Male sword is owner-approved at `87fcf2bf`; female sword is owner-approved at `5bd1c1e3`. Male daggers are owner-approved at `e0ec8124`; female daggers and the guard flash are owner-approved at `be66d48f`. Male claw is owner-approved at `6a49ab9a`; female claw is implemented and awaits playtest. The launcher accepts `--gender male|female` and `--weapon saber|sword|daggers|claw`; both genders are supported for saber, sword and daggers; both genders are also supported for claw.
+All 32 enabled male/female profiles are accepted: saber, sword, daggers, claw, double saber, spear, slicer, gunblade, handgun, mechgun, rifle, bazooka, laser cannon, rod, wand and unarmed. Laser cannon uses explicitly approved bazooka reuse. Shields are disabled as weapons. Use `--weapon` and `--gender male|female` to select a pair; `--no-grip-controls` runs the gameplay fixture without adjustment controls. The per-pair notes below preserve the tuning history; the final approval and validation records supersede their earlier pending statuses.
 
 From this worktree on this Mac:
 
@@ -35,15 +35,12 @@ python3 scripts/tools/run_humar_saber.py --check --rendered
 
 Restart the wrapper to reset the encounter. Its project/user directory isolates the fixture from campaign saves. Capture the exact `git rev-parse HEAD`, Godot version, local modifications and pack SHA before testing. A moving branch name alone is not a reproducible test reference.
 
-## Clean setup / assets still needing publication
+## Clean setup / published assets
 
-Follow `BUILD.md` and populate assets before importing. The current local prototype additionally uses the named charge and cursor WAV files, which must be included in the next asset-pack publication. A successful local test is not proof that the published pack contains them.
+Follow `BUILD.md` and populate assets before importing. The current manifest publishes all prototype animation libraries, charge/cursor audio and slicer projectile assets in pack `a637fce6f9ebbbc1bc7859a2eaf84a510f23a67d26e7ebc10babdc67b38f43f2`. The source assets are also mirrored for developer setup.
 
 ```sh
 bash scripts/tools/fetch_assets_dev.sh
-mkdir -p assets/sfx/common
-cp web/public/assets/psobb_sfx/common/common_017.wav assets/sfx/common/
-cp web/public/assets/psobb_sfx/common/common_060.wav assets/sfx/common/
 "$GODOT" --headless --editor --path . --import
 ```
 
@@ -553,3 +550,37 @@ Female fists gameplay accepted, with a final sound correction: centralized empty
 Female fists and the final unarmed sound correction owner-approved at `c83c6b2d`. Every non-shield gender/weapon pair is accepted for this prototype pass; laser cannons use owner-directed bazooka reuse. Shields remain skipped/disabled as weapons.
 
 Merge-readiness audit: CI currently fails check-asset-refs and code-health. Local asset-reference validation confirms 29 new animation libraries, common_017/common_060 audio and the slicer projectile model are absent from the published asset inventory. Publish matching assets and commit the generated manifest/tree, resolve code-health findings, then validate clean checkout/export and outstanding campaign regressions. Runtime behavior remains gated to the opt-in Coliseum prototype; merging source alone does not enable campaign rollout.
+
+
+## Merge-blocker resolution (2026-11-08)
+
+Implementation checkpoint: `27b047f5` (following the refactor and publication at `f9612e17`). All required GitHub jobs passed on this revision. No code-health baseline was expanded: profile selection is table-driven, large animation/contact/grip/probe routines are separated by responsibility, and duplicate rotation formatting is shared.
+
+Published pack: `a637fce6f9ebbbc1bc7859a2eaf84a510f23a67d26e7ebc10babdc67b38f43f2` (393,218,664 bytes). Manifest/sidecar checks pass. All 35 newly listed source assets were downloaded from the developer mirror and byte-checked against the local source; the mirror inventory was updated without deleting unrelated assets. A fresh Godot download exposed the old 30-second full-request timeout; it is now 300 seconds. Both empty-cache runs completed download, SHA verification and mounting through the existing HTTP fallback on this Mac, whose Godot TLS handshake fails. Integrity checking remains mandatory.
+
+| Validation | Result |
+| --- | --- |
+| Full Godot unit runner | 14,701 passed, zero failed |
+| Real weapon fixture, male/female × 16 enabled families | All 32 pass, group mode, adjustment panel disabled |
+| Code health / orphan / asset references | No new debt; all 387 references resolve |
+| Clean source + published pack, story sanity | All 27 checkpoints pass through quest report |
+| Clean macOS export | Builds; exported executable mounts verified pack and reaches title |
+| Projectile physics fidelity | Pass |
+| Equipment sets, real-kill progression, grinding, Photon Blasts, death/revival | Pass; separate-process persistence checks also pass |
+| Enemy burn/freeze/stun | Pass |
+| Reyburn lifecycle | Entry, damage/recovery, defeat, exit and fresh retry pass |
+
+The live probes now reveal their controlled targets before attacking, explicitly expire hit immunity while physics is frozen, and follow the existing decoded-ROM dodge contract (roll-through does not grant damage immunity). These corrections repair stale test setup/expectations; they do not introduce new combat rules.
+
+This validates the opt-in Coliseum implementation. It does not enable the controller in campaign play or claim that every story quest has been replayed. Repeated launcher animation sequencing, splash tuning and smaller grip refinements remain the previously agreed follow-ups.
+
+### Existing free-roam navigation failures classified
+
+Replayed both areas with `PSZ_AUTOPILOT_FIELD_SEED=791`, normal walls/fences enabled, on candidate `27b047f5` and untouched main `ebd7f963706467d0b108568209c074d4e598b2d3`, using the same published pack and separate fresh user directories. Both reproduce the same failures:
+
+| Area | Candidate and main result |
+| --- | --- |
+| Gurhacia | `s01b_xb2`, cell `3,3`, return visit after the key detour: stuck at `(-9.4, 0.2, 0.1)`, distance `22.13`, all three forward floor probes miss |
+| Ozette | `s02b_xb2`, cell `3,3`: stuck around `(-17.7, 0.1, 5.1)`, distance `18.70` (main `18.72`), only one of three floor probes hits |
+
+These are baseline floor/navigation defects, not weapon-adaptation regressions. They remain map follow-ups; neither run is reported as passing. This replaces the earlier inconclusive unseeded comparison. The source PR is ready for review/merge with the opt-in gate retained; campaign rollout remains separate.
