@@ -151,6 +151,7 @@ func _verify(player) -> void:
 		var surfaces: Array = []
 		player._collect_surfaces(player.weapon_node, surfaces)
 		var photon: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "handgun photon insert is solid colored, not additive white")
 		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
 		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
 	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
@@ -200,6 +201,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg"]: await _verify_gunblade(player, enemies)
+	_verify_booma_detour(enemies[0])
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -895,3 +897,24 @@ func _verify_shield_retirement() -> void:
 	_check(str(character.equipment.weapon).is_empty(), "legacy shield is unequipped on activation")
 	_check(Inventory.get_item_count("shield") == 1, "legacy shield stays in inventory")
 	character.equipment.weapon = original
+
+
+func _verify_booma_detour(enemy) -> void:
+	var old_state = enemy.current_state
+	var old_basis: Basis = enemy.basis
+	var old_velocity: Vector3 = enemy.velocity
+	var old_position: Vector3 = enemy.global_position
+	enemy.global_position = Vector3(0, 0, 5)
+	enemy.current_state = enemy.EnemyState.CHASING
+	enemy._detour_left = 0.6
+	enemy._detour_direction = Vector3.RIGHT
+	enemy.velocity = Vector3(0, 0, 2)
+	enemy._face_direction(Vector3.BACK)
+	enemy._apply_obstacle_detour(0.1)
+	_check(enemy.velocity.x > 1.9, "Booma obstacle detour changes travel direction")
+	_check(enemy.global_basis.z.normalized().dot(Vector3.RIGHT) > 0.99, "Booma faces travel direction during detour")
+	enemy._detour_left = 0
+	enemy.current_state = old_state
+	enemy.basis = old_basis
+	enemy.velocity = old_velocity
+	enemy.global_position = old_position

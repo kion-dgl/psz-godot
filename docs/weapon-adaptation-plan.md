@@ -431,3 +431,5 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon handgun --no-grip-control
 Headless checks passed all eight normal/strong shooting combinations, release/impact separation, interruption, shared movement/recovery and shield retirement checks. Owner male handgun approval remains pending. Library SHA-256: `57bbdcee4631f211c6722f1047389c5ee317c0c7caf48f7461b22242cba2a942`.
 
 Male handgun gameplay owner-approved at `3e791949`. Follow-up photon visual fix: basic handgun variants tint and emit from photon surface 1, preserve the textured casing, and omit the wrist-mounted green light. Female handgun is next after visual confirmation.
+
+Handgun photon follow-up: use opaque/mix emission on the untextured photon insert so additive blending cannot wash its tier color white. Handgun/Autogun/Lockgun/Railgun colors are green/blue/yellow/red. Simple-melee obstacle detours now turn the body into the movement direction, fixing the target-facing sideways slide observed on Booma. Focused material, detour direction and handgun combat checks passed.

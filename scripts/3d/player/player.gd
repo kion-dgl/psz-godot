@@ -893,9 +893,9 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 					new_mat.emission_enabled = true
 					new_mat.emission = tint
 					new_mat.emission_energy_multiplier = 1.2
-				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX if handgun_photons else BaseMaterial3D.BLEND_MODE_ADD
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY if handgun_photons else BaseMaterial3D.DEPTH_DRAW_DISABLED
 				mesh_inst.set_surface_override_material(surf_idx, new_mat)
 	else:
 		# Unique weapons: normal textures, double-sided faces

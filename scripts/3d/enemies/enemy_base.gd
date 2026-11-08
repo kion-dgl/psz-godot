@@ -2233,6 +2233,9 @@ func _apply_obstacle_detour(delta: float) -> void:
 		return
 	velocity.x = _detour_direction.x * speed
 	velocity.z = _detour_direction.z * speed
+	# Forward-walking melee rigs must turn with the detour, not keep facing
+	# the player while their feet slide sideways around the obstruction.
+	if _archetype == "simple_melee": _face_direction(_detour_direction)
 
 
 ## move_and_slide modifies velocity on contact. Measure the original intent,
