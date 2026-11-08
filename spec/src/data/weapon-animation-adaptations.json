@@ -1703,7 +1703,7 @@
       "donors": [
         "ri"
       ],
-      "note": "Runtime uses rifle GLB, not shotgun GLB containing additional retargeted pmri clips.",
+      "note": "Native pwars three-shot combo with female PSO rifle 250–262. Normal walk 255, approved male walk/attack grips mapped to female clips, photon insert retained.",
       "sha256": "30c02a9c53fb2d6fd8d71e26ac6d53dc2f393d8d2f2f8b5c20573c06f1c878e3",
       "clips": [
         "dummy1",
@@ -1765,7 +1765,7 @@
         ],
         "tec": []
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented; owner playtest pending"
     },
     {
       "id": "A13-M",

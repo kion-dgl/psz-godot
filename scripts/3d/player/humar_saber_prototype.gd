@@ -15,6 +15,7 @@ const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_
 const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
 const MALE_RIFLE_PROFILE := {"library": "res://assets/player/animations/pso_male_rifle.glb", "native_library": "res://assets/player/animations/rifle_m.glb", "prefix": "pso_ri", "native_prefix": "pmar", "walk": "pso_ri_walk", "run": "pso_ri_run", "source_count": 13, "class_id": "humar", "hit_fracs": [[0.2105], [0.2308], [0.3095]], "recovery": [0.14, 0.16, 0.22]}
+const FEMALE_RIFLE_PROFILE := {"library": "res://assets/player/animations/pso_female_rifle.glb", "native_library": "res://assets/player/animations/rifle_w.glb", "prefix": "pso_f_ri", "native_prefix": "pwars", "walk": "pso_f_ri_walk", "run": "pso_f_ri_run", "source_count": 13, "class_id": "humarl", "hit_fracs": [[0.2105], [0.2308], [0.3095]], "recovery": [0.14, 0.16, 0.22]}
 
 const MALE_MECHGUN_PROFILE := {"library": "res://assets/player/animations/pso_male_mechgun.glb", "native_library": "res://assets/player/animations/machinegun_m.glb", "prefix": "pso_mg", "native_prefix": "pmmg", "walk": "pmsa_walk", "run": "pso_mg_run", "source_count": 11, "class_id": "humar", "hit_fracs": [[0.1778, 0.3111], [0.1739, 0.3043], [0.1739, 0.3043]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_MECHGUN_PROFILE := {"library": "res://assets/player/animations/pso_female_mechgun.glb", "native_library": "res://assets/player/animations/machinegun_w.glb", "prefix": "pso_f_mg", "native_prefix": "pwmgs", "walk": "pwsa_walk", "run": "pso_f_mg_run", "source_count": 10, "class_id": "humarl", "hit_fracs": [[0.1778, 0.3111], [0.1739, 0.3043], [0.1739, 0.3043]], "recovery": [0.14, 0.16, 0.22]}
@@ -35,7 +36,7 @@ const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_mal
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
 static func profile(player) -> Dictionary:
-	if player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE and not player._is_female: return MALE_RIFLE_PROFILE
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE: return FEMALE_RIFLE_PROFILE if player._is_female else MALE_RIFLE_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN: return FEMALE_MECHGUN_PROFILE if player._is_female else MALE_MECHGUN_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.HANDGUN: return FEMALE_HANDGUN_PROFILE if player._is_female else MALE_HANDGUN_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE:
@@ -56,6 +57,7 @@ static func profile(player) -> Dictionary:
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == FEMALE_RIFLE_PROFILE.library: return FEMALE_RIFLE_PROFILE
 	if path == MALE_RIFLE_PROFILE.library: return MALE_RIFLE_PROFILE
 	if path == FEMALE_MECHGUN_PROFILE.library: return FEMALE_MECHGUN_PROFILE
 	if path == MALE_MECHGUN_PROFILE.library: return MALE_MECHGUN_PROFILE
@@ -112,7 +114,7 @@ static func enabled(player) -> bool:
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.HANDGUN \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN \
-		 or (not player._is_female and player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE))
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE)
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:

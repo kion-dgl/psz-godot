@@ -459,3 +459,8 @@ Female mechgun owner-approved at `ee300294`. Run `python3 scripts/tools/run_huma
 Male rifle grip calibration: owner-saved attack 1/2/3 rotations are now branch defaults. Normal walk switches to owner-requested PSO rifle 15 (`pso_ri_walk`); the grip panel opens on that pose for further alignment. The save file contained rotation entries only, with no position overrides.
 
 Male rifle owner-approved, including all three attack grips and PSO 15 normal-walk grip. The saved walking rotation is promoted to the profile defaults alongside the existing attack rotations. No local grip file or adjustment panel is required. Female rifle is next.
+
+
+## Female — Rifle playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon rifle --gender female --no-grip-controls`. Bake `--female-rifle`: female PSO rifle 250–262 supplies all 13 stance/reaction clips. Normal walk uses 255, the female counterpart to owner-selected male walk 15. Native `pwars` supplies relaxed idle, three shots, dodge and defeat. Male-approved walking and attack grips are mapped onto the corresponding female clips as starting defaults, with no legacy attack-position offset; independent female grip controls remain available. Shared timing, projectile geometry and photon material are retained. Female owner approval pending. Library SHA-256: `14ed480b0af751ede4f025e5886408a3d8d7d00938ac3c784d588f03c93e24ba`.

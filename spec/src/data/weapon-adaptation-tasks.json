@@ -153,7 +153,7 @@
       "Align shoulder, muzzle and projectile release across bodies and strong/normal steps."
     ],
     "acceptance": "Correct native sequence and source provenance; no gender-prefix fallback accidents.",
-    "status": "Male owner-approved including attack grips and PSO 15 walk. Female planned."
+    "status": "Male owner-approved. Female implemented with mapped grip defaults; owner playtest pending."
   },
   {
     "id": "A13",
