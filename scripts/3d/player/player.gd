@@ -621,8 +621,6 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 				anim_scene.queue_free()
 				return null
 			var native_clip := native.get_animation(clip).duplicate() as Animation
-			if anim_glb == SaberPrototype.MALE_SPEAR_PROFILE.library and str(role).begins_with("atk"):
-				native_clip = lib.get_animation("pso_pa_" + str(role)).duplicate() as Animation
 			if str(role).begins_with("atk"):
 				var step := int(clip.right(1)) - 1
 				native_clip.length += prototype_profile.get("recovery", SaberPrototype.RECOVERY)[step]

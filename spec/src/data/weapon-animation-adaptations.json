@@ -787,7 +787,7 @@
       "donors": [
         "pa"
       ],
-      "note": "Partisan adaptation: PSO 140\u2013142 attacks aliased to pmsp_atk1/2/3; 145 caution (runtime override of 138), 143 ready, 151 run. Upright calibrated carry grip accounts for native mesh shaft angle. Three-target sweeps on every step, provisional contact timing. Native PSZ relaxed idle/dodge/defeat retained.",
+      "note": "Native PSZ pmsp attacks retained after owner rejected retargeted PSO 140\u2013142. PSO 145 caution, 143 ready, 151 run with upright calibrated carry. Three-target sweeps on every step; decoded native contact timing. Native relaxed idle/dodge/defeat retained.",
       "sha256": "b337d0ca52872cbe66f5cc9ef0506bee34ef669df05c1bb876b3659e7b5db848",
       "clips": [
         "dummy1",

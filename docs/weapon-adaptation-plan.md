@@ -275,7 +275,7 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon spear` (HUmar with native
 | Role | Explicit source |
 | --- | --- |
 | Relaxed idle | Native `pmsp_wait` |
-| Attacks | PSO partisan 140 / 141 / 142, aliased to `pmsp_atk1/2/3` |
+| Attacks | Native PSZ `pmsp_atk1/2/3`; PSO 140–142 rejected in owner playtest |
 | Normal walk | General male 200 (`pmsa_walk`) |
 | Caution / ready / run | PSO partisan **145** / 143 / 151 |
 | Casting / block | Partisan 139 / 144 |
@@ -285,7 +285,7 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon spear` (HUmar with native
 
 Owner requested a fuller partisan adaptation after rejecting the spear-thrust version. The runtime caution alias `pso_pa_walk_ready` now uses source 145 instead of 138. Carry poses use calibrated local grips, accounting for the Ein Spear mesh shaft being 30 degrees off local +Z; caution, ready and run point upward at their calibration pose while retaining animated sway.
 
-All three swings use retargeted PSO attacks, each with one impact and up to three targets. Prototype sweep geometry is reach 3.2, horizontal angle 65°, vertical height 0.9 and vertical angle 45°; native chain turns remain 75°. Contact fractions [0.40, 0.40, 0.45] are provisional tuning on the PSO motions, not recovered PSO hit-event data. Recovery holds remain [0.14, 0.16, 0.22] seconds. Normal/strong inputs retain the shared continuation window and combo outcomes.
+All three swings use native PSZ attacks, each with one impact and up to three targets. Prototype sweep geometry is reach 3.2, horizontal angle 65°, vertical height 0.9 and vertical angle 45°; native chain turns remain 75°. Contact fractions [10/34, 11/37, 22/40] follow the decoded PSZ spear hit frames. Recovery holds remain [0.14, 0.16, 0.22] seconds. Normal/strong inputs retain the shared continuation window and combo outcomes.
 
 Checks cover per-swing three-target caps, single impacts, strong damage/flinch, shared combo timing and upright actual shaft direction. Owner playtest and asset publication remain pending.
 
