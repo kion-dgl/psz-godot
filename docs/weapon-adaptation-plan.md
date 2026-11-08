@@ -415,6 +415,8 @@ Local gunblade library SHA-256: `46f6e2dc7c58b50a6763932b878c9085b7cc96974665a4a
 
 ## Female — Gunblade playtest
 
-Run `python3 scripts/tools/run_humar_saber.py --weapon gunblade --gender female --no-grip-controls`. Bake with `--female-gunblade`. Female saber donors (16 clips) provide blade stances; female rifle 250/253/262 provide gun caution/ready/run. The female shotgun library supplies native `pwgbs` melee, dodge and defeat, plus its mixed-prefix `pmgb_sht` and `pmgb_wait_sht` shooting clips aliased under `pwgbs`. Automatic per-step range selection, common identity grip, shared timing and feedback match the approved male implementation. Female melee contact fractions currently inherit the male calibration and need owner playtesting. Female approval remains pending.
+Run `python3 scripts/tools/run_humar_saber.py --weapon gunblade --gender female --no-grip-controls`. Bake with `--female-gunblade`. Female saber donors (16 clips) provide blade stances; female rifle 250/253/262 provide gun caution/ready/run. The female shotgun library supplies native `pwgbs` melee, dodge and defeat, plus its mixed-prefix `pmgb_sht` and `pmgb_wait_sht` shooting clips aliased under `pwgbs`. Automatic per-step range selection, common identity grip, shared timing and feedback match the approved male implementation. Female melee contact fractions currently inherit the male calibration and need owner playtesting. Female owner approval recorded below.
 
 Female headless fixture checks passed, including all 64 mixed action/strength combinations and the gender-specific animation inventory. Library SHA-256: `23e032fde3924f5a22ef8f905a10b55d4b52fb5c4814e47435a65f4450edad0e`.
+
+Female gunblade owner-approved at `1295a9c9`. Follow-up: hidden/dormant enemies are excluded from player cone targeting. Gunblade always uses blade idle, walk, run, preparation and recovery stances; only the shooting attack uses the gun animation. Per-step range selection remains unchanged.

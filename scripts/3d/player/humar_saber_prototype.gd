@@ -32,10 +32,6 @@ static func profile(player) -> Dictionary:
 		if gun_mode(player):
 			var shooting := base.duplicate(true)
 			shooting["attack_prefix"] = str(base.native_prefix) + "_shot"
-			shooting["ready"] = str(base.prefix) + "_gun_wait"
-			shooting["caution"] = str(base.prefix) + "_gun_walk_ready"
-			shooting["run"] = str(base.prefix) + "_gun_run"
-			shooting["idle"] = str(base.native_prefix) + "_wait_sht"
 			shooting["hit_fracs"] = [[0.35], [0.35], [0.35]]
 			return shooting
 		return base

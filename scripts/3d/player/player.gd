@@ -3271,7 +3271,7 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 	widened["hit_h_dist"] = maxf(float(config.get("hit_h_dist", 2.4)), extra_dist)
 	widened["hit_h_angle_deg"] = maxf(float(config.get("hit_h_angle_deg", 30.0)), extra_angle)
 	var origin: Vector3 = global_position + Vector3(0, 1.0, 0)
-	var candidates: Array = get_tree().get_nodes_in_group("enemies")
+	var candidates: Array = get_tree().get_nodes_in_group("enemies").filter(func(enemy): return enemy.is_visible_in_tree() and not bool(enemy.get("dormant")))
 	candidates.append_array(get_tree().get_nodes_in_group("targetable_traps").filter(func(trap): return not trap.has_method("can_receive_hit_from") or trap.can_receive_hit_from(self)))
 	return ConeTargeting.scan_enemies(candidates, origin, player_rotation, widened)
 

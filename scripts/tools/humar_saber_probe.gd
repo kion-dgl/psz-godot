@@ -772,6 +772,17 @@ func _verify_gunblade(player, enemies: Array) -> void:
 	enemy.hurtbox.monitorable = true
 	for other in enemies: other.global_position = player.global_position + Vector3(0, 0, 20)
 	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	player.player_rotation = 0
+	enemy.dormant = true
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "dormant enemy cannot acquire cursor")
+	enemy.dormant = false
+	enemy.hide()
+	player._update_combat_targets()
+	_check(player._targeted_enemies.is_empty(), "hidden enemy cannot acquire cursor")
+	enemy.show()
+	player._update_combat_targets()
+	_check(enemy in player._targeted_enemies, "revealed enemy acquires cursor")
 	for sequence in range(8):
 		player._saber_attack_cooldown = 0
 		player._recovery_left = 0
@@ -826,7 +837,10 @@ func _verify_gunblade(player, enemies: Array) -> void:
 				if step < 2: enemy.global_position = player.global_position + Vector3(0, 0, 5.0 if sequence & (1 << (step + 1)) else 1.5)
 				player._attack_step_finished()
 			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during finisher recovery")
+			_check(player.animation_player.current_animation == _pso_prefix + "_wait", "gunblade finisher uses blade ready stance after either action")
 			player._handle_attack_state(Rules.FINISHER_GUARD)
+			_check(Rules.idle_clip(player) == _native_prefix + "_wait", "gunblade defaults to blade idle after shooting")
+			_check(str(Rules.profile(player).run) == _pso_prefix + "_run", "gunblade defaults to blade locomotion")
 			_check(player._queued_combo == player.ComboQueue.NONE, "gunblade ends combo with no stale queued action")
 	player.transition_to(player.PlayerState.IDLE)
 	player._saber_attack_cooldown = 0
