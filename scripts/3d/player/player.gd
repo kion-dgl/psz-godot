@@ -805,6 +805,9 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	node.position = idle_hold.get("pos", Vector3(0.31, 0, 0))
 	node.rotation_degrees = idle_hold.get("rot", Vector3(0, 90, 0))
 	node.scale = Vector3(s, s, s)
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DOUBLE_SABER:
+		# Owner-calibrated central grip from the live rotation controls.
+		node.basis = Basis.IDENTITY.scaled(Vector3.ONE * s)
 
 	# Mirror left-hand weapon on X axis
 	if mirror:

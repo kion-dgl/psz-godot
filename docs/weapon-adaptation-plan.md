@@ -243,7 +243,7 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber` (HUmar with
 | Photon blast | Male sword 124 |
 | Dodge / defeated hold | Native `pmds_esc_f`, `pmds_dam_d_lp` |
 
-The native model attaches at its central grip in the right hand. Preserve native reach 2.6, horizontal angle 60°, vertical height 0.8, vertical angle 45°, turn limit 180° and three targets per impact. Decoded contact counts are 2/1/3 at normalized fractions [0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294], with recovery holds [0.14, 0.16, 0.22] seconds. Every strong contact gets strong damage and flinch; only closely spaced audiovisual feedback is throttled.
+The native model attaches at its central grip in the right hand. The owner-saved orientation is local X/Y/Z = 0°/0°/0° (identity basis), promoted into the prototype default. Preserve native reach 2.6, horizontal angle 60°, vertical height 0.8, vertical angle 45°, turn limit 180° and three targets per impact. Decoded contact counts are 2/1/3 at normalized fractions [0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294], with recovery holds [0.14, 0.16, 0.22] seconds. Every strong contact gets strong damage and flinch; only closely spaced audiovisual feedback is throttled.
 
 Four-enemy checks verify three targets per impact, no duplicate contact, all strong contacts, and shared continuation timing. Rendered solo and female-claw regression checks passed. Owner playtest and asset publication remain pending.
 

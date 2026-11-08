@@ -529,6 +529,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	var weapon_type: int = player._get_equipped_weapon_type()
 	var target_cap := 3 if double_saber else 1
 	if double_saber:
+		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber uses owner-saved zero-rotation grip")
 		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_double_saber").glb_path and player.weapon_node_left == null, "native double saber attaches once at its central grip")
 	elif claw:
 		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")
