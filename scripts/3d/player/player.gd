@@ -822,7 +822,7 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	node.scale = Vector3(s, s, s)
 	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.SLICER:
 		node.basis = SLICER_GRIP.scaled(Vector3.ONE * s)
-	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DOUBLE_SABER:
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type in [WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.GUN_BLADE]:
 		# Owner-calibrated central grip from the live rotation controls.
 		node.basis = Basis.IDENTITY.scaled(Vector3.ONE * s)
 
@@ -2508,7 +2508,7 @@ func _set_weapon_hold(mode: String) -> void:
 	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
 	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
 	# Keep the calibrated central grip (including live fixture adjustments) across attacks.
-	if not (SaberPrototype.enabled(self) and wtype in [WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.SLICER]):
+	if not (SaberPrototype.enabled(self) and wtype in [WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE]):
 		weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
 
 
@@ -2561,6 +2561,8 @@ func _set_sword_pose_hold(clip: String) -> void:
 	# Ein Spear mesh shaft lies 30 degrees off local +Z. Align its actual tip axis.
 	var native := Quaternion(Vector3.UP, PI / 3.0 if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else PI / 2.0)
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: native = SLICER_GRIP.get_rotation_quaternion()
+	# Owner-saved gunblade idle grip applies to every blade and gun pose.
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE: native = Quaternion.IDENTITY
 	var target := native
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
