@@ -356,6 +356,7 @@ async function main() {
   const femaleSaber = process.argv.includes('--female-saber');
   const maleSaber = process.argv.includes('--humar-saber');
   const femaleDouble = process.argv.includes('--female-double-saber');
+  const maleSpear = process.argv.includes('--male-spear');
   const maleDouble = process.argv.includes('--male-double-saber');
   const femaleClaw = process.argv.includes('--female-claw');
   const maleClaw = process.argv.includes('--male-claw');
@@ -364,7 +365,7 @@ async function main() {
   const femaleSword = process.argv.includes('--female-sword');
   const female = femaleSaber || femaleSword || femaleDagger || femaleClaw || femaleDouble;
   const maleSword = process.argv.includes('--male-sword');
-  if ([femaleSaber, maleSaber, maleSword, femaleSword, maleDagger, femaleDagger, maleClaw, femaleClaw, maleDouble, femaleDouble].filter(Boolean).length > 1) throw new Error('Choose one profile per bake');
+  if ([femaleSaber, maleSaber, maleSword, femaleSword, maleDagger, femaleDagger, maleClaw, femaleClaw, maleDouble, femaleDouble, maleSpear].filter(Boolean).length > 1) throw new Error('Choose one profile per bake');
   const psoPath = path.resolve('../data/retarget/Humar_body.glb');
   // The source archive includes both motion sets on its common PSO skeleton.
   const pszPath = path.resolve(female ? '../assets/player/pc_010/pc_010_000.glb' : '../assets/player/pc_000/pc_000_000.glb');
@@ -395,15 +396,15 @@ async function main() {
   const pszRest = captureRestPose(pszModel);
 
   // Isolated complete saber library for the Coliseum prototype (#790).
-  const saberPrototype = maleSaber || femaleSaber || maleSword || femaleSword || maleDagger || femaleDagger || maleClaw || femaleClaw || maleDouble || femaleDouble;
+  const saberPrototype = maleSaber || femaleSaber || maleSword || femaleSword || maleDagger || femaleDagger || maleClaw || femaleClaw || maleDouble || femaleDouble || maleSpear;
   const mapping = JSON.parse(fs.readFileSync('../data/retarget/pso_animation_map.json')).mappings;
   const targets = saberPrototype ? [{
-    targetGlb: femaleDouble ? '../assets/player/animations/pso_female_double_saber.glb' : maleDouble ? '../assets/player/animations/pso_male_double_saber.glb' : femaleClaw ? '../assets/player/animations/pso_female_claw.glb' : maleClaw ? '../assets/player/animations/pso_male_claw.glb' : femaleDagger ? '../assets/player/animations/pso_female_dagger.glb' : maleDagger ? '../assets/player/animations/pso_male_dagger.glb' : femaleSword ? '../assets/player/animations/pso_female_sword.glb' : maleSword ? '../assets/player/animations/pso_male_sword.glb' : femaleSaber ? '../assets/player/animations/pso_female_saber.glb' : '../assets/player/animations/pso_humar_saber.glb',
-    anims: Object.entries(mapping).filter(([, name]) => name.startsWith(femaleDouble ? 'pso_f_ds_' : maleDouble ? 'pso_ds_' : femaleClaw ? 'pso_f_cl_' : maleClaw ? 'pso_cl_' : femaleDagger ? 'pso_f_da_' : maleDagger ? 'pso_da_' : femaleSword ? 'pso_f_sw_' : maleSword ? 'pso_sw_' : femaleSaber ? 'pso_f_sa_' : 'pso_sa_'))
+    targetGlb: maleSpear ? '../assets/player/animations/pso_male_spear.glb' : femaleDouble ? '../assets/player/animations/pso_female_double_saber.glb' : maleDouble ? '../assets/player/animations/pso_male_double_saber.glb' : femaleClaw ? '../assets/player/animations/pso_female_claw.glb' : maleClaw ? '../assets/player/animations/pso_male_claw.glb' : femaleDagger ? '../assets/player/animations/pso_female_dagger.glb' : maleDagger ? '../assets/player/animations/pso_male_dagger.glb' : femaleSword ? '../assets/player/animations/pso_female_sword.glb' : maleSword ? '../assets/player/animations/pso_male_sword.glb' : femaleSaber ? '../assets/player/animations/pso_female_saber.glb' : '../assets/player/animations/pso_humar_saber.glb',
+    anims: Object.entries(mapping).filter(([, name]) => name.startsWith(maleSpear ? 'pso_pa_' : femaleDouble ? 'pso_f_ds_' : maleDouble ? 'pso_ds_' : femaleClaw ? 'pso_f_cl_' : maleClaw ? 'pso_cl_' : femaleDagger ? 'pso_f_da_' : maleDagger ? 'pso_da_' : femaleSword ? 'pso_f_sw_' : maleSword ? 'pso_sw_' : femaleSaber ? 'pso_f_sa_' : 'pso_sa_'))
       .map(([index, name]) => ({ index: Number(index), name,
         offsets: name.endsWith('_run') ? (female ? F_RUN_OFFSETS : RUN_OFFSETS) : (female ? F_WALK_OFFSETS : WALK_OFFSETS) })),
   }] : BAKE_TARGETS;
-  if (saberPrototype && targets[0].anims.length !== (maleClaw || femaleClaw || maleDouble || femaleDouble ? 5 : femaleDagger ? 8 : maleSword || femaleSword || maleDagger ? 13 : femaleSaber ? 16 : 15)) throw new Error('Incomplete saber source inventory');
+  if (saberPrototype && targets[0].anims.length !== (maleSpear ? 14 : maleClaw || femaleClaw || maleDouble || femaleDouble ? 5 : femaleDagger ? 8 : maleSword || femaleSword || maleDagger ? 13 : femaleSaber ? 16 : 15)) throw new Error('Incomplete saber source inventory');
   // Sword shares the saber run; keep the donor ID explicit.
   if (maleSword) targets[0].anims.push({ index: 111, name: 'pso_sw_run', offsets: RUN_OFFSETS });
   if (femaleSword) targets[0].anims.push({ index: 342, name: 'pso_f_sw_run', offsets: F_RUN_OFFSETS });

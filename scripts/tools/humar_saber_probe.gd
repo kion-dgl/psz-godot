@@ -38,6 +38,10 @@ func _launch() -> void:
 		_native_prefix = "pwdss" if female else "pmds"
 		_pso_prefix = "pso_f_ds" if female else "pso_ds"
 		CharacterManager._characters[0].equipment.weapon = "ein_double_saber"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "spear":
+		_native_prefix = "pmsp"
+		_pso_prefix = "pso_pa"
+		CharacterManager._characters[0].equipment.weapon = "ein_spear"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -47,7 +51,7 @@ func _launch() -> void:
 	if OS.get_environment("PSZ_SABER_GROUP") == "1":
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[-3.0,0.0,5.0]})
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[3.0,0.0,5.0]})
-	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
+	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber", "spear"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[0.0,0.0,7.0]})
 	SessionManager.set_field_sections(sections)
 	ColiseumRoster.apply_level_override()
@@ -90,7 +94,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix in ["pmds", "pwdss"]:
+	if _native_prefix in ["pmds", "pwdss", "pmsp"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -139,7 +143,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -528,11 +532,14 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
 	var claw := _native_prefix in ["pmcl", "pwcl"]
 	var double_saber := _native_prefix in ["pmds", "pwdss"]
+	var spear := _native_prefix == "pmsp"
 	var weapon_type: int = player._get_equipped_weapon_type()
 	var target_cap := 3 if double_saber else 1
 	if double_saber:
 		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber uses owner-saved zero-rotation grip")
 		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_double_saber").glb_path and player.weapon_node_left == null, "native double saber attaches once at its central grip")
+	elif spear:
+		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_spear").glb_path and player.weapon_node_left == null, "native spear attaches once to right hand")
 	elif claw:
 		_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_claw").glb_path and player.weapon_node_left == null, "native Ein Claw attaches to right hand only")
 		_check(is_equal_approx(player.weapon_node.rotation_degrees.y, -4.0), "claw retains native grip")
@@ -552,7 +559,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 		player.play_animation(clip, true)
 		player.animation_player.seek(0.3, true)
 		player.animation_player.pause()
-		if (not claw and not double_saber) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
+		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
 
 	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
 	player.player_rotation = 0
@@ -561,7 +568,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	_check(player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon reach an offset enemy at practical melee distance")
 	player._update_combat_targets()
 	_check(player._targeted_enemies.has(enemies[0]), "multi-hit cursor agrees with widened contact geometry")
-	enemies[0].global_position = player.global_position + Vector3(0, 0, 4)
+	enemies[0].global_position = player.global_position + Vector3(0, 0, 6)
 	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon cannot hit distant enemies")
 	enemies[0].global_position = player.global_position + Vector3(0, 0, -1.5)
 	_check(not player._enemies_in_hit_cone(geometry).has(enemies[0]), "multi-hit weapon cannot hit behind the player")
@@ -574,8 +581,9 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	var strong: Dictionary = player._get_attack_damage()
 	_check(is_equal_approx(float(strong.power_multiplier), float(normal.power_multiplier) * 1.5), "finisher snapshots strong power for every contact")
 	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
-	_check(config.max_targets == target_cap and config.turn_limit_deg == ([180, 180] if double_saber else [120, 120]), "multi-hit target cap and turn limits preserved")
+	_check(config.max_targets == target_cap and config.turn_limit_deg == ([75, 75] if spear else [180, 180] if double_saber else [120, 120]), "multi-hit target cap and turn limits preserved")
 	for step in range(3):
+		if spear: target_cap = [1, 1, 3][step]
 		for i in enemies.size():
 			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.1 + i * 0.2)
 			enemies[i].current_hp = 10000
@@ -603,7 +611,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 			hp = enemies[0].current_hp
 			player._update_attack_contact(contact)
 			_check(enemies[0].current_hp == hp, "multi-hit contact never repeats next frame")
-		_check(player._attack_hit_step == ([1, 1, 2][step] if claw else [2, 1, 3][step]) and player._attack_hit_done, "multi-hit weapon preserves decoded contact count")
+		_check(player._attack_hit_step == (1 if spear else [1, 1, 2][step] if claw else [2, 1, 3][step]) and player._attack_hit_done, "multi-hit weapon preserves decoded contact count")
 		for i in range(1, enemies.size()):
 			_check(enemies[i].current_hp < 10000 if i < target_cap else enemies[i].current_hp == 10000, "multi-hit respects per-impact target cap")
 	player.transition_to(player.PlayerState.IDLE)

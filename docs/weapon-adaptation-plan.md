@@ -266,4 +266,25 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber --gender fem
 
 Female source poses were reviewed in the rendered fixture. Native `pwds_run` is deliberately unused; attacks and idle use `pwdss`. Retains the male-approved 2/1/3 contact schedule, strong damage/flinch on every impact, three-target cap and native reach/turn geometry. The approved identity grip persists through all eight normal/strong combo combinations. Live rotation controls save female adjustments separately in `.godot/double-saber-female-grip.json`.
 
-Four-enemy and rendered solo checks passed. Owner playtest and asset publication remain pending. Local library SHA-256: `67d330c58f2901952cbea3afc8dd80cbbb0fa8db0cb05993cd604b07f6182533`.
+Four-enemy and rendered solo checks passed. Female double saber owner-approved at `b16dfa16`; asset publication remains pending. Local library SHA-256: `67d330c58f2901952cbea3afc8dd80cbbb0fa8db0cb05993cd604b07f6182533`.
+
+## Male — Spear / partisan playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon spear` (HUmar with native PSZ Ein Spear). Add `--group` for four Boomas. Female remains disabled until adapted. Bake with `cd web && node scripts/bake-retarget.mjs --male-spear`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks | Native `pmsp_wait`, `pmsp_atk1/2/3` |
+| Normal walk | General male 200 (`pmsa_walk`) |
+| Caution / ready / run | PSO partisan 138 / 143 / 151 |
+| Casting / block | Partisan 139 / 144 |
+| Light / heavy / fall / get up | Partisan 148 / 146 / 149 / 147 |
+| Photon blast | Partisan 150 |
+| Dodge / defeated hold | Native `pmsp_esc_f`, `pmsp_dam_d_lp` |
+| Source inventory unused in combat | Partisan attacks 140–142 and walk 145 |
+
+PSO supplies partisan posture; PSZ retains its thrusts and finisher. Contacts use decoded `04_spear_m` frames 10/34, 11/37 and 22/40, normalized to each native motion before recovery holds [0.14, 0.16, 0.22] seconds. Preserve reach 4.0, horizontal angle 40°, vertical height 0.6, vertical angle 40°, chain turn limit 75°, and target limits 1/1/3. Native Ein Spear keeps its existing right-hand attachment and grip.
+
+Four-enemy checks verify per-step target caps, exact contact counts, strong damage/flinch, and shared combo timing. Rendered solo checks and female-double-saber regression passed. Run, ready and native finisher snapshots were inspected. Owner playtest and asset publication remain pending.
+
+Local male spear library SHA-256: `2e742a0f6c2e74e774df0b82e4085cea0fb3df6493ecc06ae72298a20e8b2b34`.
