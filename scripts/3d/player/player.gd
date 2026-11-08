@@ -609,7 +609,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.MALE_BAZOOKA_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
 		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library]:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
@@ -3196,6 +3196,8 @@ func _weapon_combat_config(weapon_type: int) -> Dictionary:
 		return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 45.0, "max_targets": 3}, true)
 	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
 		return config.merged({"hit_h_dist": 8.0 if SaberPrototype.gun_mode(self) else 2.4, "hit_h_angle_deg": 15.0 if SaberPrototype.gun_mode(self) else 40.0, "hit_v_dist": 0.9, "max_targets": 1}, true)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.BAZOOKA:
+		return config.merged({"combo_steps": 1, "max_targets": 5}, true)
 	return config
 
 
@@ -3333,6 +3335,9 @@ func _fire_projectile(atk: Dictionary) -> void:
 
 	for _i in range(int(atk.get("hits", 1))):
 		var proj: Projectile = preload("res://scripts/3d/combat/slicer_projectile.gd").new() if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SLICER else Projectile.new()
+		if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.BAZOOKA:
+			proj.free()
+			proj = preload("res://scripts/3d/combat/bazooka_projectile.gd").new()
 		proj.attack_packet = atk.duplicate(true)
 		proj.attack_packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
 		proj.attack_packet["element"] = _current_attack_element if _is_special_attack else ""
@@ -3697,6 +3702,7 @@ func apply_octo_poison(tier: int) -> void:
 	_ailments.apply_octo_poison(self,tier)
 
 func _weapon_attack_sound(weapon_type: int) -> String:
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.BAZOOKA: return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE]) # Explicit provisional donor.
 	if weapon_type == WeaponData.WeaponType.GUN_BLADE and SaberPrototype.enabled(self):
 		return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE if SaberPrototype.gun_mode(self) else WeaponData.WeaponType.SABER])
 	return str(WEAPON_SFX.get(weapon_type, ""))

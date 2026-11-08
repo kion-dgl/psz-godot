@@ -1765,7 +1765,7 @@
         ],
         "tec": []
       },
-      "status": "Implemented; owner playtest pending"
+      "status": "Owner-approved"
     },
     {
       "id": "A13-M",
@@ -1776,7 +1776,7 @@
       "donors": [
         "la"
       ],
-      "note": "PSO launcher is a proposed stance donor. Current runtime uses shotgun fallback plus retargeted rifle clips; native provenance unresolved.",
+      "note": "No native bazooka GLB available. Explicit rifle_m pmar firing/idle/dodge donor, PSO launcher 49–61 plus saber fall 108. One shot, no combo; fixture-only impact splash.",
       "sha256": "401be4959d7c52f8a2d0c6a518c3e57dc41d562d46bf2389c78b222bac927d45",
       "clips": [
         "dummy1",
@@ -1833,7 +1833,7 @@
         "esc_f": [],
         "tec": []
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Experimental fixture implemented; donor approach and visual owner approval pending"
     },
     {
       "id": "A13-F",

@@ -62,6 +62,10 @@ func _launch() -> void:
 		_native_prefix = "pwars" if female else "pmar"
 		_pso_prefix = "pso_f_ri" if female else "pso_ri"
 		CharacterManager._characters[0].equipment.weapon = "rifle"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "bazooka":
+		_native_prefix = "pmar"
+		_pso_prefix = "pso_la"
+		CharacterManager._characters[0].equipment.weapon = "ein_bazooka"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
 	DebugConfig.invincible = false
@@ -161,7 +165,7 @@ func _verify(player) -> void:
 	_check(enemy.enemy_level == 1, "fixed enemy level")
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
 	_check(player.weapon_node != null, "saber attached")
-	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"]:
+	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix != "pso_la":
 		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
 		var surfaces: Array = []
 		player._collect_surfaces(player.weapon_node, surfaces)
@@ -215,16 +219,23 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
-	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"]: await _verify_gunblade(player, enemies)
+	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix != "pso_la": await _verify_gunblade(player, enemies)
 	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
+	if _pso_prefix == "pso_la":
+		for target in enemies:
+			target.reveal()
+			target.hurtbox.monitorable = true
 	_verify_booma_detour(enemies[0])
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
-	await _verify_mixed_combos(player)
-	_verify_ready_recovery(player, enemy)
-	await _verify_feedback(player, enemy)
-	_verify_combo_outcomes(player, enemy)
-	await _verify_exchange(player, enemy)
+	if _pso_prefix == "pso_la":
+		_verify_bazooka(player, enemies)
+	else:
+		await _verify_mixed_combos(player)
+		_verify_ready_recovery(player, enemy)
+		await _verify_feedback(player, enemy)
+		_verify_combo_outcomes(player, enemy)
+		await _verify_exchange(player, enemy)
 	var saved_evasion: int = enemy.current_evasion
 	var saved_hp: int = enemy.current_hp
 	enemy.current_evasion = 500
@@ -996,3 +1007,53 @@ func _verify_mechgun(player, enemy) -> void:
 	player.transition_to(player.PlayerState.IDLE)
 	enemy.global_position = old_position
 	enemy.current_hp = old_hp
+
+
+func _verify_bazooka(player, enemies: Array) -> void:
+	var saved: Array = []
+	for i in enemies.size():
+		var enemy = enemies[i]
+		saved.append([enemy.global_position, enemy.current_hp])
+		enemy.reveal()
+		enemy.hurtbox.monitorable = true
+		enemy.global_position = player.global_position + Vector3(float(i) * 0.7, 0, 4)
+	for strong in [false, true]:
+		for enemy in enemies: enemy.current_hp = 10000
+		player._recovery_left = 0
+		player._saber_attack_cooldown = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		if strong: player._start_strong_attack()
+		else: player._start_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		var contact: float = Rules.profile(player).hit_fracs[0][0] * (player._attack_anim_length - Rules.profile(player).recovery[0])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(_slicer_projectiles().is_empty(), "bazooka does not release early")
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		var shots := _slicer_projectiles()
+		_check(shots.size() == 1, "bazooka releases exactly one shell")
+		for shot in shots:
+			_check(bool(shot.attack_packet.prototype_strong) == strong, "bazooka retains strong state")
+			_check(enemies[0].current_hp == 10000, "bazooka damage waits for impact")
+			shot._on_area_entered(enemies[0].hurtbox)
+			for enemy in enemies: _check(enemy.current_hp < 10000, "bazooka splash damages nearby targets")
+			var hp: int = enemies[0].current_hp
+			shot._on_area_entered(enemies[0].hurtbox)
+			_check(enemies[0].current_hp == hp, "bazooka cannot explode twice")
+			shot.free()
+		player._attack_step_finished()
+		_check(player._saber_phase == "guard_recovery", "single bazooka shot completes into ready recovery")
+		player._handle_attack_state(Rules.FINISHER_GUARD)
+		_check(player.current_state == player.PlayerState.IDLE, "bazooka returns to idle")
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interruption cancels unreleased bazooka shell")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i][0]
+		enemies[i].current_hp = saved[i][1]

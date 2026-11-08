@@ -153,7 +153,7 @@
       "Align shoulder, muzzle and projectile release across bodies and strong/normal steps."
     ],
     "acceptance": "Correct native sequence and source provenance; no gender-prefix fallback accidents.",
-    "status": "Male owner-approved. Female implemented with mapped grip defaults; owner playtest pending."
+    "status": "Male and female owner-approved"
   },
   {
     "id": "A13",
@@ -166,7 +166,7 @@
       "Define actual step count and explosive release/recovery; preserve splash and immunity rules."
     ],
     "acceptance": "Source provenance and supported sequence approved; no fabricated three-step combo or duplicate explosion.",
-    "status": "Not started: planning only"
+    "status": "Male experimental fixture: explicit rifle firing donor, PSO launcher stances, single-shot splash. Owner approval pending. Female planned."
   },
   {
     "id": "A14",
