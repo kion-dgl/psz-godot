@@ -497,3 +497,5 @@ Bazooka relaxed-idle (`pmar_wait`) rotation saved as a default after the reactio
 Owner found the active rifle-donor firing grip still needs calibration; reopen that clip (pmar_atk1), distinct from saved launcher preview 51. Owner also rejects one-handed launcher normal walk/run 54/61 for the heavy bazooka. Inspect shot-family walk 41, run 48 and caution walk 36 as alternatives before selecting a replacement; two-handed suitability is not yet visually verified.
 
 Bazooka active rifle-donor attack rotation and position saved. Owner selected shot walk 41 and run 48 to replace launcher 54/61; bake keeps pso_la_walk/run role names. Both new movement grips start from the saved relaxed-idle rotation with the default idle position, replacing the old locomotion offsets. Movement alignment awaits playtest.
+
+Bazooka block (PSO 53) rotation revised from the latest owner save; carry/ready was unchanged in that save. Relaunch without adjustment controls to check the transition in gameplay.
