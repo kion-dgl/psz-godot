@@ -1463,7 +1463,7 @@
           "pwhg_tec"
         ]
       },
-      "status": "Implemented; owner playtest pending"
+      "status": "Owner-approved"
     },
     {
       "id": "A11-M",
@@ -1474,7 +1474,7 @@
       "donors": [
         "mg"
       ],
-      "note": "Retain burst count and per-shot release; female prefix differs by role.",
+      "note": "Native pmmg attacks with two decoded release events per step; PSO mechgun sources 23–29 and 32–35, saber heavy-hit/get-up donors 105/106. Paired models and alternating projectile origins.",
       "sha256": "c48c808dcc14905722950376693b4bc82f9a77d9de76070c0b474a2186e25f07",
       "clips": [
         "dummy1",
@@ -1544,7 +1544,7 @@
           "pmmg_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented; owner playtest pending"
     },
     {
       "id": "A11-F",

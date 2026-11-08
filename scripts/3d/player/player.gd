@@ -605,7 +605,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
 		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library]:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
@@ -2457,7 +2457,8 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 			while _attack_hit_step < hits.size() and _attack_anim_elapsed >= float(hits[_attack_hit_step]) * motion_length:
 				if _is_special_attack and _attack_hit_step == 0:
 					_end_charge_visual()
-					SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
+					if weapon_type != WeaponData.WeaponType.MECH_GUN: SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
+				if weapon_type == WeaponData.WeaponType.MECH_GUN: SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
 				_execute_attack_hit(true)
 				_attack_hit_step += 1
 			_attack_hit_done = _attack_hit_step >= hits.size()
@@ -2690,7 +2691,7 @@ func _play_and_track_attack(anim_name: String) -> void:
 		sfx_path = BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
 	else:
 		sfx_path = _weapon_attack_sound(_get_equipped_weapon_type())
-	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and _is_special_attack):
+	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and (_is_special_attack or _get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN)):
 		SfxManager.play_at(sfx_path, global_position)
 
 
@@ -3289,6 +3290,9 @@ func _fire_projectile(atk: Dictionary) -> void:
 	var config: Dictionary = _weapon_combat_config(weapon_type)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.MECH_GUN:
+		var hand: Node3D = weapon_node if _attack_hit_step % 2 == 0 else weapon_node_left
+		if is_instance_valid(hand): spawn_pos = hand.global_position + forward * 0.2
 	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
 	var candidates := _enemies_in_hit_cone(config)
 	if not candidates.is_empty():

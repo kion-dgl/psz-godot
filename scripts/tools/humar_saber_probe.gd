@@ -54,6 +54,10 @@ func _launch() -> void:
 		_native_prefix = "pwhg" if female else "pmhg"
 		_pso_prefix = "pso_f_hg" if female else "pso_hg"
 		CharacterManager._characters[0].equipment.weapon = "handgun"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "mechgun":
+		_native_prefix = "pmmg"
+		_pso_prefix = "pso_mg"
+		CharacterManager._characters[0].equipment.weapon = "mechgun"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
 	DebugConfig.invincible = false
@@ -201,6 +205,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg"]: await _verify_gunblade(player, enemies)
+	if _native_prefix == "pmmg": _verify_mechgun(player, enemies[0])
 	_verify_booma_detour(enemies[0])
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
@@ -918,3 +923,56 @@ func _verify_booma_detour(enemy) -> void:
 	enemy.basis = old_basis
 	enemy.velocity = old_velocity
 	enemy.global_position = old_position
+
+
+func _verify_mechgun(player, enemy) -> void:
+	_check(is_instance_valid(player.weapon_node_left), "mechgun equips both hands")
+	var old_position: Vector3 = enemy.global_position
+	var old_hp: int = enemy.current_hp
+	enemy.reveal()
+	enemy.hurtbox.monitorable = true
+	enemy.global_position = player.global_position + Vector3(0, 0, 4)
+	for pattern in range(8):
+		player._saber_attack_cooldown = 0
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		if pattern & 1: player._start_strong_attack()
+		else: player._start_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		for step in range(3):
+			var hits: Array = Rules.profile(player).hit_fracs[step]
+			var motion: float = player._attack_anim_length - Rules.profile(player).recovery[step]
+			_check(player.animation_player.current_animation == "pmmg_atk" + str(step + 1), "native mechgun combo clip")
+			for hit in range(hits.size()):
+				var at: float = hits[hit] * motion
+				player._attack_anim_elapsed = at - 0.001
+				player._update_attack_contact(0)
+				_check(_slicer_projectiles().is_empty(), "mechgun does not fire early")
+				player._attack_anim_elapsed = at + 0.001
+				player._update_attack_contact(at - 0.001)
+				var shots := _slicer_projectiles()
+				_check(shots.size() == 1, "one mechgun shot per decoded event")
+				for shot in shots:
+					_check(bool(shot.attack_packet.prototype_strong) == bool(pattern & (1 << step)), "each mechgun bullet retains strong state")
+					enemy.current_hp = 10000
+					shot._on_area_entered(enemy.hurtbox)
+					_check(enemy.current_hp < 10000, "mechgun bullet deals damage on impact")
+					shot.free()
+			player._update_attack_contact(0)
+			_check(_slicer_projectiles().is_empty(), "no duplicate mechgun release")
+			player._attack_anim_elapsed = player._attack_anim_length * 0.65
+			if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
+			player._attack_step_finished()
+		player._handle_attack_state(Rules.FINISHER_GUARD)
+	player._saber_attack_cooldown = 0
+	player.transition_to(player.PlayerState.IDLE)
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interrupted mechgun burst cancels unreleased shots")
+	player.transition_to(player.PlayerState.IDLE)
+	enemy.global_position = old_position
+	enemy.current_hp = old_hp

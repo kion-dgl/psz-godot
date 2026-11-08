@@ -438,3 +438,8 @@ Handgun photon follow-up: use opaque/mix emission on the untextured photon inser
 ## Female — Handgun playtest
 
 Male handgun and photon/movement follow-ups owner-approved at `f0768f6f`. Run `python3 scripts/tools/run_humar_saber.py --weapon handgun --gender female --no-grip-controls`. Bake `--female-handgun`: female handgun PSO sources 239–249 supply the 11 stance/reaction clips, plus female saber run 342. Native `pwhg` supplies relaxed idle, all three shots, dodge and defeat; normal walk is `pwsa_walk`. Shared handgun timing, geometry, grip, photon insert and sound remain unchanged. Female owner approval pending. Library SHA-256: `0d2a21570a4e92be4606a4ccf47e34c5091550ba9b2a2877fb466123f45efbbe`.
+
+
+## Male — Mechgun playtest
+
+Female handgun owner-approved at `a4994ba7`. Run `python3 scripts/tools/run_humar_saber.py --weapon mechgun --no-grip-controls`. Bake `--male-mechgun`: 11 PSO mechgun clips (23–29,32–35), with explicit saber heavy-hit/get-up donors 105/106. Native `pmmg` supplies relaxed idle, three attacks, dodge and defeat; normal walk is `pmsa_walk`. Both models retain the existing mechgun grip. Two projectile releases per step use decoded native timing [8/45,14/45], [8/46,14/46], [8/46,14/46]; releases alternate hands and play a shot sound each time. Shared combo acceptance and holds [0.14,0.16,0.22] apply. This replaces the older simultaneous 3/3/4-shot configuration within the fixture only; base item damage and range remain unchanged and balance is provisional. Owner approval pending. Library SHA-256: `432f49a25f3da3ef77a977d6ab08193a1b91563c93d7436a4dffc62f9be38900`.
