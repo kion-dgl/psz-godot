@@ -133,8 +133,8 @@ func setup(player: Node3D) -> void:
 		_selector.select(1)
 		_select(1)
 	if bazooka:
-		_selector.select(4)
-		_select(4)
+		_selector.select(5)
+		_select(5)
 
 func _select(index: int) -> void:
 	_clip = _clips[index]

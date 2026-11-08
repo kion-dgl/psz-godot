@@ -477,3 +477,5 @@ Bazooka calibration: owner-saved PSO 52 carry/ready rotation and position promot
 Bazooka PSO 54 normal-walk rotation and position saved as defaults. Carry/ready remains preserved. Next calibration: caution walk, PSO 49.
 
 Bazooka PSO 49 caution-walk rotation and position saved as defaults, preserving carry and normal walk. Next calibration: run, PSO 61.
+
+Bazooka PSO 61 run rotation saved as a default; its position remains unchanged. Carry, normal walk and caution walk calibrations are preserved. Next calibration: launcher firing preview, PSO 51.
