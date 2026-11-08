@@ -473,3 +473,5 @@ Female rifle owner-approved at `a527f95e`. Run `python3 scripts/tools/run_humar_
 A fixture-only shell explodes once on a valid hurtbox impact, damaging at most five living, visible, non-dormant targets within 2.5 units and with clear world geometry between impact and target. It preserves strong/element attack packets, uses ordinary hurtbox immunity handling, and shows an orange impact burst. Existing base-game projectile behavior is unchanged. Wall/range-end detonation and dedicated bazooka sounds are not implemented in this first test. Native animation import and final balance remain follow-ups; owner acceptance of this explicit donor approach is pending. Library SHA-256: `bf62294d9cb8537623804bc1fbdb2412b1340d09be2f8b600e2ed3d99b5b2b0f`.
 
 Bazooka calibration: owner-saved PSO 52 carry/ready rotation and position promoted to branch defaults. Continue one pose at a time; next is PSO 54 normal walk.
+
+Bazooka PSO 54 normal-walk rotation and position saved as defaults. Carry/ready remains preserved. Next calibration: caution walk, PSO 49.
