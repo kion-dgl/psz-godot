@@ -75,8 +75,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_wn" if female else "pso_wn"
 		CharacterManager._characters[0].equipment.weapon = "wand"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "unarmed":
-		_native_prefix = "pmbn"
-		_pso_prefix = "pso_fi"
+		_native_prefix = "pwbn" if female else "pmbn"
+		_pso_prefix = "pso_f_fi" if female else "pso_fi"
 		CharacterManager._characters[0].equipment.weapon = ""
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
@@ -176,7 +176,7 @@ func _verify(player) -> void:
 	enemy.target = player
 	_check(enemy.enemy_level == 1, "fixed enemy level")
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
-	if _native_prefix == "pmbn":
+	if _native_prefix in ["pmbn", "pwbn"]:
 		_check(player._is_barehanded() and player.weapon_node == null, "unarmed uses empty equipment with no weapon model")
 	else:
 		_check(player.weapon_node != null, "saber attached")
@@ -243,7 +243,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
 	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
-	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi"]:
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi", "pso_f_fi"]:
 		for target in enemies:
 			target.reveal()
 			target.hurtbox.monitorable = true

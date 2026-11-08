@@ -42,8 +42,8 @@ def main():
         if not (ROOT / 'assets/weapons/wslc01/wslc01/wslc01_3_o/wslc01_3_o.glb').exists():
             parser.error('Fetch projectile asset: sh scripts/tools/fetch_slicer_projectile.sh, then import with Godot')
     if args.weapon == 'unarmed':
-        if args.gender == 'female': parser.error('Female unarmed is not adapted yet')
-        library, bake_flag = 'pso_male_unarmed.glb', '--male-unarmed'
+        library = 'pso_female_unarmed.glb' if args.gender == 'female' else 'pso_male_unarmed.glb'
+        bake_flag = '--female-unarmed' if args.gender == 'female' else '--male-unarmed'
     if args.weapon == 'wand':
         library = 'pso_female_wand.glb' if args.gender == 'female' else 'pso_male_wand.glb'
         bake_flag = '--female-wand' if args.gender == 'female' else '--male-wand'

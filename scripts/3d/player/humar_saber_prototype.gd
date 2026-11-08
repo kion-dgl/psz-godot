@@ -15,6 +15,7 @@ const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_
 const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
 const MALE_UNARMED_PROFILE := {"library": "res://assets/player/animations/pso_male_unarmed.glb", "native_library": "res://assets/player/animations/common_m.glb", "prefix": "pso_fi", "native_prefix": "pmbn", "walk": "pmsa_walk", "run": "pso_fi_run", "source_count": 15, "class_id": "humar", "hit_fracs": [[0.40], [0.40], [0.45]], "recovery": [0.14, 0.16, 0.22]}
+const FEMALE_UNARMED_PROFILE := {"library": "res://assets/player/animations/pso_female_unarmed.glb", "native_library": "res://assets/player/animations/common_w.glb", "prefix": "pso_f_fi", "source_prefix": "pso_fi", "native_prefix": "pwbn", "walk": "pwsa_walk", "run": "pso_f_fi_run", "source_count": 15, "class_id": "humarl", "hit_fracs": [[0.40], [0.40], [0.45]], "recovery": [0.14, 0.16, 0.22]}
 const MALE_WAND_PROFILE := {"library": "res://assets/player/animations/pso_male_wand.glb", "native_library": "res://assets/player/animations/wand_m.glb", "prefix": "pso_wn", "native_prefix": "pmwa", "walk": "pmsa_walk", "run": "pso_wn_run", "source_count": 12, "class_id": "humar", "hit_fracs": [[0.2162], [0.2195], [0.4545]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_WAND_PROFILE := {"library": "res://assets/player/animations/pso_female_wand.glb", "native_library": "res://assets/player/animations/wand_w.glb", "prefix": "pso_f_wn", "native_prefix": "pwwa", "walk": "pwsa_walk", "run": "pso_f_wn_run", "source_count": 7, "class_id": "humarl", "hit_fracs": [[0.2162], [0.2195], [0.4545]], "recovery": [0.14, 0.16, 0.22]}
 const MALE_ROD_PROFILE := {"library": "res://assets/player/animations/pso_male_rod.glb", "native_library": "res://assets/player/animations/rod_m.glb", "prefix": "pso_ro", "native_prefix": "pmro", "walk": "pso_ro_walk", "run": "pso_ro_run", "source_count": 14, "class_id": "humar", "hit_fracs": [[0.275], [0.2683], [0.4595]], "recovery": [0.14, 0.16, 0.22]}
@@ -45,7 +46,7 @@ const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_mal
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
 static func profile(player) -> Dictionary:
-	if player._is_barehanded(): return MALE_UNARMED_PROFILE
+	if player._is_barehanded(): return FEMALE_UNARMED_PROFILE if player._is_female else MALE_UNARMED_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.WAND: return FEMALE_WAND_PROFILE if player._is_female else MALE_WAND_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD: return FEMALE_ROD_PROFILE if player._is_female else MALE_ROD_PROFILE
 	if player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]: return FEMALE_BAZOOKA_PROFILE if player._is_female else MALE_BAZOOKA_PROFILE
@@ -70,6 +71,7 @@ static func profile(player) -> Dictionary:
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == FEMALE_UNARMED_PROFILE.library: return FEMALE_UNARMED_PROFILE
 	if path == MALE_UNARMED_PROFILE.library: return MALE_UNARMED_PROFILE
 	if path == FEMALE_WAND_PROFILE.library: return FEMALE_WAND_PROFILE
 	if path == MALE_WAND_PROFILE.library: return MALE_WAND_PROFILE
@@ -123,7 +125,7 @@ static func enabled(player) -> bool:
 	if OS.get_environment("PSZ_HUMAR_SABER") != "1": return false
 	var character = CharacterManager.get_active_character()
 	if player._is_barehanded():
-		return not player._is_female and character != null and character.get("class_id", "") == "humar" and SessionManager.get_location() == "field" and SessionManager.get_session().get("quest_id", "") == "debug_coliseum"
+		return character != null and character.get("class_id", "") in ["humar", "humarl"] and SessionManager.get_location() == "field" and SessionManager.get_session().get("quest_id", "") == "debug_coliseum"
 	return SessionManager.get_location() == "field" and character != null and character.get("class_id", "") in ["humar", "humarl"] \
 		and SessionManager.get_session().get("quest_id", "") == "debug_coliseum" \
 		and not player._is_barehanded() and (player._get_equipped_weapon_type() == WeaponData.WeaponType.SABER \
