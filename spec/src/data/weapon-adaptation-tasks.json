@@ -2,7 +2,7 @@
   {
     "id": "A01",
     "name": "Saber",
-    "depends": "P00–P03",
+    "depends": "P00\u2013P03",
     "scope": "Preserve approved male reference; add the female profile.",
     "steps": [
       "Extract the approved rules without changing their timings or contact behavior.",
@@ -80,7 +80,7 @@
   {
     "id": "A07",
     "name": "Slicer",
-    "depends": "P00–P03",
+    "depends": "P00\u2013P03",
     "scope": "Keep thrown-blade behavior under the shared combo states.",
     "steps": [
       "Discover M/F stance roles and keep native PSZ attack sequences.",
@@ -119,7 +119,7 @@
   {
     "id": "A10",
     "name": "Handgun",
-    "depends": "P00–P03",
+    "depends": "P00\u2013P03",
     "scope": "Use PSO movement/guard, retain PSZ firing sequence.",
     "steps": [
       "Map hg M/F readiness, caution, run and block; fill map gaps explicitly.",
@@ -166,20 +166,20 @@
       "Define actual step count and explosive release/recovery; preserve splash and immunity rules."
     ],
     "acceptance": "Source provenance and supported sequence approved; no fabricated three-step combo or duplicate explosion.",
-    "status": "Male experimental fixture: explicit rifle firing donor, PSO launcher stances, single-shot splash. Owner approval pending. Female planned."
+    "status": "Both genders owner-approved for this pass; minor grip refinements and repeated launcher combo remain follow-ups."
   },
   {
     "id": "A14",
     "name": "Laser cannon",
     "depends": "A12 + P02/P03",
-    "scope": "Adapt stance without changing beam delivery.",
+    "scope": "Owner-directed reuse of the bazooka fixture for both genders, including splash delivery; retain laser weapon model and stats.",
     "steps": [
       "Inspect female cannon file containing pmlc_atk1 instead of assumed pwlcs_atk1.",
       "Evaluate rifle posture donor as a proposal; discover a better donor if grip/recoil is unsuitable.",
       "Retain actual step count and beam tick/piercing rules; separate release feedback from hit feedback."
     ],
     "acceptance": "No duplicated beam damage; correct M/F clip selected explicitly; final-step recovery matches actual N.",
-    "status": "Not started: planning only"
+    "status": "Applied shared bazooka profiles, grips, single-shot shell and splash. Both automated fixture checks pass; separate visual testing waived by owner."
   },
   {
     "id": "A15",
@@ -192,7 +192,7 @@
       "Keep technique charge/release/cancellation independent of weapon combo recovery."
     ],
     "acceptance": "Physical impacts and casting both work; no lost charge or stale queued cast after melee interruption.",
-    "status": "Not started: planning only"
+    "status": "Male rod fixture prepared with native physical attacks and PSO rod stances; owner playtest pending."
   },
   {
     "id": "A16",
@@ -210,7 +210,7 @@
   {
     "id": "A17",
     "name": "Unarmed",
-    "depends": "P00–P03",
+    "depends": "P00\u2013P03",
     "scope": "Handle empty equipment as its own profile.",
     "steps": [
       "Audit pmbn/pwbn native attacks and fi M/F stance/reaction candidates.",

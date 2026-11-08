@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--group', action='store_true')
     parser.add_argument('--no-grip-controls', action='store_true', help='Play with committed grip defaults and no adjustment panel')
-    parser.add_argument('--weapon', choices=['saber', 'sword', 'daggers', 'claw', 'double-saber', 'spear', 'slicer', 'gunblade', 'handgun', 'mechgun', 'rifle', 'bazooka'], default='saber')
+    parser.add_argument('--weapon', choices=['saber', 'sword', 'daggers', 'claw', 'double-saber', 'spear', 'slicer', 'gunblade', 'handgun', 'mechgun', 'rifle', 'bazooka', 'laser-cannon', 'rod'], default='saber')
     parser.add_argument('--gender', choices=['male', 'female'], default='male', help='HUmar or HUmarl saber reference')
     parser.add_argument('--rendered', action='store_true', help='Render automated checks for visual capture')
     parser.add_argument('--godot', default=os.environ.get('GODOT') or shutil.which('godot'))
@@ -41,7 +41,10 @@ def main():
         bake_flag = '--female-slicer' if args.gender == 'female' else '--male-slicer'
         if not (ROOT / 'assets/weapons/wslc01/wslc01/wslc01_3_o/wslc01_3_o.glb').exists():
             parser.error('Fetch projectile asset: sh scripts/tools/fetch_slicer_projectile.sh, then import with Godot')
-    if args.weapon == 'bazooka':
+    if args.weapon == 'rod':
+        if args.gender == 'female': parser.error('Female rod is not adapted yet')
+        library, bake_flag = 'pso_male_rod.glb', '--male-rod'
+    if args.weapon in ['bazooka', 'laser-cannon']:
         library = 'pso_female_bazooka.glb' if args.gender == 'female' else 'pso_male_bazooka.glb'
         bake_flag = '--female-bazooka' if args.gender == 'female' else '--male-bazooka'
     if args.weapon == 'rifle':

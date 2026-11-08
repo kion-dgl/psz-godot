@@ -18,7 +18,7 @@ var _clips := ["pmsp_wait", "pmsa_walk", "pso_pa_walk_ready", "pso_pa_wait", "ps
 
 func setup(player: Node3D) -> void:
 	_player = player
-	var bazooka: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.BAZOOKA
+	var bazooka: bool = player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]
 	var rifle: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE
 	var gunblade: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE
 	var slicer: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER

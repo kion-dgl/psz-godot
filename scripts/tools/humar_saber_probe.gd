@@ -62,10 +62,14 @@ func _launch() -> void:
 		_native_prefix = "pwars" if female else "pmar"
 		_pso_prefix = "pso_f_ri" if female else "pso_ri"
 		CharacterManager._characters[0].equipment.weapon = "rifle"
-	if OS.get_environment("PSZ_MELEE_WEAPON") == "bazooka":
+	if OS.get_environment("PSZ_MELEE_WEAPON") in ["bazooka", "laser-cannon"]:
 		_native_prefix = "pwars" if female else "pmar"
 		_pso_prefix = "pso_f_la" if female else "pso_la"
-		CharacterManager._characters[0].equipment.weapon = "ein_bazooka"
+		CharacterManager._characters[0].equipment.weapon = "ein_cannon" if OS.get_environment("PSZ_MELEE_WEAPON") == "laser-cannon" else "ein_bazooka"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "rod":
+		_native_prefix = "pmro"
+		_pso_prefix = "pso_ro"
+		CharacterManager._characters[0].equipment.weapon = "pole"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
 	DebugConfig.invincible = false
@@ -221,7 +225,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
 	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
-	if _pso_prefix in ["pso_la", "pso_f_la"]:
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro"]:
 		for target in enemies:
 			target.reveal()
 			target.hurtbox.monitorable = true

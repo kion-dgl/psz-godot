@@ -509,3 +509,15 @@ Female bazooka uses native female rifle `pwars` idle/fire/dodge/defeat as the sa
 Female library SHA-256: `7e70838e57f5a9aab97acc377eb80592d0c6c2b340b0fffe8bd372edf250aa47`.
 
 Bazooka ready stance revised for both genders: male PSO shot 39 and female shot 276 replace launcher 52/289 under the existing ready-role aliases. Both start from the approved idle rotation and default idle position. This changes both pre-shot preparation and post-shot guard recovery while retaining their timing; relaxed idle is unchanged. Re-bake both bazooka libraries before testing.
+
+Both bazooka genders owner-approved after shot-ready 39/276 retest at `d1734401`.
+
+## Laser cannon — shared bazooka implementation
+
+Owner explicitly requested applying the bazooka setup identically to both genders and skipping separate visual review. Both laser cannon fixtures now use the same male/female bazooka animation libraries, rifle firing donors, per-role grips, single-shot recovery, targeting geometry and impact splash. Ein Cannon retains its own model and damage stats; this intentionally replaces the fixture's prior direct multi-target beam delivery with bazooka shells. Normal/strong release, splash, duplicate-contact prevention, interruption and recovery checks passed for both genders. This is owner-directed reuse, not independent visual playtest approval. The scope remains the opt-in Coliseum fixture.
+
+## Male — Rod playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon rod --group --no-grip-controls`. Native `rod_m.glb` / `pmro` supplies relaxed idle, three physical attacks, dodge, defeat, technique and charge clips. PSO rod 62–75 supplies 14 stance/reaction clips; saber run 111 fills the missing run role. Contact fractions 0.275/0.2683/0.4595 follow the native decoded events. Shared combo timing, normal/strong attack behavior, recovery and block feedback apply. Existing rod physical damage, targeting and technique behavior are retained. Pole model/grip is the initial reference. Owner approval pending. Bake with `--male-rod`.
+
+Rod library SHA-256: `7d42968b4a127b0b5fc5e67e38025de43a8a73899f159102476f2ca9db51336c`.

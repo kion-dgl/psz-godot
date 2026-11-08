@@ -607,9 +607,10 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 			for role in ["atk1", "atk2", "atk3", "esc_f"]:
 				native.add_animation("pwmgs_" + role, native.get_animation("pmmg_" + role).duplicate())
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
+		if anim_glb == SaberPrototype.MALE_ROD_PROFILE.library: native_roles.append_array(["tec", "chg"])
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.MALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.MALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.MALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.MALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.MALE_BAZOOKA_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library, SaberPrototype.MALE_ROD_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
 		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_GUNBLADE_PROFILE.library, SaberPrototype.FEMALE_HANDGUN_PROFILE.library, SaberPrototype.FEMALE_MECHGUN_PROFILE.library, SaberPrototype.FEMALE_RIFLE_PROFILE.library, SaberPrototype.FEMALE_BAZOOKA_PROFILE.library]:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
@@ -912,7 +913,7 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 			if mat is StandardMaterial3D:
 				var new_mat := mat.duplicate() as StandardMaterial3D
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				if weapon_data.glb_path == "res://assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.glb":
+				if weapon_data.glb_path == "res://assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.glb" or (SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.LASER_CANNON):
 					# This texture has binary alpha, not translucent surfaces.
 					# Alpha blending sorts whole surfaces and exposes rear faces.
 					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
@@ -2599,7 +2600,7 @@ const RIFLE_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
@@ -2618,7 +2619,7 @@ func _set_sword_pose_hold(clip: String) -> void:
 		weapon_node.position = WEAPON_HOLD[WeaponData.WeaponType.RIFLE].idle.pos
 		var positions: Dictionary = get_meta("fixture_grip_positions", {})
 		if positions.has(clip): weapon_node.position = positions[clip]
-	if _get_equipped_weapon_type() == WeaponData.WeaponType.BAZOOKA:
+	if _get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
 		var bazooka_grip_key := clip.replace("pwars_", "pmar_").replace("pso_f_la_", "pso_la_")
 		var mode := "attack" if bazooka_grip_key in ["pmar_atk1", "pso_la_atk1"] else "idle"
 		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.BAZOOKA][mode]
@@ -3231,8 +3232,8 @@ func _weapon_combat_config(weapon_type: int) -> Dictionary:
 		return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 45.0, "max_targets": 3}, true)
 	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
 		return config.merged({"hit_h_dist": 8.0 if SaberPrototype.gun_mode(self) else 2.4, "hit_h_angle_deg": 15.0 if SaberPrototype.gun_mode(self) else 40.0, "hit_v_dist": 0.9, "max_targets": 1}, true)
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.BAZOOKA:
-		return config.merged({"combo_steps": 1, "max_targets": 5}, true)
+	if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
+		return CombatManager.get_weapon_type_config(WeaponData.WeaponType.BAZOOKA).merged({"combo_steps": 1, "max_targets": 5}, true)
 	return config
 
 
@@ -3290,7 +3291,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		atk["hits"] = 1
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
-	if weapon_type in RANGED_WEAPON_TYPES or bool(atk.get("gunblade_shot", false)):
+	if weapon_type in RANGED_WEAPON_TYPES or bool(atk.get("gunblade_shot", false)) or (SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.LASER_CANNON):
 		_fire_projectile(atk)
 		return
 
@@ -3370,7 +3371,7 @@ func _fire_projectile(atk: Dictionary) -> void:
 
 	for _i in range(int(atk.get("hits", 1))):
 		var proj: Projectile = preload("res://scripts/3d/combat/slicer_projectile.gd").new() if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SLICER else Projectile.new()
-		if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.BAZOOKA:
+		if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
 			proj.free()
 			proj = preload("res://scripts/3d/combat/bazooka_projectile.gd").new()
 		proj.attack_packet = atk.duplicate(true)
@@ -3737,7 +3738,7 @@ func apply_octo_poison(tier: int) -> void:
 	_ailments.apply_octo_poison(self,tier)
 
 func _weapon_attack_sound(weapon_type: int) -> String:
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.BAZOOKA: return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE]) # Explicit provisional donor.
+	if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]: return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE]) # Explicit provisional donor.
 	if weapon_type == WeaponData.WeaponType.GUN_BLADE and SaberPrototype.enabled(self):
 		return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE if SaberPrototype.gun_mode(self) else WeaponData.WeaponType.SABER])
 	return str(WEAPON_SFX.get(weapon_type, ""))
