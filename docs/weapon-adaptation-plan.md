@@ -455,3 +455,5 @@ Male mechgun fully owner-approved at `318ff34f`. Run `python3 scripts/tools/run_
 ## Male — Rifle playtest
 
 Female mechgun owner-approved at `ee300294`. Run `python3 scripts/tools/run_humar_saber.py --weapon rifle --no-grip-controls`. Bake `--male-rifle`: PSO rifle 10–22 supplies 13 stance/reaction clips; saber PB 110 fills the missing role. Native `pmar` provides relaxed idle, three attacks, dodge and defeat; normal walk is `pmsa_walk`. Release fractions 0.2105/0.2308/0.3095 follow decoded native firing frames 8/38, 9/39, 13/42. Shared combo timing and recovery holds apply. Existing rifle range (12), single-target projectile, grip and item stats are retained. White photon surface 1 receives opaque tier color and emission; wrist light omitted. Male owner approval pending. Library SHA-256: `9ba6fb9c4368a8d03af3217c0efa04d7613d682f5d99fdbf6373ece485d62c1a`.
+
+Male rifle grip calibration: owner-saved attack 1/2/3 rotations are now branch defaults. Normal walk switches to owner-requested PSO rifle 15 (`pso_ri_walk`); the grip panel opens on that pose for further alignment. The save file contained rotation entries only, with no position overrides.

@@ -2567,6 +2567,12 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 	"pwsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
 }
 
+const RIFLE_SAVED_GRIPS := {
+	"pmar_atk1": Basis(Vector3(0.00515774590895, 0.0865135490894, 0.024265255779), Vector3(-0.085670851171, -0.00259306188673, 0.0274550616741), Vector3(0.0270906314254, -0.0246714632958, 0.0822035074234)),
+	"pmar_atk2": Basis(Vector3(0.00438578659669, 0.0894539356232, 0.00887459143996), Vector3(-0.0854547545314, 0.00139149744064, 0.028205467388), Vector3(0.027897130698, -0.00980088207871, 0.0850040689111)),
+	"pmar_atk3": Basis(Vector3(0.00515774637461, 0.0865135416389, 0.0242652539164), Vector3(-0.0829837620258, -0.00473345443606, 0.034515094012), Vector3(0.0344542525709, -0.0243515819311, 0.0794978365302)),
+}
+
 func _set_sword_pose_hold(clip: String) -> void:
 	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE]:
 		return
@@ -2587,6 +2593,8 @@ func _set_sword_pose_hold(clip: String) -> void:
 		weapon_node.position = WEAPON_HOLD[WeaponData.WeaponType.RIFLE].idle.pos
 		var positions: Dictionary = get_meta("fixture_grip_positions", {})
 		if positions.has(clip): weapon_node.position = positions[clip]
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE and RIFLE_SAVED_GRIPS.has(clip):
+		native = RIFLE_SAVED_GRIPS[clip].get_rotation_quaternion()
 	var target := native
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
