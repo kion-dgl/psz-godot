@@ -125,6 +125,11 @@ func set_active_slot(slot: int) -> void:
 	sync_inventory_to_active()
 	TrapBall.vision_until_msec = 0
 	_active_slot = slot
+	# Retired weapon category: keep owned shields, but remove legacy equipment.
+	var equipment: Dictionary = _characters[slot].get("equipment", {})
+	var equipped_weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(str(equipment.get("weapon", ""))))
+	if equipped_weapon != null and equipped_weapon.weapon_type == WeaponData.WeaponType.SHIELD:
+		equipment["weapon"] = ""
 	# Load incoming character's data
 	Inventory.restore_items(_characters[slot].get("inventory", {}),
 		_characters[slot].get("inventory_order", []))

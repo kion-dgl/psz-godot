@@ -114,6 +114,7 @@ func get_stats_at_level(level: int) -> Dictionary:
 
 ## Check if this class can equip a weapon type
 func can_equip_weapon_type(weapon_type: int) -> bool:
+	if weapon_type == WeaponData.WeaponType.SHIELD: return false
 	if allowed_weapon_types.is_empty():
 		return true
 	return weapon_type in allowed_weapon_types

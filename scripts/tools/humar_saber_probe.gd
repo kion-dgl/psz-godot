@@ -50,7 +50,12 @@ func _launch() -> void:
 		_native_prefix = "pwgbs" if female else "pmgb"
 		_pso_prefix = "pso_f_gb" if female else "pso_gb"
 		CharacterManager._characters[0].equipment.weapon = "axeon"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "handgun":
+		_native_prefix = "pmhg"
+		_pso_prefix = "pso_hg"
+		CharacterManager._characters[0].equipment.weapon = "handgun"
 	CharacterManager.set_active_slot(0)
+	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
 	ColiseumRoster.selected_enemy_level = 1
@@ -187,7 +192,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
-	if _native_prefix in ["pmgb", "pwgbs"]: await _verify_gunblade(player, enemies)
+	if _native_prefix in ["pmgb", "pwgbs", "pmhg"]: await _verify_gunblade(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -763,6 +768,7 @@ func _verify_slicer(player, enemies: Array) -> void:
 		enemies[i].current_hp = saved[i].hp
 
 func _verify_gunblade(player, enemies: Array) -> void:
+	var handgun := _native_prefix == "pmhg"
 	var positions: Array = []
 	for target in enemies: positions.append(target.global_position)
 	var enemy = enemies[0]
@@ -783,12 +789,12 @@ func _verify_gunblade(player, enemies: Array) -> void:
 	enemy.show()
 	player._update_combat_targets()
 	_check(enemy in player._targeted_enemies, "revealed enemy acquires cursor")
-	for sequence in range(8):
+	for sequence in ([7] if handgun else range(8)):
 		player._saber_attack_cooldown = 0
 		player._recovery_left = 0
 		player.transition_to(player.PlayerState.IDLE)
 		var prefix := _native_prefix
-		if sequence == 7:
+		if sequence == 7 and not handgun:
 			for clip in [_pso_prefix + "_gun_wait", _pso_prefix + "_gun_walk_ready", _pso_prefix + "_gun_run"]:
 				player.play_animation(clip, true)
 				player.animation_player.seek(0.3, true)
@@ -805,8 +811,8 @@ func _verify_gunblade(player, enemies: Array) -> void:
 			player._handle_attack_state(Rules.READY_PREP)
 			for step in range(3):
 				var mode := 1 if sequence & (1 << step) else 0
-				prefix = _native_prefix + "_shot" if mode == 1 else _native_prefix
-				_check(Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
+				prefix = _native_prefix + "_shot" if mode == 1 and not handgun else _native_prefix
+				_check(handgun or Rules.gun_mode(player) == (mode == 1), "gunblade selects range independently on each combo step")
 				enemy.current_hp = 10000
 				_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")
 				var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
@@ -859,3 +865,26 @@ func _verify_gunblade(player, enemies: Array) -> void:
 	for i in enemies.size(): enemies[i].global_position = positions[i]
 	enemy.global_position = position
 	enemy.current_hp = hp
+
+
+func _verify_shield_retirement() -> void:
+	var old_debug: bool = DebugConfig.equip_all
+	DebugConfig.equip_all = true
+	for id in WeaponRegistry.get_all_weapon_ids():
+		var weapon = WeaponRegistry.get_weapon(id)
+		if weapon.weapon_type == WeaponData.WeaponType.SHIELD:
+			_check(not EquipmentUtils.item_fits_slot(str(id) + "#2", "weapon"), "shield cannot equip even with debug bypass: " + str(id))
+	DebugConfig.equip_all = old_debug
+	var shop = preload("res://scripts/2d/shops/weapon_shop.gd").new()
+	shop._generate_inventory()
+	for item in shop._weapons:
+		_check(int(item.weapon_type) != WeaponData.WeaponType.SHIELD, "shop excludes shields")
+	shop.free()
+	var character = CharacterManager.get_active_character()
+	var original: String = str(character.equipment.weapon)
+	Inventory.add_item("shield", 1)
+	character.equipment.weapon = "shield"
+	CharacterManager.set_active_slot(0)
+	_check(str(character.equipment.weapon).is_empty(), "legacy shield is unequipped on activation")
+	_check(Inventory.get_item_count("shield") == 1, "legacy shield stays in inventory")
+	character.equipment.weapon = original

@@ -46,6 +46,9 @@ func buy_item(shop_id: String, item_name: String, quantity: int = 1) -> bool:
 	# Convert shop item name to registry ID (e.g. "Monomate" → "monomate")
 	var item_id: String = item_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(item_id))
+	if weapon != null and weapon.weapon_type == WeaponData.WeaponType.SHIELD: return false
+
 	# Check if inventory can hold the item
 	if not Inventory.can_add_item(item_id):
 		return false

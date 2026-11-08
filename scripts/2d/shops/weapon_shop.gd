@@ -93,7 +93,7 @@ func _generate_inventory() -> void:
 	weapon_ids.append_array(SHOP_WEAPON_TIER2)
 	for wid in weapon_ids:
 		var w = WeaponRegistry.get_weapon(wid)
-		if w == null:
+		if w == null or w.weapon_type == WeaponData.WeaponType.SHIELD:
 			continue
 		var price: int = _weapon_price(w)
 		_weapons.append({
@@ -335,6 +335,8 @@ func _buy_selected() -> void:
 	var cost: int = int(item.get("cost", 0))
 	var item_id: String = str(item.get("id", ""))
 	var cat: String = str(item.get("category", ""))
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(item_id))
+	if weapon != null and weapon.weapon_type == WeaponData.WeaponType.SHIELD: return
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return

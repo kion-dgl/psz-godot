@@ -420,3 +420,12 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon gunblade --gender female 
 Female headless fixture checks passed, including all 64 mixed action/strength combinations and the gender-specific animation inventory. Library SHA-256: `23e032fde3924f5a22ef8f905a10b55d4b52fb5c4814e47435a65f4450edad0e`.
 
 Female gunblade owner-approved at `1295a9c9`. Follow-up: hidden/dormant enemies are excluded from player cone targeting. Gunblade always uses blade idle, walk, run, preparation and recovery stances; only the shooting attack uses the gun animation. Per-step range selection remains unchanged.
+
+
+## Shields deferred; Male — Handgun playtest
+
+Both shield weapon adaptations are skipped by owner decision. Shields cannot be bought from weapon shops or equipped as weapons, including debug equip bypass. Existing shield inventory is retained, and legacy equipped shields are cleared when activating a character. A future visual armor/barrier role is undecided and is not implemented.
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon handgun --no-grip-controls`. Bake with `--male-handgun`. Native `pmhg` supplies idle, all three shots, dodge and defeat. PSO handgun sources 0–4 and 7–9 supply caution, casting, attack reference, ready, block, heavy reaction, get-up and PB; explicit saber donors 107/108/111 supply light reaction, fall and run. Normal walk remains PSZ. Native release fractions are provisionally 0.35/0.35/0.40 from the existing handgun configuration, with recovery holds 0.14/0.16/0.22. Existing handgun model grip, 9-unit range, single-target projectile and item stats are retained. Shared combo timing, strong feedback and recovery apply.
+
+Headless checks passed all eight normal/strong shooting combinations, release/impact separation, interruption, shared movement/recovery and shield retirement checks. Owner male handgun approval remains pending. Library SHA-256: `57bbdcee4631f211c6722f1047389c5ee317c0c7caf48f7461b22242cba2a942`.

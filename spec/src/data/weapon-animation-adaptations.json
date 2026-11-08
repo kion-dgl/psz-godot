@@ -1282,7 +1282,7 @@
         "esc_f": [],
         "tec": []
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Skipped by owner; shield weapons disabled, future armor role deferred"
     },
     {
       "id": "A09-F",
@@ -1310,7 +1310,7 @@
         "esc_f": [],
         "tec": []
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Skipped by owner; shield weapons disabled, future armor role deferred"
     },
     {
       "id": "A10-M",
@@ -1321,7 +1321,7 @@
       "donors": [
         "hg"
       ],
-      "note": "Retain PSZ attack sequence and projectile release, not PSO single-shot attack.",
+      "note": "Native pmhg three-shot combo with PSO handgun stance/guard sources 0–4 and 7–9; explicit saber light reaction/fall/run donors 107/108/111. Native walk, grip and ranged geometry retained.",
       "sha256": "1f3f3c940fa931c3874aff0f4c85b70e22d5f6e3d2f38f7336d385ec411fdb0a",
       "clips": [
         "dummy1",
@@ -1387,7 +1387,7 @@
           "pmhg_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented; focused checks passed, owner playtest pending"
     },
     {
       "id": "A10-F",

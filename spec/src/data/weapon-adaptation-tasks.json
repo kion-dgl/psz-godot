@@ -114,7 +114,7 @@
       "Implement only with resolved clips; otherwise leave disabled with an explicit unsupported state."
     ],
     "acceptance": "No silent saber-library fallback; approved source/profile or documented exclusion.",
-    "status": "Not started: planning only"
+    "status": "Skipped by owner: shields disabled as purchasable/equippable weapons; future armor role undecided."
   },
   {
     "id": "A10",
@@ -127,7 +127,7 @@
       "Test muzzle alignment, moving targets and target-cursor sound/caution interaction."
     ],
     "acceptance": "Each accepted step releases the correct shot; no melee-only hit policy leaks into guns.",
-    "status": "Not started: planning only"
+    "status": "Male implemented; focused checks passed, owner playtest pending. Female planned."
   },
   {
     "id": "A11",
