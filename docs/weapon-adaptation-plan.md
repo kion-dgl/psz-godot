@@ -483,3 +483,5 @@ Bazooka PSO 61 run rotation saved as a default; its position remains unchanged. 
 Bazooka PSO 51 launcher-firing rotation saved as a default; no firing position override was saved. Earlier carry/walk/run calibrations are preserved. Next calibration: block, PSO 53. Launcher firing remains a preview until the planned repeated-shot combo is implemented.
 
 Bazooka PSO 53 block rotation saved as a default, preserving earlier calibrations. Next calibration: light damage, PSO 58.
+
+Bazooka PSO 58 light-damage rotation saved as a default, preserving earlier calibrations. Next calibration: big damage, PSO 56.
