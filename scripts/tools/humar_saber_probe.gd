@@ -337,6 +337,9 @@ func _verify_mixed_combos(player) -> void:
 		for step in range(1, 4):
 			var clip := (_native_prefix + "_atk") + str(step)
 			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
+			if _native_prefix == "pmsp":
+				player._weapon_grip_tween.custom_step(1.0)
+				_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.PARTISAN_SAVED_GRIPS[clip].orthonormalized()), "saved spear attack grip survives combo transition: " + clip)
 			_check(is_equal_approx(player._attack_anim_length, player.animation_player.get_animation(clip).length), "normal and strong use identical step duration")
 			if step < 3:
 				player._attack_anim_elapsed = player._attack_anim_length * 0.65

@@ -296,3 +296,5 @@ Local male spear source library SHA-256: `2e742a0f6c2e74e774df0b82e4085cea0fb3df
 The interactive spear fixture opens with a per-animation rotation panel. Select relaxed idle, normal walk, caution 145, ready 143, run, native attacks or block. Preview freezes player movement and enemies; disable Play to hold/scrub a pose. Local XYZ controls rotate by ±5°, ±90° or 180°. Switching poses preserves unsaved adjustments. Reset selected affects only that animation; Save all writes `.godot/spear-male-grips.json`. Uncheck Preview to test the same overrides through gameplay transitions. Automated combat checks ignore this local file. The panel smoke check (`PSZ_SPEAR_CONTROLS_CHECK=1`) verifies pose switching, gameplay application and reset without writing the user's saved file.
 
 Owner-saved normal walk (`pmsa_walk`) and relaxed idle (`pmsp_wait`) rotations are promoted separately into `PARTISAN_SAVED_GRIPS`. Local panel overrides remain available for further tuning.
+
+Owner-saved attack grips `pmsp_atk1`, `pmsp_atk2`, and `pmsp_atk3` are also promoted independently. Combo checks verify each grip across all eight normal/strong input combinations.
