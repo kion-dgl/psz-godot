@@ -224,6 +224,27 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon claw --gender female` (HU
 | Casting / photon blast | Explicit female saber donors 328 / 341 |
 | Dodge / defeated hold | Native `pwcl_esc_f`, `pwcl_dam_d_lp` |
 
-Source clips 381–385 were rendered and inspected before labeling. Female native attacks use the approved claw 1/1/2 normalized contact schedule and holds against their own motion lengths. Reach, single-target cap, strong feedback on every contact, guard flash, and native right-hand grip retain the approved male settings. Group, rendered solo and male-claw regression checks passed; owner playtest and asset publication remain pending.
+Source clips 381–385 were rendered and inspected before labeling. Female native attacks use the approved claw 1/1/2 normalized contact schedule and holds against their own motion lengths. Reach, single-target cap, strong feedback on every contact, guard flash, and native right-hand grip retain the approved male settings. Group, rendered solo and male-claw regression checks passed. Female Claw owner-approved at `5e795966`; asset publication remains pending.
 
 Local female claw library SHA-256: `702bebfd11ca6a29803629f7179f32ea5d2efda78263fdce93de946bf4b45f21`.
+
+## Male — Double saber playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber` (HUmar with native PSZ Ein Double Saber). Add `--group` for four Boomas. Female is not enabled yet. Bake with `cd web && node scripts/bake-retarget.mjs --male-double-saber`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks 1–3 | Native `pmds_wait`, `pmds_atk1/2/3` |
+| Normal walk / run | General male 200 (`pmsa_walk`) / saber 111 |
+| Caution / ready | PSO double saber 165 / 169 |
+| Source attacks (unused in combat) | PSO 166 / 167 / 168 |
+| Casting / block | Male sword 113 / 118 |
+| Light / heavy / fall / get up | Male sword 122 / 120 / 123 / 121 |
+| Photon blast | Male sword 124 |
+| Dodge / defeated hold | Native `pmds_esc_f`, `pmds_dam_d_lp` |
+
+The native model attaches at its central grip in the right hand. Preserve native reach 2.6, horizontal angle 60°, vertical height 0.8, vertical angle 45°, turn limit 180° and three targets per impact. Decoded contact counts are 2/1/3 at normalized fractions [0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294], with recovery holds [0.14, 0.16, 0.22] seconds. Every strong contact gets strong damage and flinch; only closely spaced audiovisual feedback is throttled.
+
+Four-enemy checks verify three targets per impact, no duplicate contact, all strong contacts, and shared continuation timing. Rendered solo and female-claw regression checks passed. Owner playtest and asset publication remain pending.
+
+Local male double saber library SHA-256: `12f680c0118eba6c67e6a481e36376636372c69f26066f3a9210bb0a568f9772`.

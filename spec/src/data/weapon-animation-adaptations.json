@@ -620,7 +620,7 @@
           "pwcl_tec"
         ]
       },
-      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
+      "status": "Owner-approved at 5e795966"
     },
     {
       "id": "A05-M",
@@ -629,9 +629,11 @@
       "path": "assets/player/animations/dsaver_m.glb",
       "prefix": "pmds",
       "donors": [
-        "ds"
+        "ds",
+        "sw",
+        "sa"
       ],
-      "note": "Female native run uses pwds while attacks use pwdss.",
+      "note": "PSO 165 caution, 169 ready; sword 113 casting, 118 block, 120 heavy, 121 get up, 122 light, 123 fall, 124 photon blast; saber 111 run; general 200 walk. Native pmds idle and attacks with 2/1/3 contacts. PSO attacks 166\u2013168 unused in combat.",
       "sha256": "2f11ab9bd54288b6c9503b534e5d16e294c2f893d898d134bc4dc63f58af8235",
       "clips": [
         "dummy1",
@@ -697,7 +699,7 @@
           "pmds_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
     },
     {
       "id": "A05-F",
