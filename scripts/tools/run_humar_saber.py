@@ -62,6 +62,7 @@ def main():
         env["PSZ_DOUBLE_SABER_GRIP_PATH"] = str(ROOT / ".godot" / ("double-saber-female-grip.json" if args.gender == "female" else "double-saber-grip.json"))
         env["PSZ_SPEAR_GRIP_PATH"] = str(ROOT / ".godot" / ("spear-female-grips.json" if args.gender == "female" else "spear-male-grips.json"))
         env["PSZ_SLICER_GRIP_PATH"] = str(ROOT / ".godot" / ("slicer-female-grips.json" if args.gender == "female" else "slicer-male-grips.json"))
+        env["PSZ_GUNBLADE_GRIP_PATH"] = str(ROOT / ".godot" / ("gunblade-" + args.gender + "-grips.json"))
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
             command += ['--headless']

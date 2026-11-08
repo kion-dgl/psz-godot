@@ -2553,7 +2553,7 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip

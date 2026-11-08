@@ -95,7 +95,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -112,7 +112,13 @@ func _launch() -> void:
 				controls._toggle_preview(true)
 				controls._action("Reset selected")
 				_check(player.weapon_node.basis.is_equal_approx(initial), "reset restores selected grip")
-				await _snapshot("spear_grip_panel")
+				controls._path = "user://grip-controls-test.json"
+				controls._action("Save all")
+				_check(not controls.visible and player.is_physics_processing(), "save hides controls and resumes gameplay")
+				_check(not player.get_meta("fixture_grip_preview", true), "save exits preview")
+				_check(FileAccess.file_exists(controls._path), "save writes rotations")
+				for enemy in get_tree().get_nodes_in_group("enemies"):
+					_check(enemy.is_physics_processing(), "save resumes enemy")
 				print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
 				get_tree().quit(0 if _ok else 1)
 		if _native_prefix == "pmgb":
