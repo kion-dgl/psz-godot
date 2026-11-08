@@ -598,6 +598,9 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		if native == null:
 			anim_scene.queue_free()
 			return null
+		if anim_glb == SaberPrototype.MALE_SPEAR_PROFILE.library:
+			lib.remove_animation("pso_pa_walk_ready")
+			lib.add_animation("pso_pa_walk_ready", lib.get_animation("pso_pa_walk").duplicate()) # Owner-selected PSO 145.
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
@@ -618,6 +621,8 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 				anim_scene.queue_free()
 				return null
 			var native_clip := native.get_animation(clip).duplicate() as Animation
+			if anim_glb == SaberPrototype.MALE_SPEAR_PROFILE.library and str(role).begins_with("atk"):
+				native_clip = lib.get_animation("pso_pa_" + str(role)).duplicate() as Animation
 			if str(role).begins_with("atk"):
 				var step := int(clip.right(1)) - 1
 				native_clip.length += prototype_profile.get("recovery", SaberPrototype.RECOVERY)[step]
@@ -2507,16 +2512,24 @@ const SWORD_CARRY_DIRECTIONS := {
 	"pso_sw_wait": Vector3(0.031778, -0.316038, 0.948214),
 }
 
+const PARTISAN_CARRY_DIRECTIONS := {
+	"pso_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
+	"pso_pa_run": Vector3(-0.553328, -0.381034, 0.740703),
+	"pso_pa_wait": Vector3(-0.220334, -0.961007, 0.167088),
+}
+
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() != WeaponData.WeaponType.SWORD:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
 	if _weapon_grip_tween: _weapon_grip_tween.kill()
-	var native := Quaternion(Vector3.UP, PI / 2.0)
+	# Ein Spear mesh shaft lies 30 degrees off local +Z. Align its actual tip axis.
+	var native := Quaternion(Vector3.UP, PI / 3.0 if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else PI / 2.0)
 	var target := native
-	if SWORD_CARRY_DIRECTIONS.has(clip):
-		target = Quaternion(Vector3.RIGHT, SWORD_CARRY_DIRECTIONS[clip].normalized()) * native
+	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
+	if directions.has(clip):
+		target = Quaternion(Vector3.RIGHT, directions[clip].normalized()) * native
 	_weapon_grip_tween = create_tween()
 	_weapon_grip_tween.tween_property(weapon_node, "quaternion", target, SaberPrototype.READY_BLEND)
 
@@ -3101,13 +3114,18 @@ func _weapon_combat_config(weapon_type: int) -> Dictionary:
 		return config.merged({"hit_h_dist": 2.6, "hit_v_dist": 0.9, "hit_h_angle_deg": 38.0, "hit_v_angle_deg": 45.0}, true)
 	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.CLAW:
 		return config.merged({"hit_h_dist": 2.4, "hit_v_dist": 0.9, "hit_h_angle_deg": 36.0, "hit_v_angle_deg": 45.0}, true)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SPEAR:
+		return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 45.0, "max_targets": 3}, true)
 	return config
 
 
 func _get_attack_damage() -> Dictionary:
 	# Combo timing no longer scales damage (#461): crit and damage bonuses come
 	# from character stats + equipment, not from the chain-accept window.
-	return CombatManager.calculate_attack_damage(combo_state, _is_special_attack)
+	var damage: Dictionary = CombatManager.calculate_attack_damage(combo_state, _is_special_attack)
+	if SaberPrototype.enabled(self) and _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR:
+		damage["max_targets"] = 3
+	return damage
 
 
 func _get_equipped_weapon_type() -> int:

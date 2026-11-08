@@ -559,6 +559,12 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 		player.play_animation(clip, true)
 		player.animation_player.seek(0.3, true)
 		player.animation_player.pause()
+		if spear and role in ["walk_ready", "wait", "run"]:
+			player.skeleton.force_update_all_bone_transforms()
+			var bone: Transform3D = player.skeleton.global_transform * player.skeleton.get_bone_global_pose(player.skeleton.find_bone("070_RArm02"))
+			player._weapon_grip_tween.custom_step(1.0)
+			var tip: Vector3 = (bone.basis * Basis(player.weapon_node.quaternion) * Vector3(0.5, 0, 0.8660254)).normalized()
+			_check(tip.dot(Vector3.UP) > 0.99, clip + " carries partisan upright")
 		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
 
 	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
@@ -583,7 +589,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 	_check(config.max_targets == target_cap and config.turn_limit_deg == ([75, 75] if spear else [180, 180] if double_saber else [120, 120]), "multi-hit target cap and turn limits preserved")
 	for step in range(3):
-		if spear: target_cap = [1, 1, 3][step]
+		if spear: target_cap = 3
 		for i in enemies.size():
 			enemies[i].global_position = player.global_position + Vector3(0, 0, 1.1 + i * 0.2)
 			enemies[i].current_hp = 10000

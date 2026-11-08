@@ -787,7 +787,7 @@
       "donors": [
         "pa"
       ],
-      "note": "PSO partisan 138 caution, 139 casting, 143 ready, 144 block, 146 heavy, 147 get up, 148 light, 149 fall, 150 photon blast, 151 run. General male 200 walk. Native pmsp idle, attacks, dodge and defeated hold; PSO attacks 140\u2013142 and walk 145 unused in combat. Preserve 1/1/3 target caps.",
+      "note": "Partisan adaptation: PSO 140\u2013142 attacks aliased to pmsp_atk1/2/3; 145 caution (runtime override of 138), 143 ready, 151 run. Upright calibrated carry grip accounts for native mesh shaft angle. Three-target sweeps on every step, provisional contact timing. Native PSZ relaxed idle/dodge/defeat retained.",
       "sha256": "b337d0ca52872cbe66f5cc9ef0506bee34ef669df05c1bb876b3659e7b5db848",
       "clips": [
         "dummy1",

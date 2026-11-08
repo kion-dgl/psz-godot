@@ -68,13 +68,13 @@
     "id": "A06",
     "name": "Spear / partisan",
     "depends": "A01 + P02",
-    "scope": "Use PSO partisan posture with PSZ spear attacks.",
+    "scope": "Adapt PSO partisan posture and sweeping attacks to PSZ spear models.",
     "steps": [
       "Map male pa donor roles; discover female equivalents or explicit fallback.",
-      "Retain PSZ thrusts, long reach and finisher target expansion.",
+      "Use PSO attacks 140\u2013142 and three-target sweeps on every step; tune contact timing in owner playtest.",
       "Inspect shaft grip, tip path, caution/run and collision alignment on both bodies."
     ],
-    "acceptance": "Partisan donors look coherent; thrust contacts and finisher targets remain correct.",
+    "acceptance": "Upright 145 caution carry, coherent partisan sweeps, one contact per swing and three-target cap.",
     "status": "Male implemented; focused checks passed, owner playtest pending. Female planned."
   },
   {
