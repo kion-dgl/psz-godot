@@ -1010,6 +1010,12 @@ func _verify_mechgun(player, enemy) -> void:
 
 
 func _verify_bazooka(player, enemies: Array) -> void:
+	var surfaces: Array = []
+	player._collect_surfaces(player.weapon_node, surfaces)
+	for surface in surfaces:
+		var material: StandardMaterial3D = surface[0].get_active_material(surface[1])
+		_check(material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR, "bazooka uses binary cutout instead of blended rear faces")
+		_check(material.depth_draw_mode == BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY, "bazooka solid surfaces write depth")
 	var saved: Array = []
 	for i in enemies.size():
 		var enemy = enemies[i]

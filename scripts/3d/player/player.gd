@@ -912,6 +912,12 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 			if mat is StandardMaterial3D:
 				var new_mat := mat.duplicate() as StandardMaterial3D
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				if weapon_data.glb_path == "res://assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.glb":
+					# This texture has binary alpha, not translucent surfaces.
+					# Alpha blending sorts whole surfaces and exposes rear faces.
+					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					new_mat.alpha_scissor_threshold = 0.5
+					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY
 				mesh_inst.set_surface_override_material(surf_idx, new_mat)
 
 
