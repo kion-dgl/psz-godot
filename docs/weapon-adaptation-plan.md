@@ -475,3 +475,5 @@ A fixture-only shell explodes once on a valid hurtbox impact, damaging at most f
 Bazooka calibration: owner-saved PSO 52 carry/ready rotation and position promoted to branch defaults. Continue one pose at a time; next is PSO 54 normal walk.
 
 Bazooka PSO 54 normal-walk rotation and position saved as defaults. Carry/ready remains preserved. Next calibration: caution walk, PSO 49.
+
+Bazooka PSO 49 caution-walk rotation and position saved as defaults, preserving carry and normal walk. Next calibration: run, PSO 61.
