@@ -2,7 +2,7 @@
   {
     "id": "A01",
     "name": "Saber",
-    "depends": "P00\u2013P03",
+    "depends": "P00–P03",
     "scope": "Preserve approved male reference; add the female profile.",
     "steps": [
       "Extract the approved rules without changing their timings or contact behavior.",
@@ -80,7 +80,7 @@
   {
     "id": "A07",
     "name": "Slicer",
-    "depends": "P00\u2013P03",
+    "depends": "P00–P03",
     "scope": "Keep thrown-blade behavior under the shared combo states.",
     "steps": [
       "Discover M/F stance roles and keep native PSZ attack sequences.",
@@ -94,14 +94,14 @@
     "id": "A08",
     "name": "Gunblade",
     "depends": "A01 + A12 + P03",
-    "scope": "Treat melee and shooting as explicit attack modes.",
+    "scope": "Select slash or shot independently for each combo step from target distance; no manual mode toggle.",
     "steps": [
       "Decide per-role saber/rifle donor choices; inspect shotgun GLBs and mixed prefixes.",
       "Separate contact and projectile events, timing and feedback by mode.",
-      "Reset queued actions on mode/equipment changes; test every normal/strong transition."
+      "Test all eight slash/shot sequences with every normal/strong combination; commit each action through its windup and cancel releases on interruption."
     ],
     "acceptance": "No stale-mode shot, wrong pose or doubled damage; M/F grip and shooting alignment approved.",
-    "status": "Male implemented; focused checks passed, owner playtest pending. Female planned."
+    "status": "Male owner-approved at 762e6e5e, including automatic mixed combos and common grip. Female planned."
   },
   {
     "id": "A09",
@@ -119,7 +119,7 @@
   {
     "id": "A10",
     "name": "Handgun",
-    "depends": "P00\u2013P03",
+    "depends": "P00–P03",
     "scope": "Use PSO movement/guard, retain PSZ firing sequence.",
     "steps": [
       "Map hg M/F readiness, caution, run and block; fill map gaps explicitly.",
@@ -210,7 +210,7 @@
   {
     "id": "A17",
     "name": "Unarmed",
-    "depends": "P00\u2013P03",
+    "depends": "P00–P03",
     "scope": "Handle empty equipment as its own profile.",
     "steps": [
       "Audit pmbn/pwbn native attacks and fi M/F stance/reaction candidates.",

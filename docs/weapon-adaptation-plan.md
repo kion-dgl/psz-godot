@@ -395,18 +395,19 @@ Melee contact fractions follow native decoded frames 9/36, 11/39 and 16/43. Gun 
 
 ```mermaid
 stateDiagram-v2
-    BladeFree --> GunFree: G (no action/cooldown)
-    GunFree --> BladeFree: G (no action/cooldown)
-    BladeFree --> BladeCombo: normal / strong
-    GunFree --> GunCombo: normal / strong
-    BladeCombo --> BladeFree: shared outcome recovery completes
-    GunCombo --> GunFree: shared outcome recovery completes
-    BladeCombo --> HitRecovery: interrupted
-    GunCombo --> HitRecovery: interrupted (no later release)
-    HitRecovery --> BladeFree: recovery completes in blade mode
-    HitRecovery --> GunFree: recovery completes in gun mode
+    Free --> SelectStep: normal / strong
+    SelectStep --> Slash: target within 2.4 units or no target
+    SelectStep --> Shot: target farther away
+    Slash --> SelectStep: valid chain input, next step
+    Shot --> SelectStep: valid chain input, next step
+    Slash --> OutcomeRecovery: stop / fail / third hit
+    Shot --> OutcomeRecovery: stop / fail / third hit
+    Slash --> HitRecovery: interrupted
+    Shot --> HitRecovery: interrupted (cancel unreleased shot)
+    OutcomeRecovery --> Free: shared outcome recovery completes
+    HitRecovery --> Free: recovery completes
 ```
 
-Focused checks exercise eight normal/strong combinations in both modes, one projectile without melee damage, impact damage, interruption before release, mode locking during actions and cooldowns, and cleared queued actions after switching. Female slicer regression passed. Owner playtest and asset publication remain pending.
+Male gunblade owner-approved at `762e6e5e`, including the common grip and automatic mixed combos. Focused checks passed all eight slash/shot sequences with all eight normal/strong combinations, projectile/contact separation, interruption and shared recovery. Female gunblade is next; asset publication remains pending.
 
 Local gunblade library SHA-256: `46f6e2dc7c58b50a6763932b878c9085b7cc96974665a4aab943779cc7b051ae`.
