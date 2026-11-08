@@ -62,7 +62,7 @@
       "Preserve per-step target counts and two-handed weapon orientation during spins."
     ],
     "acceptance": "Multi-target sweeps and repeated hits match profile; no foot/root drift.",
-    "status": "Male implemented; owner playtest pending. Female planned."
+    "status": "Male owner-approved; female implemented and focused checks passed; owner playtest pending"
   },
   {
     "id": "A06",

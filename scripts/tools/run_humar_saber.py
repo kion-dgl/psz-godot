@@ -30,9 +30,8 @@ def main():
         library = 'pso_female_claw.glb' if args.gender == 'female' else 'pso_male_claw.glb'
         bake_flag = '--female-claw' if args.gender == 'female' else '--male-claw'
     if args.weapon == 'double-saber':
-        if args.gender == 'female':
-            parser.error('Female double saber is not adapted yet')
-        library, bake_flag = 'pso_male_double_saber.glb', '--male-double-saber'
+        library = 'pso_female_double_saber.glb' if args.gender == 'female' else 'pso_male_double_saber.glb'
+        bake_flag = '--female-double-saber' if args.gender == 'female' else '--male-double-saber'
     if not (ROOT / 'assets/player/animations' / library).exists():
         parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:
@@ -47,7 +46,7 @@ def main():
         env = dict(os.environ, PSZ_HUMAR_SABER='1', PSZ_SABER_GENDER=args.gender, PSZ_MELEE_WEAPON=args.weapon, PSZ_SABER_CHECK='1' if args.check else '0',
                    PSZ_SABER_GROUP='1' if args.group else '0', XDG_DATA_HOME=str(project / 'save'))
         env["PSZ_DAGGER_GRIP_PATH"] = str(ROOT / ".godot" / ("dagger-female-left-grip.json" if args.gender == "female" else "dagger-left-grip.json"))
-        env["PSZ_DOUBLE_SABER_GRIP_PATH"] = str(ROOT / ".godot" / "double-saber-grip.json")
+        env["PSZ_DOUBLE_SABER_GRIP_PATH"] = str(ROOT / ".godot" / ("double-saber-female-grip.json" if args.gender == "female" else "double-saber-grip.json"))
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
             command += ['--headless']

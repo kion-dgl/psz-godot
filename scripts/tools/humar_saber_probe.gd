@@ -35,8 +35,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_cl" if female else "pso_cl"
 		CharacterManager._characters[0].equipment.weapon = "ein_claw"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "double-saber":
-		_native_prefix = "pmds"
-		_pso_prefix = "pso_ds"
+		_native_prefix = "pwdss" if female else "pmds"
+		_pso_prefix = "pso_f_ds" if female else "pso_ds"
 		CharacterManager._characters[0].equipment.weapon = "ein_double_saber"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
@@ -75,10 +75,10 @@ func _launch() -> void:
 		print("[humar-saber] DONE " + ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 	else:
-		if _native_prefix in ["pmda", "pwda", "pmds"]:
+		if _native_prefix in ["pmda", "pwda", "pmds", "pwdss"]:
 			var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
 			add_child(controls)
-			controls.setup(player, _native_prefix == "pmds")
+			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
 		print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
@@ -90,7 +90,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix == "pmds":
+	if _native_prefix in ["pmds", "pwdss"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -117,7 +117,7 @@ func _verify(player) -> void:
 			player.animation_player.stop()
 			player.play_animation(clip, false)
 			player.animation_player.seek(player.animation_player.get_animation(clip).length * 0.5, true)
-			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or str(clip).begins_with("pso_f_cl_") or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
+			if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1" or str(clip).begins_with("pso_f_cl_") or str(clip).begins_with("pso_f_ds_") or clip in ["pso_f_sw_wait", "pso_f_sw_block", "pso_f_sw_walk", "pso_f_sw_dam_n", "pso_f_sw_pb"]: await _snapshot(clip)
 	_check(count == int(Rules.profile(player).source_count), "complete saber inventory")
 	_check(player.animation_player.has_animation((_native_prefix + "_esc_f")), "native dodge remains available")
 	_check(player.animation_player.has_animation((_native_prefix + "_dam_d_lp")), "native defeated hold remains available")
@@ -139,7 +139,7 @@ func _verify(player) -> void:
 			_check(result.hit, "fixture contact ignores accuracy RNG")
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
-	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -323,7 +323,7 @@ func _verify_mixed_combos(player) -> void:
 		_check(player._saber_phase == "guard_recovery" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "completed combo enters ready recovery")
 		player._handle_attack_state(Rules.FINISHER_GUARD)
 		_check(player.current_state == player.PlayerState.IDLE and not player._charge_active, "mixed combo finishes cleanly")
-		if _native_prefix == "pmds":
+		if _native_prefix in ["pmds", "pwdss"]:
 			_check(player.weapon_node.basis.orthonormalized().is_equal_approx(Basis.IDENTITY), "double saber grip survives completed combo and return to idle")
 	# Interrupt strong windup: no delayed callback may restart the swing.
 	player._start_strong_attack()
@@ -527,7 +527,7 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 	var saved: Array = []
 	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
 	var claw := _native_prefix in ["pmcl", "pwcl"]
-	var double_saber := _native_prefix == "pmds"
+	var double_saber := _native_prefix in ["pmds", "pwdss"]
 	var weapon_type: int = player._get_equipped_weapon_type()
 	var target_cap := 3 if double_saber else 1
 	if double_saber:

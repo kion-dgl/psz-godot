@@ -699,7 +699,7 @@
           "pmds_tec"
         ]
       },
-      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
+      "status": "Owner-approved at 4d7f99b6"
     },
     {
       "id": "A05-F",
@@ -708,9 +708,11 @@
       "path": "assets/player/animations/dsaver_w.glb",
       "prefix": "pwdss",
       "donors": [
-        "ds"
+        "ds",
+        "sw",
+        "sa"
       ],
-      "note": "Female native run uses pwds while attacks use pwdss.",
+      "note": "Female double saber 376 caution, 380 ready; sword 344 casting, 349 block, 351 heavy, 352 get up, 353 light, 354 fall, 355 photon blast; saber 342 run; general 412 walk. Native pwdss idle/attacks/dodge/defeat; pwds_run intentionally unused. Source attacks 377\u2013379 unused in combat.",
       "sha256": "36199aa3dfc0812dae0cac224efa873b405b7c2d1e841a2f3dcbaabacaa31374",
       "clips": [
         "dummy1",
@@ -774,7 +776,7 @@
           "pwdss_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
     },
     {
       "id": "A06-M",

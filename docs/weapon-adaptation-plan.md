@@ -230,7 +230,7 @@ Local female claw library SHA-256: `702bebfd11ca6a29803629f7179f32ea5d2efda78263
 
 ## Male — Double saber playtest
 
-Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber` (HUmar with native PSZ Ein Double Saber). Add `--group` for four Boomas. Female is not enabled yet. Bake with `cd web && node scripts/bake-retarget.mjs --male-double-saber`, then import with Godot.
+Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber` (HUmar with native PSZ Ein Double Saber). Add `--group` for four Boomas. Add `--gender female` for HUmarl. Bake with `cd web && node scripts/bake-retarget.mjs --male-double-saber`, then import with Godot.
 
 | Role | Explicit source |
 | --- | --- |
@@ -245,6 +245,25 @@ Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber` (HUmar with
 
 The native model attaches at its central grip in the right hand. The owner-saved orientation is local X/Y/Z = 0°/0°/0° (identity basis), promoted into the prototype default. Preserve native reach 2.6, horizontal angle 60°, vertical height 0.8, vertical angle 45°, turn limit 180° and three targets per impact. Decoded contact counts are 2/1/3 at normalized fractions [0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294], with recovery holds [0.14, 0.16, 0.22] seconds. Every strong contact gets strong damage and flinch; only closely spaced audiovisual feedback is throttled.
 
-Four-enemy checks verify three targets per impact, no duplicate contact, all strong contacts, and shared continuation timing. Rendered solo and female-claw regression checks passed. Owner playtest and asset publication remain pending.
+Four-enemy checks verify three targets per impact, no duplicate contact, all strong contacts, and shared continuation timing. Rendered solo and female-claw regression checks passed. Male double saber owner-approved at `4d7f99b6`; asset publication remains pending.
 
 Local male double saber library SHA-256: `12f680c0118eba6c67e6a481e36376636372c69f26066f3a9210bb0a568f9772`.
+
+## Female — Double saber playtest
+
+Run `python3 scripts/tools/run_humar_saber.py --weapon double-saber --gender female`. Add `--group` for four Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --female-double-saber`, then import with Godot.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks | Native `pwdss_wait`, `pwdss_atk1/2/3` |
+| Normal walk / run | General female 412 (`pwsa_walk`) / saber 342 |
+| Caution / ready | Female double saber 376 / 380 |
+| Source attacks (unused in combat) | 377 / 378 / 379 |
+| Casting / block | Female sword 344 / 349 |
+| Light / heavy / fall / get up | Female sword 353 / 351 / 354 / 352 |
+| Photon blast | Female sword 355 |
+| Dodge / defeated hold | Native `pwdss_esc_f`, `pwdss_dam_d_lp` |
+
+Female source poses were reviewed in the rendered fixture. Native `pwds_run` is deliberately unused; attacks and idle use `pwdss`. Retains the male-approved 2/1/3 contact schedule, strong damage/flinch on every impact, three-target cap and native reach/turn geometry. The approved identity grip persists through all eight normal/strong combo combinations. Live rotation controls save female adjustments separately in `.godot/double-saber-female-grip.json`.
+
+Four-enemy and rendered solo checks passed. Owner playtest and asset publication remain pending. Local library SHA-256: `67d330c58f2901952cbea3afc8dd80cbbb0fa8db0cb05993cd604b07f6182533`.
