@@ -71,8 +71,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_ro" if female else "pso_ro"
 		CharacterManager._characters[0].equipment.weapon = "pole"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "wand":
-		_native_prefix = "pmwa"
-		_pso_prefix = "pso_wn"
+		_native_prefix = "pwwa" if female else "pmwa"
+		_pso_prefix = "pso_f_wn" if female else "pso_wn"
 		CharacterManager._characters[0].equipment.weapon = "wand"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
@@ -120,7 +120,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro", "pwro", "pmwa"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro", "pwro", "pmwa", "pwwa"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -236,7 +236,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
 	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]: await _verify_gunblade(player, enemies)
 	if _native_prefix in ["pmmg", "pwmgs"]: _verify_mechgun(player, enemies[0])
-	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn"]:
+	if _pso_prefix in ["pso_la", "pso_f_la", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn"]:
 		for target in enemies:
 			target.reveal()
 			target.hurtbox.monitorable = true

@@ -31,7 +31,7 @@ func setup(player: Node3D) -> void:
 	if rod: _clips = ["pmro_wait", "pso_ro_walk", "pso_ro_walk_ready", "pso_ro_wait", "pso_ro_run", "pmro_atk1", "pmro_atk2", "pmro_atk3", "pso_ro_block"]
 	if wand: _clips = ["pmwa_wait", "pmsa_walk", "pso_wn_walk_ready", "pso_wn_wait", "pso_wn_run", "pmwa_atk1", "pmwa_atk2", "pmwa_atk3", "pso_wn_block", "pso_wn_dam_n", "pso_wn_dam_h", "pso_wn_dam_d", "pso_wn_dam_d_wa"]
 	if player._is_female:
-		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb").replace("pmar", "pwars").replace("pso_ri", "pso_f_ri").replace("pso_la", "pso_f_la").replace("pmro", "pwro").replace("pso_ro", "pso_f_ro")
+		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb").replace("pmar", "pwars").replace("pso_ri", "pso_f_ri").replace("pso_la", "pso_f_la").replace("pmro", "pwro").replace("pso_ro", "pso_f_ro").replace("pmwa", "pwwa").replace("pso_wn", "pso_f_wn")
 	_blade = player.weapon_node
 	_path = OS.get_environment("PSZ_GUNBLADE_GRIP_PATH" if gunblade else ("PSZ_SLICER_GRIP_PATH" if slicer else "PSZ_SPEAR_GRIP_PATH"))
 	if wand: _path = OS.get_environment("PSZ_WAND_GRIP_PATH")
@@ -79,6 +79,7 @@ func setup(player: Node3D) -> void:
 	if rod: labels = ["Relaxed idle — PSZ", "Normal walk — PSO 69", "Caution walk — PSO 62", "Weapon ready — PSO 67", "Run — PSO 111", "Attack 1", "Attack 2", "Attack 3", "Block — PSO 68"]
 	if rod and player._is_female: labels = ["Relaxed idle — PSZ", "Normal walk — PSO 306", "Caution walk — PSO 299", "Weapon ready — PSO 304", "Run — PSO 342", "Attack 1", "Attack 2", "Attack 3", "Block — PSO 305"]
 	if wand: labels = ["Relaxed idle — PSZ", "Normal walk — PSZ", "Caution walk — PSO 76", "Weapon ready — PSO 81", "Run — PSO 111", "Attack 1", "Attack 2", "Attack 3", "Block — PSO 82", "Damage", "Big damage", "Fall down", "Get up"]
+	if wand and player._is_female: labels = ["Relaxed idle — PSZ", "Normal walk — PSZ", "Caution walk — PSO 309", "Weapon ready — PSO 332", "Run — PSO 342", "Attack 1", "Attack 2", "Attack 3", "Block — PSO 311", "Damage", "Big damage", "Fall down", "Get up"]
 	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)
