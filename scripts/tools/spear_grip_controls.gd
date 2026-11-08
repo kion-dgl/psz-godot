@@ -19,6 +19,7 @@ var _clips := ["pmsp_wait", "pmsa_walk", "pso_pa_walk_ready", "pso_pa_wait", "ps
 func setup(player: Node3D) -> void:
 	_player = player
 	var bazooka: bool = player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]
+	var rod: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD
 	var rifle: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE
 	var gunblade: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE
 	var slicer: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER
@@ -26,10 +27,12 @@ func setup(player: Node3D) -> void:
 	if gunblade: _clips = ["pmgb_wait", "pmsa_walk", "pso_gb_walk_ready", "pso_gb_wait", "pso_gb_run", "pmgb_atk1", "pmgb_atk2", "pmgb_atk3", "pso_gb_block", "pmgb_wait_sht", "pso_gb_gun_walk_ready", "pso_gb_gun_wait", "pso_gb_gun_run", "pmgb_shot_atk1", "pmgb_shot_atk2", "pmgb_shot_atk3"]
 	if rifle: _clips = ["pmar_wait", "pso_ri_walk", "pso_ri_walk_ready", "pso_ri_wait", "pso_ri_run", "pmar_atk1", "pmar_atk2", "pmar_atk3", "pso_ri_block", "pso_ri_dam_n", "pso_ri_dam_h", "pso_ri_dam_d", "pso_ri_dam_d_wa"]
 	if bazooka: _clips = ["pmar_wait", "pso_la_walk", "pso_la_walk_ready", "pso_la_wait", "pso_la_run", "pso_la_atk1", "pmar_atk1", "pso_la_block", "pso_la_dam_n", "pso_la_dam_h", "pso_la_dam_d", "pso_la_dam_d_wa"]
+	if rod: _clips = ["pmro_wait", "pso_ro_walk", "pso_ro_walk_ready", "pso_ro_wait", "pso_ro_run", "pmro_atk1", "pmro_atk2", "pmro_atk3", "pso_ro_block"]
 	if player._is_female:
 		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb").replace("pmar", "pwars").replace("pso_ri", "pso_f_ri").replace("pso_la", "pso_f_la")
 	_blade = player.weapon_node
 	_path = OS.get_environment("PSZ_GUNBLADE_GRIP_PATH" if gunblade else ("PSZ_SLICER_GRIP_PATH" if slicer else "PSZ_SPEAR_GRIP_PATH"))
+	if rod: _path = OS.get_environment("PSZ_ROD_GRIP_PATH")
 	if rifle: _path = OS.get_environment("PSZ_RIFLE_GRIP_PATH")
 	if bazooka: _path = OS.get_environment("PSZ_BAZOOKA_GRIP_PATH")
 	if FileAccess.file_exists(_path):
@@ -59,6 +62,7 @@ func setup(player: Node3D) -> void:
 	title.text = ("Gunblade" if gunblade else ("Slicer" if slicer else "Spear")) + " grip — separate rotation for each animation"
 	if rifle: title.text = "Rifle grip — separate rotation for each animation"
 	if bazooka: title.text = "Bazooka grip — rotation and position per pose"
+	if rod: title.text = "Rod grip — rotation and position per pose"
 	box.add_child(title)
 	_selector = OptionButton.new()
 	var labels := ["Relaxed idle — PSZ pmsp_wait", "Normal walk — pmsa_walk", "Caution walk — PSO 145", "Weapon ready — PSO 143", "Run — PSO 151", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 144", "Source walk — PSO 145 (comparison)"]
@@ -68,6 +72,7 @@ func setup(player: Node3D) -> void:
 	if rifle and player._is_female: labels = ["Relaxed idle", "Normal walk — PSO 255", "Caution walk — PSO 250", "Weapon ready — PSO 253", "Run — PSO 262", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 254", "Damage", "Big damage", "Fall down", "Get up"]
 	if bazooka: labels = ["Current relaxed idle", "Normal walk — PSO shot 41", "Caution walk — PSO 49", "Carry / ready — PSO shot 39", "Run — PSO shot 48", "Launcher firing — PSO 51 (preview)", "Current rifle-donor firing", "Block — PSO 53", "Damage", "Big damage", "Fall down", "Get up"]
 	if bazooka and player._is_female: labels = ["Current relaxed idle", "Normal walk — PSO shot 278", "Caution walk — PSO 286", "Carry / ready — PSO shot 276", "Run — PSO shot 285", "Launcher firing — PSO 288 (preview)", "Current rifle-donor firing", "Block — PSO 290", "Damage", "Big damage", "Fall down", "Get up"]
+	if rod: labels = ["Relaxed idle — PSZ", "Normal walk — PSO 69", "Caution walk — PSO 62", "Weapon ready — PSO 67", "Run — PSO 111", "Attack 1", "Attack 2", "Attack 3", "Block — PSO 68"]
 	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)
@@ -105,7 +110,7 @@ func setup(player: Node3D) -> void:
 			button.focus_mode = Control.FOCUS_NONE
 			button.pressed.connect(_rotate.bind(axis, degrees))
 			row.add_child(button)
-	if rifle or bazooka:
+	if rifle or bazooka or rod:
 		for axis in range(3):
 			var row := HBoxContainer.new()
 			box.add_child(row)
@@ -133,6 +138,9 @@ func setup(player: Node3D) -> void:
 	if rifle:
 		_selector.select(1)
 		_select(1)
+	if rod:
+		_selector.select(0)
+		_select(0)
 	if bazooka:
 		_selector.select(3)
 		_select(3)

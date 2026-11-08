@@ -862,7 +862,7 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 
 # Weapon type → global material indices that get additive blending (blade/energy surfaces)
 # Indices count across all mesh children in order (matching web preview)
-const PHOTON_INSERT_MODELS := ["res://assets/weapons/basic/Handgun.glb", "res://assets/weapons/basic/Mechgun.glb", "res://assets/weapons/basic/Rifle.glb"]
+const PHOTON_INSERT_MODELS := ["res://assets/weapons/basic/Handgun.glb", "res://assets/weapons/basic/Mechgun.glb", "res://assets/weapons/basic/Rifle.glb", "res://assets/weapons/basic/Rod.glb"]
 
 const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
 	WeaponData.WeaponType.SABER: [1, 2],
@@ -900,6 +900,12 @@ func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 					new_mat.emission_enabled = true
 					new_mat.emission = tint
 					new_mat.emission_energy_multiplier = 1.2
+					if weapon_data.glb_path == "res://assets/weapons/basic/Rod.glb":
+						# Tip surface is green in COLOR_0; preserve it rather than applying Pole blue tint.
+						new_mat.albedo_color = Color.WHITE
+						new_mat.vertex_color_use_as_albedo = true
+						new_mat.emission = Color(0.498, 1.0, 0.498)
+						new_mat.emission_texture = new_mat.albedo_texture
 				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX if photon_insert else BaseMaterial3D.BLEND_MODE_ADD
 				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY if photon_insert else BaseMaterial3D.DEPTH_DRAW_DISABLED
@@ -2574,6 +2580,12 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 	"pwsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
 }
 
+const ROD_SAVED_GRIPS := {
+	"pso_ro_block": Basis(Vector3(0.0684283152223, -0.0584505051374, -0.00105437077582), Vector3(0.0584531202912, 0.0684340596199, -0.000148255378008), Vector3(0.00089806271717, -0.000571999233216, 0.0899937897921)),
+	"pso_ro_run": Basis(Vector3(0.0416584424675, -0.0696120113134, -0.038971144706), Vector3(0.0531565099955, 0.0570033825934, -0.0449999980628), Vector3(0.0594891794026, -0.0021882308647, 0.0675000175834)),
+	"pso_ro_walk": Basis(Vector3(0.0416584201157, -0.0696119740605, -0.0389711558819), Vector3(0.0531565099955, 0.0570033825934, -0.0449999980628), Vector3(0.0594891905785, -0.00218823039904, 0.067500025034)),
+}
+
 const BAZOOKA_SAVED_GRIPS := {
 	"pmar_atk1": Basis(Vector3(0.911556780338, -0.0973225161433, -0.399492383003), Vector3(0.127156481147, 0.990683078766, 0.0487985163927), Vector3(0.391020685434, -0.0952806025743, 0.91543751955)),
 	"pmar_wait": Basis(Vector3(0.970646798611, 0.13883407414, -0.196392223239), Vector3(-0.121769860387, 0.98785585165, 0.0965038463473), Vector3(0.207405239344, -0.0697564929724, 0.975764870644)),
@@ -2600,7 +2612,7 @@ const RIFLE_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON, WeaponData.WeaponType.ROD]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
@@ -2610,6 +2622,14 @@ func _set_sword_pose_hold(clip: String) -> void:
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: native = SLICER_GRIP.get_rotation_quaternion()
 	# Owner-saved gunblade idle grip applies to every blade and gun pose.
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE: native = Quaternion.IDENTITY
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.ROD:
+		var mode := "attack" if clip.begins_with("pmro_atk") else "idle"
+		var hold: Dictionary = WEAPON_HOLD.get(WeaponData.WeaponType.ROD, WEAPON_HOLD_DEFAULT)[mode]
+		native = Quaternion.from_euler(hold.rot * PI / 180.0)
+		if ROD_SAVED_GRIPS.has(clip): native = ROD_SAVED_GRIPS[clip].get_rotation_quaternion()
+		weapon_node.position = hold.pos
+		var positions: Dictionary = get_meta("fixture_grip_positions", {})
+		if positions.has(clip): weapon_node.position = positions[clip]
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE:
 		var mode := "attack" if clip in ["pmar_atk1", "pmar_atk2", "pmar_atk3", "pwars_atk1", "pwars_atk2", "pwars_atk3"] else "idle"
 		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.RIFLE][mode]

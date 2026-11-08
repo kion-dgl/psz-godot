@@ -116,7 +116,7 @@ func _launch() -> void:
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
+		if _native_prefix in ["pmsp", "pwsp", "pmsl", "pwsls", "pmgb", "pwgbs", "pmar", "pwars", "pmro"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)
@@ -177,6 +177,13 @@ func _verify(player) -> void:
 		_check(photon.blend_mode == BaseMaterial3D.BLEND_MODE_MIX, "handgun photon insert is solid colored, not additive white")
 		_check(photon.emission_enabled and photon.emission.is_equal_approx(player._get_equipped_weapon_data().tint_color), "handgun photon surface emits weapon tint")
 		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled and surfaces[0][0].get_active_material(surfaces[0][1]).albedo_texture != null, "handgun casing material remains unchanged")
+	if _native_prefix == "pmro":
+		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "rod has no wrist glow")
+		var surfaces: Array = []
+		player._collect_surfaces(player.weapon_node, surfaces)
+		var tip: StandardMaterial3D = surfaces[1][0].get_active_material(surfaces[1][1])
+		_check(tip.emission_enabled and tip.emission.g > tip.emission.r and tip.vertex_color_use_as_albedo, "rod tip emits green and preserves vertex coloring")
+		_check(not surfaces[0][0].get_active_material(surfaces[0][1]).emission_enabled, "rod shaft remains non-emissive")
 	var wrong_prefix := "pmsa_" if player._is_female else "pwsa_"
 	for clip in player.animation_player.get_animation_list():
 		_check(not str(clip).begins_with(wrong_prefix), "no opposite-gender native clip: " + str(clip))

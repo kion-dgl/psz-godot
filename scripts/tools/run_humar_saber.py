@@ -74,6 +74,7 @@ def main():
         env["PSZ_SLICER_GRIP_PATH"] = str(ROOT / ".godot" / ("slicer-female-grips.json" if args.gender == "female" else "slicer-male-grips.json"))
         env["PSZ_GUNBLADE_GRIP_PATH"] = str(ROOT / ".godot" / ("gunblade-" + args.gender + "-grips.json"))
         env["PSZ_RIFLE_GRIP_PATH"] = str(ROOT / ".godot" / ("rifle-" + args.gender + "-grips.json"))
+        env["PSZ_ROD_GRIP_PATH"] = str(ROOT / ".godot" / ("rod-" + args.gender + "-grips.json"))
         env["PSZ_BAZOOKA_GRIP_PATH"] = str(ROOT / ".godot" / ("bazooka-" + args.gender + "-grips.json"))
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
