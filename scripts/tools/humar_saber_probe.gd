@@ -79,13 +79,13 @@ func _launch() -> void:
 		print("[humar-saber] DONE " + ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 	else:
-		if _native_prefix in ["pmda", "pwda", "pmds", "pwdss"]:
+		if _native_prefix in ["pmda", "pwda", "pmds", "pwdss"] and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/dagger_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player, _native_prefix in ["pmds", "pwdss"])
 			await get_tree().process_frame
 			await _snapshot("weapon_grip_controls")
-		if _native_prefix == "pmsp":
+		if _native_prefix == "pmsp" and OS.get_environment("PSZ_NO_GRIP_CONTROLS") != "1":
 			var controls = preload("res://scripts/tools/spear_grip_controls.gd").new()
 			add_child(controls)
 			controls.setup(player)

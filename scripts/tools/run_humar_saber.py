@@ -14,6 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--group', action='store_true')
+    parser.add_argument('--no-grip-controls', action='store_true', help='Play with committed grip defaults and no adjustment panel')
     parser.add_argument('--weapon', choices=['saber', 'sword', 'daggers', 'claw', 'double-saber', 'spear'], default='saber')
     parser.add_argument('--gender', choices=['male', 'female'], default='male', help='HUmar or HUmarl saber reference')
     parser.add_argument('--rendered', action='store_true', help='Render automated checks for visual capture')
@@ -48,7 +49,7 @@ def main():
             'config/name="PSZ Saber Prototype"\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="psz-saber-prototype"')
         (project / 'project.godot').write_text(settings)
         env = dict(os.environ, PSZ_HUMAR_SABER='1', PSZ_SABER_GENDER=args.gender, PSZ_MELEE_WEAPON=args.weapon, PSZ_SABER_CHECK='1' if args.check else '0',
-                   PSZ_SABER_GROUP='1' if args.group else '0', XDG_DATA_HOME=str(project / 'save'))
+                   PSZ_SABER_GROUP='1' if args.group else '0', PSZ_NO_GRIP_CONTROLS='1' if args.no_grip_controls else '0', XDG_DATA_HOME=str(project / 'save'))
         env["PSZ_DAGGER_GRIP_PATH"] = str(ROOT / ".godot" / ("dagger-female-left-grip.json" if args.gender == "female" else "dagger-left-grip.json"))
         env["PSZ_DOUBLE_SABER_GRIP_PATH"] = str(ROOT / ".godot" / ("double-saber-female-grip.json" if args.gender == "female" else "double-saber-grip.json"))
         env["PSZ_SPEAR_GRIP_PATH"] = str(ROOT / ".godot" / "spear-male-grips.json")
