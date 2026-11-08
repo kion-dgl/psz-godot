@@ -16,14 +16,17 @@ var _clips := ["pmsp_wait", "pmsa_walk", "pso_pa_walk_ready", "pso_pa_wait", "ps
 
 func setup(player: Node3D) -> void:
 	_player = player
+	var rifle: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE
 	var gunblade: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE
 	var slicer: bool = player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER
 	if slicer: _clips = ["pmsl_wait", "pmsa_walk", "pso_sl_walk_ready", "pso_sl_wait", "pso_sl_run", "pmsl_atk1", "pmsl_atk2", "pmsl_atk3", "pso_sl_block"]
 	if gunblade: _clips = ["pmgb_wait", "pmsa_walk", "pso_gb_walk_ready", "pso_gb_wait", "pso_gb_run", "pmgb_atk1", "pmgb_atk2", "pmgb_atk3", "pso_gb_block", "pmgb_wait_sht", "pso_gb_gun_walk_ready", "pso_gb_gun_wait", "pso_gb_gun_run", "pmgb_shot_atk1", "pmgb_shot_atk2", "pmgb_shot_atk3"]
+	if rifle: _clips = ["pmar_wait", "pmsa_walk", "pso_ri_walk_ready", "pso_ri_wait", "pso_ri_run", "pmar_atk1", "pmar_atk2", "pmar_atk3", "pso_ri_block", "pso_ri_dam_n", "pso_ri_dam_h", "pso_ri_dam_d", "pso_ri_dam_d_wa"]
 	if player._is_female:
 		for i in _clips.size(): _clips[i] = _clips[i].replace("pmsp", "pwsp").replace("pmsa", "pwsa").replace("pso_pa", "pso_f_pa").replace("pmsl", "pwsls").replace("pso_sl", "pso_f_sl").replace("pmgb", "pwgbs").replace("pso_gb", "pso_f_gb")
 	_blade = player.weapon_node
 	_path = OS.get_environment("PSZ_GUNBLADE_GRIP_PATH" if gunblade else ("PSZ_SLICER_GRIP_PATH" if slicer else "PSZ_SPEAR_GRIP_PATH"))
+	if rifle: _path = OS.get_environment("PSZ_RIFLE_GRIP_PATH")
 	if FileAccess.file_exists(_path):
 		var data = JSON.parse_string(FileAccess.get_file_as_string(_path))
 		if data is Dictionary:
@@ -41,11 +44,13 @@ func setup(player: Node3D) -> void:
 	panel.add_child(box)
 	var title := Label.new()
 	title.text = ("Gunblade" if gunblade else ("Slicer" if slicer else "Spear")) + " grip — separate rotation for each animation"
+	if rifle: title.text = "Rifle grip — separate rotation for each animation"
 	box.add_child(title)
 	_selector = OptionButton.new()
 	var labels := ["Relaxed idle — PSZ pmsp_wait", "Normal walk — pmsa_walk", "Caution walk — PSO 145", "Weapon ready — PSO 143", "Run — PSO 151", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 144", "Source walk — PSO 145 (comparison)"]
 	if slicer: labels = ["Relaxed idle — PSZ", "Normal walk", "Caution walk — PSO 152", "Weapon ready — PSO 156", "Run — PSO 111", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 103"]
 	if gunblade: labels = ["Blade relaxed idle", "Normal walk", "Blade caution walk", "Blade ready", "Blade run", "Blade attack 1", "Blade attack 2", "Blade attack 3", "Block", "Gun idle", "Gun caution walk", "Gun ready", "Gun run", "Gun attack 1", "Gun attack 2", "Gun attack 3"]
+	if rifle: labels = ["Relaxed idle", "Normal walk", "Caution walk — PSO 10", "Weapon ready — PSO 13", "Run — PSO 22", "Attack 1 — PSZ", "Attack 2 — PSZ", "Attack 3 — PSZ", "Block — PSO 14", "Damage", "Big damage", "Fall down", "Get up"]
 	for label in labels: _selector.add_item(label.replace("pmsp", "pwsp").replace("pmsa", "pwsa") if player._is_female else label)
 	_selector.focus_mode = Control.FOCUS_NONE
 	_selector.item_selected.connect(_select)

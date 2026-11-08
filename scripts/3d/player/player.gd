@@ -2568,7 +2568,7 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
@@ -2578,6 +2578,12 @@ func _set_sword_pose_hold(clip: String) -> void:
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: native = SLICER_GRIP.get_rotation_quaternion()
 	# Owner-saved gunblade idle grip applies to every blade and gun pose.
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE: native = Quaternion.IDENTITY
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE:
+		var mode := "attack" if clip in ["pmar_atk1", "pmar_atk2", "pmar_atk3"] else "idle"
+		var hold: Dictionary = WEAPON_HOLD[WeaponData.WeaponType.RIFLE][mode]
+		var degrees: Vector3 = hold.rot
+		native = Quaternion.from_euler(degrees * PI / 180.0)
+		weapon_node.position = hold.pos
 	var target := native
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
