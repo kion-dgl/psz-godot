@@ -2798,16 +2798,8 @@ func _play_and_track_attack(anim_name: String) -> void:
 	_attack_hit_step = 0
 	_attack_hit_targets.clear()
 	_attack_damage_snapshot.clear()
-	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
-	# Barehanded is discriminated here by the empty weapon_id (NOT by the weapon
-	# type, which falls back to 0 == SABER): map it to BAREHANDED_SFX (common46)
-	# and only play if the asset is actually loadable, so until the pack carries
-	# common46 barehanded is silent rather than playing the wrong saber swing.
-	var sfx_path: String
-	if _is_barehanded():
-		sfx_path = BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
-	else:
-		sfx_path = _weapon_attack_sound(_get_equipped_weapon_type())
+	# Shared lookup covers swing start and delayed strong-attack release.
+	var sfx_path := _weapon_attack_sound(_get_equipped_weapon_type())
 	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and (_is_special_attack or _get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN)):
 		SfxManager.play_at(sfx_path, global_position)
 
@@ -3796,6 +3788,8 @@ func apply_octo_poison(tier: int) -> void:
 	_ailments.apply_octo_poison(self,tier)
 
 func _weapon_attack_sound(weapon_type: int) -> String:
+	# Empty equipment also reports type 0; resolve it before the saber enum.
+	if _is_barehanded(): return BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
 	if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]: return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE]) # Explicit provisional donor.
 	if weapon_type == WeaponData.WeaponType.GUN_BLADE and SaberPrototype.enabled(self):
 		return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE if SaberPrototype.gun_mode(self) else WeaponData.WeaponType.SABER])

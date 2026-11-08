@@ -178,6 +178,8 @@ func _verify(player) -> void:
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
 	if _native_prefix in ["pmbn", "pwbn"]:
 		_check(player._is_barehanded() and player.weapon_node == null, "unarmed uses empty equipment with no weapon model")
+		var expected_sound: String = player.BAREHANDED_SFX if ResourceLoader.exists(player.BAREHANDED_SFX) else ""
+		_check(player._weapon_attack_sound(player._get_equipped_weapon_type()) == expected_sound, "unarmed delayed release uses fist swing instead of saber sound")
 	else:
 		_check(player.weapon_node != null, "saber attached")
 	if _native_prefix in ["pmhg", "pwhg", "pmar", "pwars"] and _pso_prefix not in ["pso_la", "pso_f_la"]:

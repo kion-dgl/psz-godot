@@ -545,3 +545,5 @@ Female wand owner-approved at `fb83cd50`. Unarmed uses empty equipment and nativ
 ## Female — Unarmed playtest
 
 Male fists owner-approved at `c9375b04`. Female uses native `common_w.glb` / `pwbn` idle/attacks/dodge/defeat/technique; source `pwbns_chg` is explicitly aliased. The available shared PSO fist set 193–207 is retargeted to the female skeleton as `pso_f_fi`; no separate female fist source block is claimed. Native general female walk, explicit fist targeting and provisional male-tested timing apply. Run `python3 scripts/tools/run_humar_saber.py --weapon unarmed --gender female --no-grip-controls` for one Booma. Final pair awaits owner approval; broader release gates remain separate. Bake `--female-unarmed`. Library SHA-256: `999eded13b96d83c514b57e2bc10bc23a2154b9daa32f5373657d6f92233b2f7`.
+
+Female fists gameplay accepted, with a final sound correction: centralized empty-equipment sound selection in `_weapon_attack_sound`, covering delayed strong-attack contacts as well as swing start. This prevents saber enum 0 fallback from sounding on unarmed kicks. Both genders share the correction; audio retest pending.
