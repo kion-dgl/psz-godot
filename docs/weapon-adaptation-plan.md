@@ -531,3 +531,5 @@ Male rod owner-approved at `4fe3c2cb`. Female uses native `rod_w.glb` attacks/ch
 ## Male — Wand playtest
 
 Female rod owner-approved at `83141ade`. Male wand uses native `wand_m.glb` / `pmwa` idle, three physical attacks, technique/charge, dodge and defeat. PSO wand 76–87 provides 12 stance/reaction clips; saber run 111 fills the missing run, with native general walk. Contact fractions 0.2162/0.2195/0.4545 follow native decoded events. Shared normal/strong continuation and recovery apply; existing wand stats and technique behavior remain. Run `python3 scripts/tools/run_humar_saber.py --weapon wand --no-grip-controls` for one Booma. Owner approval pending. Bake `--male-wand`. Library SHA-256: `8a41cab34ccb1a23f98c42cfe8d4f19ce7ece0db262cbdbd857a48897de9559c`.
+
+Male wand: owner-saved rotations for all 13 panel poses promoted to defaults (idle, walk, run, caution, ready, three attacks, block and four reactions). No position overrides were saved. Per-pose controls are available; resumed one-Booma gameplay without the panel.

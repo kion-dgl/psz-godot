@@ -2583,6 +2583,22 @@ const FEMALE_PARTISAN_SAVED_GRIPS := {
 	"pwsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
 }
 
+const WAND_SAVED_GRIPS := {
+	"pmsa_walk": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_atk1": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_atk2": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_atk3": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pmwa_wait": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_block": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_d": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_d_wa": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_h": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_dam_n": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_run": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_wait": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+	"pso_wn_walk_ready": Basis(Vector3(-0.0541633553803, -0.0718772038817, 3.93402510568e-09), Vector3(-0.0718772038817, 0.054163351655, 0), Vector3(-2.36755548499e-09, -3.14185233385e-09, -0.0900000035763)),
+}
+
 const ROD_SAVED_GRIPS := {
 	"pso_ro_block": Basis(Vector3(0.0684283152223, -0.0584505051374, -0.00105437077582), Vector3(0.0584531202912, 0.0684340596199, -0.000148255378008), Vector3(0.00089806271717, -0.000571999233216, 0.0899937897921)),
 	"pso_ro_run": Basis(Vector3(0.0416584424675, -0.0696120113134, -0.038971144706), Vector3(0.0531565099955, 0.0570033825934, -0.0449999980628), Vector3(0.0594891794026, -0.0021882308647, 0.0675000175834)),
@@ -2615,7 +2631,7 @@ const RIFLE_SAVED_GRIPS := {
 }
 
 func _set_sword_pose_hold(clip: String) -> void:
-	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON, WeaponData.WeaponType.ROD]:
+	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR, WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON, WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND]:
 		return
 	if not is_instance_valid(weapon_node) or _sword_grip_clip == clip: return
 	_sword_grip_clip = clip
@@ -2625,6 +2641,14 @@ func _set_sword_pose_hold(clip: String) -> void:
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: native = SLICER_GRIP.get_rotation_quaternion()
 	# Owner-saved gunblade idle grip applies to every blade and gun pose.
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE: native = Quaternion.IDENTITY
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.WAND:
+		var mode := "attack" if clip.begins_with("pmwa_atk") else "idle"
+		var hold: Dictionary = WEAPON_HOLD.get(WeaponData.WeaponType.WAND, WEAPON_HOLD_DEFAULT)[mode]
+		native = Quaternion.from_euler(hold.rot * PI / 180.0)
+		if WAND_SAVED_GRIPS.has(clip): native = WAND_SAVED_GRIPS[clip].get_rotation_quaternion()
+		weapon_node.position = hold.pos
+		var positions: Dictionary = get_meta("fixture_grip_positions", {})
+		if positions.has(clip): weapon_node.position = positions[clip]
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.ROD:
 		var rod_grip_key := clip.replace("pwro_", "pmro_").replace("pso_f_ro_", "pso_ro_")
 		var mode := "attack" if rod_grip_key.begins_with("pmro_atk") else "idle"
