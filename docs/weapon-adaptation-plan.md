@@ -354,3 +354,5 @@ The published [weapon storybook](https://kion-dgl.github.io/psz-godot/tools/stor
 The prototype equips Ein Slicer (`wslc01_1_o`) and uses the alternate `wslc01_3_o` mesh as its spinning thrown blade. Other families are inventoried, not yet wired or verified as projectile models. Fetch the ignored GLB and PNG with `sh scripts/tools/fetch_slicer_projectile.sh`, then import with Godot. GLB SHA-256: `ddbfb0b411174de47b23e2e0a6c3206a178b6def106cf900f1d809c4ff3743dc`; PNG: `33cb37ed51c858759db4d39bed0bf8b0ed11f52f341a407376ebae921ecdb4c8`.
 
 The new prototype-only `slicer_projectile.gd` follows physical travel between targets, retains released strong-hit state, excludes already-hit/dead/hidden enemies, and respects the total range budget. Five-enemy checks simulate the projectile sweep between impacts and reject instant area damage and fifth-target hits.
+
+The owner-saved slicer relaxed-idle grip is now the common fixture grip for all slicer animations, including spawn, movement, ready, attacks and reactions. The attachment and attack/idle transition paths preserve it. Per-pose panel overrides remain available for future exceptions.

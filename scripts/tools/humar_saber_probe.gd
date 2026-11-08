@@ -347,6 +347,9 @@ func _verify_mixed_combos(player) -> void:
 		for step in range(1, 4):
 			var clip := (_native_prefix + "_atk") + str(step)
 			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
+			if _native_prefix == "pmsl":
+				player._weapon_grip_tween.custom_step(1.0)
+				_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.SLICER_GRIP.orthonormalized()), "slicer combo preserves shared grip")
 			if _native_prefix in ["pmsp", "pwsp"]:
 				player._weapon_grip_tween.custom_step(1.0)
 				_check(player.weapon_node.basis.orthonormalized().is_equal_approx((player.FEMALE_PARTISAN_SAVED_GRIPS if player._is_female else player.PARTISAN_SAVED_GRIPS)[clip].orthonormalized()), "saved spear attack grip survives combo transition: " + clip)
@@ -669,6 +672,11 @@ func _slicer_projectiles() -> Array:
 	return get_tree().current_scene.get_children().filter(func(node): return node is Projectile and not node.is_queued_for_deletion())
 
 func _verify_slicer(player, enemies: Array) -> void:
+	for clip in player.animation_player.get_animation_list():
+		player._sword_grip_clip = ""
+		player.play_animation(clip, true)
+		player._weapon_grip_tween.custom_step(1.0)
+		_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.SLICER_GRIP.orthonormalized()), "shared slicer grip: " + clip)
 	# These fixture enemies start dormant; projectile contact correctly ignores hidden hurtboxes.
 	for enemy in enemies:
 		enemy.reveal()

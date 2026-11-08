@@ -809,6 +809,8 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	node.position = idle_hold.get("pos", Vector3(0.31, 0, 0))
 	node.rotation_degrees = idle_hold.get("rot", Vector3(0, 90, 0))
 	node.scale = Vector3(s, s, s)
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.SLICER:
+		node.basis = SLICER_GRIP.scaled(Vector3.ONE * s)
 	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DOUBLE_SABER:
 		# Owner-calibrated central grip from the live rotation controls.
 		node.basis = Basis.IDENTITY.scaled(Vector3.ONE * s)
@@ -2495,7 +2497,7 @@ func _set_weapon_hold(mode: String) -> void:
 	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
 	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
 	# Keep the calibrated central grip (including live fixture adjustments) across attacks.
-	if not (SaberPrototype.enabled(self) and wtype == WeaponData.WeaponType.DOUBLE_SABER):
+	if not (SaberPrototype.enabled(self) and wtype in [WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.SLICER]):
 		weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
 
 
@@ -2510,6 +2512,8 @@ const SWORD_CARRY_DIRECTIONS := {
 	"pso_sw_walk_ready": Vector3(-0.728611, 0.080743, 0.680152),
 	"pso_sw_wait": Vector3(0.031778, -0.316038, 0.948214),
 }
+
+const SLICER_GRIP := Basis(Vector3(0.766045094, 0.000000006, 0.642787755), Vector3(-0.000000007, 1.000000119, 0.000000000), Vector3(-0.642787814, -0.000000005, 0.766045034))
 
 const PARTISAN_CARRY_DIRECTIONS := {
 	"pso_f_pa_walk_ready": Vector3(0.306496, -0.280168, 0.909707),
@@ -2545,6 +2549,7 @@ func _set_sword_pose_hold(clip: String) -> void:
 	if _weapon_grip_tween: _weapon_grip_tween.kill()
 	# Ein Spear mesh shaft lies 30 degrees off local +Z. Align its actual tip axis.
 	var native := Quaternion(Vector3.UP, PI / 3.0 if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else PI / 2.0)
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: native = SLICER_GRIP.get_rotation_quaternion()
 	var target := native
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
