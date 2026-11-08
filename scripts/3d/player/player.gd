@@ -2516,6 +2516,12 @@ const PARTISAN_CARRY_DIRECTIONS := {
 	"pso_pa_wait": Vector3(0.421957, -0.874271, -0.240005), # 143: tip up across the torso at 45 degrees.
 }
 
+# Owner-saved per-pose grips; keep walk and relaxed idle independent.
+const PARTISAN_SAVED_GRIPS := {
+	"pmsa_walk": Basis(Vector3(-0.000000060, -1.000000000, 0.000000016), Vector3(0.866025507, -0.000000044, 0.500000060), Vector3(-0.500000060, 0.000000044, 0.866025507)),
+	"pmsp_wait": Basis(Vector3(0.556670427, -0.766044676, 0.321393847), Vector3(0.500000000, -0.000000044, -0.866025388), Vector3(0.663414061, 0.642787695, 0.383022338)),
+}
+
 func _set_sword_pose_hold(clip: String) -> void:
 	if not SaberPrototype.enabled(self) or _get_equipped_weapon_type() not in [WeaponData.WeaponType.SWORD, WeaponData.WeaponType.SPEAR]:
 		return
@@ -2528,6 +2534,8 @@ func _set_sword_pose_hold(clip: String) -> void:
 	var directions: Dictionary = PARTISAN_CARRY_DIRECTIONS if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR else SWORD_CARRY_DIRECTIONS
 	if directions.has(clip):
 		target = Quaternion(Vector3.RIGHT, directions[clip].normalized()) * native
+	if _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR and PARTISAN_SAVED_GRIPS.has(clip):
+		target = PARTISAN_SAVED_GRIPS[clip].get_rotation_quaternion()
 	# Only the isolated authoring panel sets these per-animation overrides.
 	var fixture_grips: Dictionary = get_meta("fixture_grips", {})
 	if fixture_grips.has(clip): target = fixture_grips[clip].get_rotation_quaternion()

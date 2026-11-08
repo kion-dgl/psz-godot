@@ -588,6 +588,12 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 			_check(tip.dot(expected_tip) > 0.99, clip + " uses calibrated partisan carry angle")
 		if (not claw and not double_saber and not spear) or role in ["run", "walk_ready", "wait", "block"]: await _snapshot(clip)
 
+	if spear:
+		for clip in ["pmsa_walk", "pmsp_wait"]:
+			player._sword_grip_clip = ""
+			player.play_animation(clip, true)
+			player._weapon_grip_tween.custom_step(1.0)
+			_check(player.weapon_node.basis.orthonormalized().is_equal_approx(player.PARTISAN_SAVED_GRIPS[clip].orthonormalized()), "owner-saved spear grip applied: " + clip)
 	var geometry: Dictionary = player._weapon_combat_config(weapon_type)
 	player.player_rotation = 0
 	for enemy in enemies: enemy.global_position = player.global_position + Vector3(0, 0, 10)
