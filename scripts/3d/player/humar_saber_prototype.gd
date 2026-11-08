@@ -14,6 +14,8 @@ const FEMALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_f
 const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_claw.glb", "native_library": "res://assets/player/animations/claw_m.glb", "prefix": "pso_cl", "native_prefix": "pmcl", "walk": "pmsa_walk", "run": "pso_cl_run", "source_count": 5, "class_id": "humar", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
+const MALE_GUNBLADE_PROFILE := {"library": "res://assets/player/animations/pso_male_gunblade.glb", "native_library": "res://assets/player/animations/shotgun_m.glb", "prefix": "pso_gb", "source_prefix": "pso_sa", "native_prefix": "pmgb", "walk": "pmsa_walk", "run": "pso_gb_run", "source_count": 15, "class_id": "humar", "hit_fracs": [[0.25], [0.282051], [0.372093]], "recovery": [0.14, 0.16, 0.22]}
+
 const MALE_SLICER_PROFILE := {"library": "res://assets/player/animations/pso_male_slicer.glb", "native_library": "res://assets/player/animations/slicer_m.glb", "prefix": "pso_sl", "native_prefix": "pmsl", "walk": "pmsa_walk", "run": "pso_sl_run", "source_count": 12, "class_id": "humar", "hit_fracs": [[0.30303], [0.40], [0.45]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_SLICER_PROFILE := {"library": "res://assets/player/animations/pso_female_slicer.glb", "native_library": "res://assets/player/animations/slicer_w.glb", "prefix": "pso_f_sl", "source_prefix": "pso_sl", "native_prefix": "pwsls", "walk": "pwsa_walk", "run": "pso_f_sl_run", "source_count": 12, "class_id": "humarl", "hit_fracs": [[0.30303], [0.40], [0.45]], "recovery": [0.14, 0.16, 0.22]}
 
@@ -24,6 +26,17 @@ const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_mal
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
 static func profile(player) -> Dictionary:
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE and not player._is_female:
+		if gun_mode(player):
+			var shooting := MALE_GUNBLADE_PROFILE.duplicate(true)
+			shooting["attack_prefix"] = "pmgb_shot"
+			shooting["ready"] = "pso_gb_gun_wait"
+			shooting["caution"] = "pso_gb_gun_walk_ready"
+			shooting["run"] = "pso_gb_gun_run"
+			shooting["idle"] = "pmgb_wait_sht"
+			shooting["hit_fracs"] = [[0.35], [0.35], [0.35]]
+			return shooting
+		return MALE_GUNBLADE_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER: return FEMALE_SLICER_PROFILE if player._is_female else MALE_SLICER_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR: return FEMALE_SPEAR_PROFILE if player._is_female else MALE_SPEAR_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER: return FEMALE_DOUBLE_PROFILE if player._is_female else MALE_DOUBLE_PROFILE
@@ -34,6 +47,7 @@ static func profile(player) -> Dictionary:
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == MALE_GUNBLADE_PROFILE.library: return MALE_GUNBLADE_PROFILE
 	if path == FEMALE_SLICER_PROFILE.library: return FEMALE_SLICER_PROFILE
 	if path == MALE_SLICER_PROFILE.library: return MALE_SLICER_PROFILE
 	if path == FEMALE_SPEAR_PROFILE.library: return FEMALE_SPEAR_PROFILE
@@ -51,7 +65,7 @@ static func profile_for_library(path: String) -> Dictionary:
 	return {}
 
 static func ready_clip(player) -> String:
-	return str(profile(player).prefix) + "_wait"
+	return str(profile(player).get("ready", str(profile(player).prefix) + "_wait"))
 
 static func native_clip(player, role: String) -> String:
 	return str(profile(player).native_prefix) + "_" + role
@@ -79,7 +93,8 @@ static func enabled(player) -> bool:
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.CLAW \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.DOUBLE_SABER \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR \
-		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER)
+		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.SLICER \
+		 or (character.get("class_id", "") == "humar" and player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE))
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
@@ -107,7 +122,7 @@ static func update_caution(player, movement_yaw: float, delta: float) -> bool:
 	return player._saber_caution_active
 
 static func idle_clip(player) -> String:
-	return native_clip(player, "wait")
+	return str(profile(player).get("idle", native_clip(player, "wait")))
 
 static func facing_guard(facing: float, offset: Vector3) -> bool:
 	var planar := Vector3(offset.x, 0, offset.z)
@@ -133,7 +148,7 @@ static func guarding(player) -> bool:
 		and player.animation_player != null and player.animation_player.current_animation == str(profile(player).prefix) + "_block"
 
 static func select_walk(player, cautious: bool) -> void:
-	var clip: String = str(profile(player).prefix) + "_walk_ready" if cautious else str(profile(player).walk)
+	var clip: String = str(profile(player).get("caution", str(profile(player).prefix) + "_walk_ready")) if cautious else str(profile(player).walk)
 	if player._walk_anim == clip: return
 	player._walk_anim = clip
 	if player.current_state == player.PlayerState.WALKING: player.play_animation(clip, true)
@@ -259,3 +274,19 @@ static func block_feedback(player, source: Node3D) -> void:
 	tween.tween_property(flash, "scale", Vector3.ONE * 1.25, 0.32)
 	tween.tween_property(flash_material, "albedo_color:a", 0.0, 0.24).set_delay(0.08)
 	tween.chain().tween_callback(flash.queue_free)
+
+static func gun_mode(player) -> bool:
+	return player._get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE and bool(player.get_meta("prototype_gun_mode", false))
+
+static func toggle_gun_mode(player) -> bool:
+	if not enabled(player) or player._get_equipped_weapon_type() != WeaponData.WeaponType.GUN_BLADE: return false
+	if player.current_state not in [player.PlayerState.IDLE, player.PlayerState.WALKING, player.PlayerState.RUNNING] or player._saber_attack_cooldown > 0 or player._recovery_left > 0: return false
+	player.set_meta("prototype_gun_mode", not gun_mode(player))
+	player._queued_combo = player.ComboQueue.NONE
+	player._queued_combo_special = false
+	player._queued_combo_yaw = null
+	player._attack_damage_snapshot.clear()
+	player._run_anim = str(profile(player).run)
+	select_walk(player, player._saber_caution_active)
+	player.transition_to(player.current_state)
+	return true

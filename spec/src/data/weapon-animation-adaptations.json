@@ -1090,7 +1090,7 @@
           "pwsls_tec"
         ]
       },
-      "status": "Implemented for HUmarl; focused checks passed; owner playtest pending"
+      "status": "Owner-approved at 47d40ef0"
     },
     {
       "id": "A08-M",
@@ -1102,7 +1102,7 @@
         "sa",
         "ri"
       ],
-      "note": "Proposed donors: saber for melee stance, rifle for shooting stance; choose explicitly per role.",
+      "note": "Explicit saber 97\u2013111 stance/reaction donors mapped to pso_gb; rifle 10 caution, 13 ready, 22 run for shooting mode. Native pmgb idle/attacks/dodge/defeat, pmgb_wait_sht and pmgb_sht for gun mode. G toggles only outside committed actions/cooldowns. Native melee contacts 9/36,11/39,16/43; gun release .35 provisional.",
       "sha256": "401be4959d7c52f8a2d0c6a518c3e57dc41d562d46bf2389c78b222bac927d45",
       "clips": [
         "dummy1",
@@ -1173,7 +1173,7 @@
           "pmgb_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented for HUmar; focused checks passed; owner playtest pending"
     },
     {
       "id": "A08-F",

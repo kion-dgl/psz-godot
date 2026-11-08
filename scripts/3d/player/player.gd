@@ -605,7 +605,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		var native_roles := ["wait", "atk1", "atk2", "atk3"]
 		if anim_glb == SaberPrototype.FEMALE_LIBRARY:
 			native_roles.append_array(["walk", "esc_f", "dam_d_lp"])
-		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library]:
+		if anim_glb in [SaberPrototype.MALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.MALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.MALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.MALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.MALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.MALE_SLICER_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library, SaberPrototype.MALE_GUNBLADE_PROFILE.library]:
 			native_roles.append_array(["esc_f", "dam_d_lp"])
 		if anim_glb in [SaberPrototype.FEMALE_SWORD_PROFILE.library, SaberPrototype.FEMALE_DAGGER_PROFILE.library, SaberPrototype.FEMALE_CLAW_PROFILE.library, SaberPrototype.FEMALE_DOUBLE_PROFILE.library, SaberPrototype.FEMALE_SPEAR_PROFILE.library, SaberPrototype.FEMALE_SLICER_PROFILE.library]:
 			var female_walk := _build_animation_library(str(SaberPrototype.FEMALE_PROFILE.native_library))
@@ -615,6 +615,13 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 				return null
 			lib.add_animation("pwsa_walk", female_walk.get_animation("pwsa_walk").duplicate())
 		if anim_glb == SaberPrototype.FEMALE_DAGGER_PROFILE.library: native_roles.append("tec")
+		if anim_glb == SaberPrototype.MALE_GUNBLADE_PROFILE.library:
+			lib.add_animation("pmgb_wait_sht", native.get_animation("pmgb_wait_sht").duplicate())
+			for step in range(3):
+				var shot := native.get_animation("pmgb_sht").duplicate() as Animation
+				shot.loop_mode = Animation.LOOP_NONE
+				shot.length += prototype_profile.recovery[step]
+				lib.add_animation("pmgb_shot_atk" + str(step + 1), shot)
 		for role in native_roles:
 			var clip := str(prototype_profile.native_prefix) + "_" + str(role)
 			if not native.has_animation(clip):
@@ -725,6 +732,10 @@ func _setup_weapon() -> void:
 		weapon_data.id, weapon_data.name, weapon_data.weapon_type,
 		weapon_data.glb_path, weapon_data.glb_scale, weapon_data.tint_color])
 
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.GUN_BLADE:
+		weapon_data = weapon_data.duplicate() as WeaponData
+		weapon_data.glb_path = "res://assets/weapons/wgbr02/wgbr02/wgbr02_1_o/wgbr02_1_o.glb"
+		weapon_data.glb_scale = 1.0
 	# Use the native PSZ dagger geometry for this fixture. Keep equipped
 	# combat stats unchanged; only the attachment's visual resource is copied.
 	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS:
@@ -2438,7 +2449,7 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 			while _attack_hit_step < hits.size() and _attack_anim_elapsed >= float(hits[_attack_hit_step]) * motion_length:
 				if _is_special_attack and _attack_hit_step == 0:
 					_end_charge_visual()
-					SfxManager.play_at(WEAPON_SFX[weapon_type], global_position)
+					SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
 				_execute_attack_hit(true)
 				_attack_hit_step += 1
 			_attack_hit_done = _attack_hit_step >= hits.size()
@@ -2446,7 +2457,7 @@ func _update_attack_contact(previous_elapsed: float) -> void:
 		if _attack_anim_elapsed >= float(SaberPrototype.profile(self).get("contact", SaberPrototype.CONTACT)[step]) * motion_length:
 			if _is_special_attack:
 				_end_charge_visual()
-				SfxManager.play_at(WEAPON_SFX[weapon_type], global_position)
+				SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
 			_execute_attack_hit(true)
 			_attack_hit_done = true
 		return
@@ -2567,7 +2578,7 @@ func _set_sword_pose_hold(clip: String) -> void:
 const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
 
 func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
-	var attack_prefix: String = str(SaberPrototype.profile(self).native_prefix) if SaberPrototype.enabled(self) else _anim_prefix
+	var attack_prefix: String = str(SaberPrototype.profile(self).get("attack_prefix", SaberPrototype.profile(self).native_prefix)) if SaberPrototype.enabled(self) else _anim_prefix
 	var anim_name := attack_prefix + "_atk" + str(attack_num)
 	_attack_step_ended = false
 	_attack_anim_elapsed = 0.0
@@ -2667,7 +2678,7 @@ func _play_and_track_attack(anim_name: String) -> void:
 	if _is_barehanded():
 		sfx_path = BAREHANDED_SFX if ResourceLoader.exists(BAREHANDED_SFX) else ""
 	else:
-		sfx_path = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
+		sfx_path = _weapon_attack_sound(_get_equipped_weapon_type())
 	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and _is_special_attack):
 		SfxManager.play_at(sfx_path, global_position)
 
@@ -3146,6 +3157,8 @@ func _weapon_combat_config(weapon_type: int) -> Dictionary:
 		return config.merged({"hit_h_dist": 2.4, "hit_v_dist": 0.9, "hit_h_angle_deg": 36.0, "hit_v_angle_deg": 45.0}, true)
 	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SPEAR:
 		return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 45.0, "max_targets": 3}, true)
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
+		return config.merged({"hit_h_dist": 8.0 if SaberPrototype.gun_mode(self) else 2.4, "hit_h_angle_deg": 15.0 if SaberPrototype.gun_mode(self) else 40.0, "hit_v_dist": 0.9, "max_targets": 1}, true)
 	return config
 
 
@@ -3155,6 +3168,10 @@ func _get_attack_damage() -> Dictionary:
 	var damage: Dictionary = CombatManager.calculate_attack_damage(combo_state, _is_special_attack)
 	if SaberPrototype.enabled(self) and _get_equipped_weapon_type() == WeaponData.WeaponType.SPEAR:
 		damage["max_targets"] = 3
+	if SaberPrototype.enabled(self) and _get_equipped_weapon_type() == WeaponData.WeaponType.GUN_BLADE:
+		damage["gunblade_shot"] = SaberPrototype.gun_mode(self)
+		damage["hits"] = 1
+		damage["max_targets"] = 1
 	return damage
 
 
@@ -3199,7 +3216,7 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		atk["hits"] = 1
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 
-	if weapon_type in RANGED_WEAPON_TYPES:
+	if weapon_type in RANGED_WEAPON_TYPES or bool(atk.get("gunblade_shot", false)):
 		_fire_projectile(atk)
 		return
 
@@ -3636,3 +3653,8 @@ func can_photon_blast() -> bool:
 
 func apply_octo_poison(tier: int) -> void:
 	_ailments.apply_octo_poison(self,tier)
+
+func _weapon_attack_sound(weapon_type: int) -> String:
+	if weapon_type == WeaponData.WeaponType.GUN_BLADE and SaberPrototype.enabled(self):
+		return str(WEAPON_SFX[WeaponData.WeaponType.RIFLE if SaberPrototype.gun_mode(self) else WeaponData.WeaponType.SABER])
+	return str(WEAPON_SFX.get(weapon_type, ""))

@@ -374,3 +374,39 @@ Shared slicer donor IDs are explicit, not claimed female source discoveries. The
 The approved common hand grip applies to every female pose and combo. Traveling blade, four-target maximum, impact-only damage, strong feedback and interrupted-release cancellation are shared with the approved male behavior. Five-enemy checks and male regression passed; rendered ready/attack poses reviewed. Owner playtest and asset publication remain pending.
 
 Female slicer library SHA-256: `f3ba1d06c998e51ad2e2db21580adcb2e891d46faa27ba35675cde0c09a0b05b`.
+
+## Male — Gunblade playtest
+
+Female slicer owner-approved at `47d40ef0`. Run `python3 scripts/tools/run_humar_saber.py --weapon gunblade --no-grip-controls`; add `--group` for three Boomas. Press **G** to switch blade/gun mode while free to act. Normal/strong attack buttons use the selected mode. Switching during preparation, attacks, finisher guard, hit recovery or stopped-combo cooldown is rejected. Female gunblade is not enabled yet.
+
+Bake with `cd web && node scripts/bake-retarget.mjs --male-gunblade`, then import Godot. This fixture equips **Axeon** (weapon type 7) and explicitly resolves its native `wgbr02_1_o` visual from its legacy model metadata. Ein Mazurka is currently classified as rifle (11) in item data and was not used; its registry entry is unchanged.
+
+| Role | Explicit source |
+| --- | --- |
+| Blade idle / attacks / dodge / defeated hold | Native `pmgb_wait`, `pmgb_atk1/2/3`, `pmgb_esc_f`, `pmgb_dam_d_lp` |
+| Blade caution / ready / run | Male saber 97 / 102 / 111, aliased `pso_gb_*` |
+| Normal walk | General male 200 (`pmsa_walk`) |
+| Casting / block | Male saber 98 / 103 |
+| Heavy / get up / light / fall / photon blast | Male saber 105 / 106 / 107 / 108 / 110 |
+| Gun idle / firing | Native `pmgb_wait_sht` / `pmgb_sht` (three `pmgb_shot_atk*` aliases) |
+| Gun caution / ready / run | Male rifle 10 / 13 / 22, aliased `pso_gb_gun_*` |
+
+Melee contact fractions follow native decoded frames 9/36, 11/39 and 16/43. Gun mode uses one projectile per step and a provisional 0.35 release fraction; it is an experimental three-step shooting mode, not a claim of exact original PSZ gunblade spread behavior. Both modes use holds [0.14, 0.16, 0.22] seconds and the approved shared input window. Blade reach is 2.4 with a 40° horizontal cone; gun reach is 8 with a 15° cone. Both hit one target per impact. Damage uses the existing gunblade item/fallback combat calculation. Strong state is retained in the released projectile.
+
+```mermaid
+stateDiagram-v2
+    BladeFree --> GunFree: G (no action/cooldown)
+    GunFree --> BladeFree: G (no action/cooldown)
+    BladeFree --> BladeCombo: normal / strong
+    GunFree --> GunCombo: normal / strong
+    BladeCombo --> BladeFree: shared outcome recovery completes
+    GunCombo --> GunFree: shared outcome recovery completes
+    BladeCombo --> HitRecovery: interrupted
+    GunCombo --> HitRecovery: interrupted (no later release)
+    HitRecovery --> BladeFree: recovery completes in blade mode
+    HitRecovery --> GunFree: recovery completes in gun mode
+```
+
+Focused checks exercise eight normal/strong combinations in both modes, one projectile without melee damage, impact damage, interruption before release, mode locking during actions and cooldowns, and cleared queued actions after switching. Female slicer regression passed. Owner playtest and asset publication remain pending.
+
+Local gunblade library SHA-256: `46f6e2dc7c58b50a6763932b878c9085b7cc96974665a4aab943779cc7b051ae`.

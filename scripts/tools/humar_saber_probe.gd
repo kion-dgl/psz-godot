@@ -46,6 +46,10 @@ func _launch() -> void:
 		_native_prefix = "pwsls" if female else "pmsl"
 		_pso_prefix = "pso_f_sl" if female else "pso_sl"
 		CharacterManager._characters[0].equipment.weapon = "ein_slicer"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "gunblade":
+		_native_prefix = "pmgb"
+		_pso_prefix = "pso_gb"
+		CharacterManager._characters[0].equipment.weapon = "axeon"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -111,6 +115,10 @@ func _launch() -> void:
 				await _snapshot("spear_grip_panel")
 				print("[humar-saber] CONTROLS " + ("ok" if _ok else "FAIL"))
 				get_tree().quit(0 if _ok else 1)
+		if _native_prefix == "pmgb":
+			var controls = preload("res://scripts/tools/gunblade_mode_controls.gd").new()
+			add_child(controls)
+			controls.setup(player)
 		print("[humar-saber] Ready: standard movement/attack controls; automatic frontal guard while ready. Restart launcher to reset; --group selects three Boomas.")
 
 func _verify(player) -> void:
@@ -120,7 +128,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls"]:
+	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl", "pwsls", "pmgb"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -173,6 +181,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
+	if _native_prefix == "pmgb": await _verify_gunblade(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -745,3 +754,83 @@ func _verify_slicer(player, enemies: Array) -> void:
 	for i in enemies.size():
 		enemies[i].global_position = saved[i].position
 		enemies[i].current_hp = saved[i].hp
+
+func _verify_gunblade(player, enemies: Array) -> void:
+	var positions: Array = []
+	for target in enemies: positions.append(target.global_position)
+	var enemy = enemies[0]
+	var position: Vector3 = enemy.global_position
+	var hp: int = enemy.current_hp
+	enemy.reveal()
+	enemy.hurtbox.monitorable = true
+	for other in enemies: other.global_position = player.global_position + Vector3(0, 0, 20)
+	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
+	for mode in range(2):
+		player._saber_attack_cooldown = 0
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		if Rules.gun_mode(player) != (mode == 1): _check(Rules.toggle_gun_mode(player), "gunblade switches mode while free")
+		var prefix := "pmgb_shot" if mode == 1 else "pmgb"
+		if mode == 1:
+			for clip in ["pso_gb_gun_wait", "pso_gb_gun_walk_ready", "pso_gb_gun_run"]:
+				player.play_animation(clip, true)
+				player.animation_player.seek(0.3, true)
+				await _snapshot(clip)
+		for pattern in range(8):
+			for projectile in _slicer_projectiles(): projectile.free()
+			player._saber_attack_cooldown = 0
+			player.transition_to(player.PlayerState.IDLE)
+			player.player_rotation = 0
+			if pattern & 1: player._start_strong_attack()
+			else: player._start_attack()
+			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during preparation")
+			player._handle_attack_state(Rules.READY_PREP)
+			for step in range(3):
+				enemy.current_hp = 10000
+				_check(player.animation_player.current_animation == prefix + "_atk" + str(step + 1), "gunblade uses the selected mode animation")
+				var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+				player._attack_anim_elapsed = contact - 0.001
+				player._update_attack_contact(0)
+				_check(enemy.current_hp == 10000 and _slicer_projectiles().is_empty(), "no early gunblade contact or shot")
+				player._attack_anim_elapsed = contact + 0.001
+				player._update_attack_contact(contact - 0.001)
+				if mode == 0:
+					_check(enemy.current_hp < 10000 and _slicer_projectiles().is_empty(), "blade mode deals melee damage only")
+				else:
+					var shots := _slicer_projectiles()
+					_check(shots.size() == 1 and enemy.current_hp == 10000, "gun mode releases exactly one shot without melee damage")
+					if shots.size() == 1:
+						var shot: Projectile = shots[0]
+						shot.set_physics_process(false)
+						_check(bool(shot.attack_packet.prototype_strong) == bool(pattern & (1 << step)), "gunblade snapshots normal or strong state")
+						shot._on_area_entered(enemy.hurtbox)
+						_check(enemy.current_hp < 10000, "gunblade shot deals damage at impact")
+						shot.free()
+				player._update_attack_contact(contact)
+				_check(_slicer_projectiles().is_empty(), "gunblade does not release duplicate shot")
+				if pattern == 0 and step == 0:
+					player.animation_player.seek(0.3, true)
+					await _snapshot(prefix + "_attack_mode")
+				player._attack_anim_elapsed = player._attack_anim_length * 0.65
+				if step < 2: player._try_queue_combo(bool(pattern & (1 << (step + 1))))
+				player._attack_step_finished()
+			_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during finisher recovery")
+			player._handle_attack_state(Rules.FINISHER_GUARD)
+			_check(player._queued_combo == player.ComboQueue.NONE, "gunblade ends combo with no stale queued action")
+	player.transition_to(player.PlayerState.IDLE)
+	player._saber_attack_cooldown = 0
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interrupted gunblade shot never releases later")
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot switch during hit recovery")
+	player.transition_to(player.PlayerState.IDLE)
+	player._saber_attack_cooldown = Rules.STOPPED_ATTACK_COOLDOWN
+	_check(not Rules.toggle_gun_mode(player), "gunblade cannot bypass stopped-combo cooldown by switching")
+	player._saber_attack_cooldown = 0
+	_check(Rules.toggle_gun_mode(player) and not Rules.gun_mode(player), "gunblade returns safely to blade mode")
+	for i in enemies.size(): enemies[i].global_position = positions[i]
+	enemy.global_position = position
+	enemy.current_hp = hp

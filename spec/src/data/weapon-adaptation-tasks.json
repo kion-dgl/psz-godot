@@ -88,7 +88,7 @@
       "Attach hit feedback to actual projectile damage, not release or swing end."
     ],
     "acceptance": "No double release or phantom impact; interruption does not emit a delayed blade.",
-    "status": "Male owner-approved at 419f0c80; female implemented; focused checks passed, owner playtest pending"
+    "status": "Male and female owner-approved"
   },
   {
     "id": "A08",
@@ -101,7 +101,7 @@
       "Reset queued actions on mode/equipment changes; test every normal/strong transition."
     ],
     "acceptance": "No stale-mode shot, wrong pose or doubled damage; M/F grip and shooting alignment approved.",
-    "status": "Not started: planning only"
+    "status": "Male implemented; focused checks passed, owner playtest pending. Female planned."
   },
   {
     "id": "A09",
