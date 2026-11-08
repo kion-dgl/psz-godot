@@ -527,3 +527,7 @@ Rod calibration: saved block, run and normal-walk rotations promoted to defaults
 ## Female — Rod playtest
 
 Male rod owner-approved at `4fe3c2cb`. Female uses native `rod_w.glb` attacks/charge/techniques; source idle/dodge/defeat retain `pwros` names and are explicitly aliased to `pwro`. PSO rod 299–308 supplies ten stance clips; female saber 336–339 reactions and run 342 fill the missing roles. Male-approved block/walk/run grips map to female role names. Staff-tip green emission remains shared. Run `python3 scripts/tools/run_humar_saber.py --weapon rod --gender female --no-grip-controls` for one Booma. Owner approval pending. Bake `--female-rod`. Library SHA-256: `52a24c912941cc7a51818b46b30909f478f65ea1c126721cd6129d5595571cd5`.
+
+## Male — Wand playtest
+
+Female rod owner-approved at `83141ade`. Male wand uses native `wand_m.glb` / `pmwa` idle, three physical attacks, technique/charge, dodge and defeat. PSO wand 76–87 provides 12 stance/reaction clips; saber run 111 fills the missing run, with native general walk. Contact fractions 0.2162/0.2195/0.4545 follow native decoded events. Shared normal/strong continuation and recovery apply; existing wand stats and technique behavior remain. Run `python3 scripts/tools/run_humar_saber.py --weapon wand --no-grip-controls` for one Booma. Owner approval pending. Bake `--male-wand`. Library SHA-256: `8a41cab34ccb1a23f98c42cfe8d4f19ce7ece0db262cbdbd857a48897de9559c`.

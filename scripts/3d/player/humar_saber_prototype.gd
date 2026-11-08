@@ -14,6 +14,7 @@ const FEMALE_DAGGER_PROFILE := {"library": "res://assets/player/animations/pso_f
 const MALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_male_claw.glb", "native_library": "res://assets/player/animations/claw_m.glb", "prefix": "pso_cl", "native_prefix": "pmcl", "walk": "pmsa_walk", "run": "pso_cl_run", "source_count": 5, "class_id": "humar", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 const FEMALE_CLAW_PROFILE := {"library": "res://assets/player/animations/pso_female_claw.glb", "native_library": "res://assets/player/animations/claw_w.glb", "prefix": "pso_f_cl", "native_prefix": "pwcl", "walk": "pwsa_walk", "run": "pso_f_cl_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.2368], [0.2632], [0.2245, 0.6735]], "recovery": [0.10, 0.12, 0.18]}
 
+const MALE_WAND_PROFILE := {"library": "res://assets/player/animations/pso_male_wand.glb", "native_library": "res://assets/player/animations/wand_m.glb", "prefix": "pso_wn", "native_prefix": "pmwa", "walk": "pmsa_walk", "run": "pso_wn_run", "source_count": 12, "class_id": "humar", "hit_fracs": [[0.2162], [0.2195], [0.4545]], "recovery": [0.14, 0.16, 0.22]}
 const MALE_ROD_PROFILE := {"library": "res://assets/player/animations/pso_male_rod.glb", "native_library": "res://assets/player/animations/rod_m.glb", "prefix": "pso_ro", "native_prefix": "pmro", "walk": "pso_ro_walk", "run": "pso_ro_run", "source_count": 14, "class_id": "humar", "hit_fracs": [[0.275], [0.2683], [0.4595]], "recovery": [0.14, 0.16, 0.22]}
 const FEMALE_ROD_PROFILE := {"library": "res://assets/player/animations/pso_female_rod.glb", "native_library": "res://assets/player/animations/rod_w.glb", "prefix": "pso_f_ro", "native_prefix": "pwro", "walk": "pso_f_ro_walk", "run": "pso_f_ro_run", "source_count": 10, "class_id": "humarl", "hit_fracs": [[0.275], [0.2683], [0.4595]], "recovery": [0.14, 0.16, 0.22]}
 
@@ -42,6 +43,7 @@ const MALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_mal
 const FEMALE_DOUBLE_PROFILE := {"library": "res://assets/player/animations/pso_female_double_saber.glb", "native_library": "res://assets/player/animations/dsaver_w.glb", "prefix": "pso_f_ds", "native_prefix": "pwdss", "walk": "pwsa_walk", "run": "pso_f_ds_run", "source_count": 5, "class_id": "humarl", "hit_fracs": [[0.3404, 0.3617], [0.3953], [0.3922, 0.4706, 0.5294]], "recovery": [0.14, 0.16, 0.22]}
 
 static func profile(player) -> Dictionary:
+	if player._get_equipped_weapon_type() == WeaponData.WeaponType.WAND and not player._is_female: return MALE_WAND_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD: return FEMALE_ROD_PROFILE if player._is_female else MALE_ROD_PROFILE
 	if player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]: return FEMALE_BAZOOKA_PROFILE if player._is_female else MALE_BAZOOKA_PROFILE
 	if player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE: return FEMALE_RIFLE_PROFILE if player._is_female else MALE_RIFLE_PROFILE
@@ -65,6 +67,7 @@ static func profile(player) -> Dictionary:
 	return FEMALE_PROFILE if player._is_female else MALE_PROFILE
 
 static func profile_for_library(path: String) -> Dictionary:
+	if path == MALE_WAND_PROFILE.library: return MALE_WAND_PROFILE
 	if path == FEMALE_ROD_PROFILE.library: return FEMALE_ROD_PROFILE
 	if path == MALE_ROD_PROFILE.library: return MALE_ROD_PROFILE
 	if path == FEMALE_BAZOOKA_PROFILE.library: return FEMALE_BAZOOKA_PROFILE
@@ -128,7 +131,8 @@ static func enabled(player) -> bool:
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN \
 		 or player._get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE \
 		 or (player._get_equipped_weapon_type() in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]) \
-		 or (player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD))
+		 or (player._get_equipped_weapon_type() == WeaponData.WeaponType.ROD) \
+		 or (not player._is_female and player._get_equipped_weapon_type() == WeaponData.WeaponType.WAND))
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
