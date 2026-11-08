@@ -1626,7 +1626,7 @@
       "donors": [
         "ri"
       ],
-      "note": "Native pmar three-shot combo at decoded release fractions; PSO rifle 10–22 plus saber PB donor 110. PSZ normal walk, existing rifle grip/range, opaque emissive photon insert.",
+      "note": "Native pmar three-shot combo at decoded release fractions; PSO rifle 10–22 plus saber PB donor 110. PSO 15 normal walk, owner-calibrated walk/attack grips, existing range, opaque emissive photon insert.",
       "sha256": "546d4139830961d60eb33f2f2aac184fbe10189d37511a5ea45933fb12e69462",
       "clips": [
         "dummy1",
@@ -1692,7 +1692,7 @@
           "pmar_tec"
         ]
       },
-      "status": "Implemented; owner playtest pending"
+      "status": "Owner-approved including attack grips and PSO 15 walk"
     },
     {
       "id": "A12-F",
