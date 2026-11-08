@@ -450,3 +450,8 @@ Male mechgun gameplay owner-approved at `be7fed29`. Photon follow-up applies the
 ## Female — Mechgun playtest
 
 Male mechgun fully owner-approved at `318ff34f`. Run `python3 scripts/tools/run_humar_saber.py --weapon mechgun --gender female --no-grip-controls`. Bake `--female-mechgun`: PSO female mechgun 263–272 supplies 10 stance/reaction clips; female saber casting/PB donors 328/341 fill missing roles. The female native machinegun GLB retains `pmmg` names for its attacks and dodge; these are explicitly aliased under `pwmgs`, while relaxed idle and defeat use its native female clips. Normal walk is `pwsa_walk`. Both photon inserts, grip, alternating shots and shared combo timing retain approved male behavior. Female owner approval pending. Library SHA-256: `16ad41b77c8eea354d56ee56a0b6b77f3b56e8a3864124c42bb92896a2fbd4e2`.
+
+
+## Male — Rifle playtest
+
+Female mechgun owner-approved at `ee300294`. Run `python3 scripts/tools/run_humar_saber.py --weapon rifle --no-grip-controls`. Bake `--male-rifle`: PSO rifle 10–22 supplies 13 stance/reaction clips; saber PB 110 fills the missing role. Native `pmar` provides relaxed idle, three attacks, dodge and defeat; normal walk is `pmsa_walk`. Release fractions 0.2105/0.2308/0.3095 follow decoded native firing frames 8/38, 9/39, 13/42. Shared combo timing and recovery holds apply. Existing rifle range (12), single-target projectile, grip and item stats are retained. White photon surface 1 receives opaque tier color and emission; wrist light omitted. Male owner approval pending. Library SHA-256: `9ba6fb9c4368a8d03af3217c0efa04d7613d682f5d99fdbf6373ece485d62c1a`.

@@ -1615,7 +1615,7 @@
         "esc_f": [],
         "tec": []
       },
-      "status": "Implemented; owner playtest pending"
+      "status": "Owner-approved"
     },
     {
       "id": "A12-M",
@@ -1626,7 +1626,7 @@
       "donors": [
         "ri"
       ],
-      "note": "Runtime uses rifle GLB, not shotgun GLB containing additional retargeted pmri clips.",
+      "note": "Native pmar three-shot combo at decoded release fractions; PSO rifle 10–22 plus saber PB donor 110. PSZ normal walk, existing rifle grip/range, opaque emissive photon insert.",
       "sha256": "546d4139830961d60eb33f2f2aac184fbe10189d37511a5ea45933fb12e69462",
       "clips": [
         "dummy1",
@@ -1692,7 +1692,7 @@
           "pmar_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented; owner playtest pending"
     },
     {
       "id": "A12-F",
