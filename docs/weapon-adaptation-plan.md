@@ -491,3 +491,5 @@ Bazooka PSO 56 big-damage grip accepted without adjustment. Next calibration: fa
 Bazooka fall-down rotation (PSO saber 108 donor) saved as a default, preserving earlier calibrations. Next calibration: get up, PSO 57.
 
 Bazooka PSO 57 get-up rotation saved as a default. Per-pose calibration is complete; big damage was accepted unchanged. Relaunch without grip controls for review. The requested three-step combo repeating PSO launcher 51 and three-target explosion cap remain to be implemented; current gameplay still uses the single-shot rifle donor. Male bazooka gameplay approval remains pending.
+
+Bazooka relaxed-idle (`pmar_wait`) rotation saved as a default after the reaction poses; no idle position override was saved. All earlier calibrations are preserved. Relaunched without controls for review; the repeated launcher-shot combo remains pending.
