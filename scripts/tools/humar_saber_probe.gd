@@ -42,6 +42,10 @@ func _launch() -> void:
 		_native_prefix = "pwsp" if female else "pmsp"
 		_pso_prefix = "pso_f_pa" if female else "pso_pa"
 		CharacterManager._characters[0].equipment.weapon = "ein_spear"
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer":
+		_native_prefix = "pmsl"
+		_pso_prefix = "pso_sl"
+		CharacterManager._characters[0].equipment.weapon = "ein_slicer"
 	CharacterManager.set_active_slot(0)
 	DebugConfig.invincible = false
 	DebugConfig.show_combo_timing = true
@@ -51,8 +55,10 @@ func _launch() -> void:
 	if OS.get_environment("PSZ_SABER_GROUP") == "1":
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[-3.0,0.0,5.0]})
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[3.0,0.0,5.0]})
-	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber", "spear"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
+	if OS.get_environment("PSZ_MELEE_WEAPON") in ["sword", "double-saber", "spear", "slicer"] and OS.get_environment("PSZ_SABER_GROUP") == "1":
 		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[0.0,0.0,7.0]})
+	if OS.get_environment("PSZ_MELEE_WEAPON") == "slicer" and OS.get_environment("PSZ_SABER_GROUP") == "1":
+		sections[0].cells[0].objects.append({"type":"enemy", "enemy_id":"pso_booma", "position":[2.0,0.0,7.0]})
 	SessionManager.set_field_sections(sections)
 	ColiseumRoster.apply_level_override()
 	await SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", ColiseumRoster.warp_data())
@@ -114,7 +120,7 @@ func _verify(player) -> void:
 	_check(not enemies.is_empty(), "real opponents spawned")
 	if enemies.is_empty(): return
 	for enemy in enemies: enemy.set_physics_process(false)
-	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp"]:
+	if _native_prefix in ["pmds", "pwdss", "pmsp", "pwsp", "pmsl"]:
 		for target in enemies: target.current_hp = 10000 # Keep high-power contact checks alive.
 	var enemy = enemies[0]
 	enemy.target = player
@@ -166,6 +172,7 @@ func _verify(player) -> void:
 	if OS.get_environment("PSZ_SABER_FEEDBACK_ONLY") != "1": await _snapshot("humar_saber")
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
+	if _native_prefix == "pmsl": _verify_slicer(player, enemies)
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
 	await _verify_mixed_combos(player)
@@ -289,7 +296,8 @@ func _verify_movement(player, enemies: Array) -> void:
 	var movement_yaw: float = player._held_movement_yaw()
 	var direction := Vector3(sin(movement_yaw), 0, cos(movement_yaw))
 	player.player_rotation = movement_yaw
-	for enemy in enemies: enemy.global_position = player.global_position + direction * 5.0
+	var outside_reach: float = float(player._weapon_combat_config(player._get_equipped_weapon_type()).hit_h_dist) + 2.0
+	for enemy in enemies: enemy.global_position = player.global_position + direction * outside_reach
 	player._update_combat_targets()
 	_check(player._targeted_enemies.is_empty(), "enemy outside cursor reach has no target")
 	player._handle_movement(0.1)
@@ -652,6 +660,68 @@ func _verify_multi_contacts(player, enemies: Array) -> void:
 		_check(player._attack_hit_step == (1 if spear else [1, 1, 2][step] if claw else [2, 1, 3][step]) and player._attack_hit_done, "multi-hit weapon preserves decoded contact count")
 		for i in range(1, enemies.size()):
 			_check(enemies[i].current_hp < 10000 if i < target_cap else enemies[i].current_hp == 10000, "multi-hit respects per-impact target cap")
+	player.transition_to(player.PlayerState.IDLE)
+	for i in enemies.size():
+		enemies[i].global_position = saved[i].position
+		enemies[i].current_hp = saved[i].hp
+
+func _slicer_projectiles() -> Array:
+	return get_tree().current_scene.get_children().filter(func(node): return node is Projectile and not node.is_queued_for_deletion())
+
+func _verify_slicer(player, enemies: Array) -> void:
+	# These fixture enemies start dormant; projectile contact correctly ignores hidden hurtboxes.
+	for enemy in enemies:
+		enemy.reveal()
+		enemy.hurtbox.monitorable = true
+	var saved: Array = []
+	for enemy in enemies: saved.append({"position": enemy.global_position, "hp": enemy.current_hp})
+	_check(player.weapon_node.scene_file_path == WeaponRegistry.get_weapon("ein_slicer").glb_path, "slicer uses native PSZ model")
+	for step in range(3):
+		for projectile in _slicer_projectiles(): projectile.free()
+		for i in enemies.size():
+			enemies[i].global_position = player.global_position + Vector3(0, 0, 3.0 + 0.2 * i)
+			enemies[i].current_hp = 10000
+		player._saber_attack_cooldown = 0
+		player._recovery_left = 0
+		player.transition_to(player.PlayerState.IDLE)
+		player.player_rotation = 0
+		player._start_strong_attack()
+		player._handle_attack_state(Rules.READY_PREP)
+		player.combo_state = step + 1
+		player._play_attack_animation(step + 1, true)
+		var contact: float = Rules.profile(player).hit_fracs[step][0] * (player._attack_anim_length - Rules.profile(player).recovery[step])
+		player._attack_anim_elapsed = contact - 0.001
+		player._update_attack_contact(0)
+		_check(_slicer_projectiles().is_empty(), "slicer does not release early")
+		player._attack_anim_elapsed = contact + 0.001
+		player._update_attack_contact(contact - 0.001)
+		var projectiles := _slicer_projectiles()
+		_check(projectiles.size() == 1, "one slicer projectile per step")
+		if projectiles.size() != 1: continue
+		var projectile: Projectile = projectiles[0]
+		projectile.set_physics_process(false)
+		_check(enemies[0].current_hp == 10000, "slicer release does not cause phantom melee damage")
+		_check(projectile.pierce and projectile.max_hits == 4 and is_equal_approx(projectile.bounce_radius, 3.0), "slicer preserves piercing and four-target bounce budget")
+		player._update_attack_contact(contact)
+		_check(_slicer_projectiles().size() == 1, "slicer release cannot repeat next frame")
+		projectile._on_area_entered(enemies[0].hurtbox)
+		var hit_count := 0
+		for enemy in enemies:
+			if enemy.current_hp < 10000: hit_count += 1
+		_check(hit_count == mini(4, enemies.size()), "slicer impact and bounce respect four-target budget")
+		_check(enemies[0].hurt_timer >= 0.45, "strong slicer feedback occurs at impact")
+		var hp: int = enemies[0].current_hp
+		projectile._on_area_entered(enemies[0].hurtbox)
+		_check(enemies[0].current_hp == hp, "slicer cannot damage same enemy twice")
+		projectile.free()
+	player.transition_to(player.PlayerState.IDLE)
+	player._saber_attack_cooldown = 0
+	player._start_attack()
+	player._handle_attack_state(Rules.READY_PREP)
+	player.transition_to(player.PlayerState.DAMAGED)
+	player._attack_anim_elapsed = 100
+	player._update_attack_contact(0)
+	_check(_slicer_projectiles().is_empty(), "interrupted slicer swing cannot release later")
 	player.transition_to(player.PlayerState.IDLE)
 	for i in enemies.size():
 		enemies[i].global_position = saved[i].position

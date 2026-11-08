@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--group', action='store_true')
     parser.add_argument('--no-grip-controls', action='store_true', help='Play with committed grip defaults and no adjustment panel')
-    parser.add_argument('--weapon', choices=['saber', 'sword', 'daggers', 'claw', 'double-saber', 'spear'], default='saber')
+    parser.add_argument('--weapon', choices=['saber', 'sword', 'daggers', 'claw', 'double-saber', 'spear', 'slicer'], default='saber')
     parser.add_argument('--gender', choices=['male', 'female'], default='male', help='HUmar or HUmarl saber reference')
     parser.add_argument('--rendered', action='store_true', help='Render automated checks for visual capture')
     parser.add_argument('--godot', default=os.environ.get('GODOT') or shutil.which('godot'))
@@ -36,6 +36,10 @@ def main():
     if args.weapon == 'spear':
         library = 'pso_female_spear.glb' if args.gender == 'female' else 'pso_male_spear.glb'
         bake_flag = '--female-spear' if args.gender == 'female' else '--male-spear'
+    if args.weapon == 'slicer':
+        if args.gender == 'female':
+            parser.error('Female slicer is not adapted yet')
+        library, bake_flag = 'pso_male_slicer.glb', '--male-slicer'
     if not (ROOT / 'assets/player/animations' / library).exists():
         parser.error('Bake first: cd web && node scripts/bake-retarget.mjs ' + bake_flag)
     with tempfile.TemporaryDirectory(prefix='psz-saber-') as temporary:

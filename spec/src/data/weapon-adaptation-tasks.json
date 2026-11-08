@@ -75,7 +75,7 @@
       "Inspect shaft grip, tip path, caution/run and collision alignment on both bodies."
     ],
     "acceptance": "Upright 145 caution carry, coherent partisan sweeps, one contact per swing and three-target cap.",
-    "status": "Male owner-approved at ab2536ff; female implemented, focused checks passed; owner playtest pending."
+    "status": "Male and female owner-approved"
   },
   {
     "id": "A07",
@@ -88,7 +88,7 @@
       "Attach hit feedback to actual projectile damage, not release or swing end."
     ],
     "acceptance": "No double release or phantom impact; interruption does not emit a delayed blade.",
-    "status": "Not started: planning only"
+    "status": "Male implemented; focused checks passed; owner playtest pending. Female planned."
   },
   {
     "id": "A08",

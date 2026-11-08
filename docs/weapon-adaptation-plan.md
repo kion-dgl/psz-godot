@@ -317,3 +317,24 @@ These are explicit shared donors, not claimed female source IDs. The runtime pre
 Four-enemy and rendered checks passed, including upright caution/run, diagonal ready and 24 attack-grip transition checks. Male spear regression passed. Owner playtest and asset publication remain pending.
 
 Female spear library SHA-256: `b334ba7a10201e2126751fde3b73206d859a8cbd4e82f7c452a8f255c6f60c1b`.
+
+## Male — Slicer playtest
+
+Female spear owner-approved at `d1a2cfa5`. Launch `python3 scripts/tools/run_humar_saber.py --weapon slicer --no-grip-controls`; add `--group` for five Boomas. Bake with `cd web && node scripts/bake-retarget.mjs --male-slicer`, then import with Godot. Female slicer remains disabled until adapted.
+
+| Role | Explicit source |
+| --- | --- |
+| Relaxed idle / attacks / dodge / defeated hold | Native `pmsl_wait`, `pmsl_atk1/2/3`, `pmsl_esc_f`, `pmsl_dam_d_lp` |
+| Normal walk / run | General male 200 (`pmsa_walk`) / explicit saber 111 |
+| Caution / ready | PSO slicer 152 / 156 |
+| Casting / block | Explicit saber 98 / 103 |
+| Light / heavy / fall / get up / photon blast | Slicer 162 / 160 / 163 / 161 / 164 |
+| Unused source inventory | Slicer attacks 153–155, walk 158, stand 159 |
+
+Native PSZ Ein Slicer is equipped. One projectile releases per swing. Step 1 uses decoded `16_slicer_m` frame 10/33; steps 2 and 3 have no decoded release marker and use provisional fractions 0.40 / 0.45 for owner tuning. Holds remain 0.14 / 0.16 / 0.22 seconds, with the shared normal/strong continuation window.
+
+Preserve existing projectile speed 20, reach 8, piercing, bounce radius 3 and four-target maximum. Existing projectile behavior does not include a returning blade; this adaptation does not add one. Strong feedback is snapshotted into the projectile and occurs at impact. Release does not cause melee damage.
+
+Focused checks cover one release per swing, no early/duplicate release, impact-only damage, four-target cap against five enemies, no repeated damage to one enemy, strong impact flinch and interrupted-swing cancellation. Owner playtest and asset publication remain pending.
+
+Local male slicer library SHA-256: `f70cbd88cc34b9410dc4df586305afe8ef2ae3bd9b26520c3e7e5a6ebca7ede0`.
