@@ -1387,7 +1387,7 @@
           "pmhg_tec"
         ]
       },
-      "status": "Male gameplay owner-approved; photon glow fix ready for visual testing. Female planned."
+      "status": "Owner-approved including photon fix"
     },
     {
       "id": "A10-F",
@@ -1398,7 +1398,7 @@
       "donors": [
         "hg"
       ],
-      "note": "Retain PSZ attack sequence and projectile release, not PSO single-shot attack.",
+      "note": "Native pwhg three-shot combo; female PSO handgun stance/reaction sources 239–249 and explicit female saber run donor 342. PSZ female normal walk and approved common handgun photon material.",
       "sha256": "9b91ea8b460905ab8f1fc23615908a8d14bac5e7d4af1793192da73d597f1def",
       "clips": [
         "dummy1",
@@ -1463,7 +1463,7 @@
           "pwhg_tec"
         ]
       },
-      "status": "Planned; source presence is not visual validation"
+      "status": "Implemented; owner playtest pending"
     },
     {
       "id": "A11-M",

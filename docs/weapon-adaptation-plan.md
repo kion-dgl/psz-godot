@@ -433,3 +433,8 @@ Headless checks passed all eight normal/strong shooting combinations, release/im
 Male handgun gameplay owner-approved at `3e791949`. Follow-up photon visual fix: basic handgun variants tint and emit from photon surface 1, preserve the textured casing, and omit the wrist-mounted green light. Female handgun is next after visual confirmation.
 
 Handgun photon follow-up: use opaque/mix emission on the untextured photon insert so additive blending cannot wash its tier color white. Handgun/Autogun/Lockgun/Railgun colors are green/blue/yellow/red. Simple-melee obstacle detours now turn the body into the movement direction, fixing the target-facing sideways slide observed on Booma. Focused material, detour direction and handgun combat checks passed.
+
+
+## Female — Handgun playtest
+
+Male handgun and photon/movement follow-ups owner-approved at `f0768f6f`. Run `python3 scripts/tools/run_humar_saber.py --weapon handgun --gender female --no-grip-controls`. Bake `--female-handgun`: female handgun PSO sources 239–249 supply the 11 stance/reaction clips, plus female saber run 342. Native `pwhg` supplies relaxed idle, all three shots, dodge and defeat; normal walk is `pwsa_walk`. Shared handgun timing, geometry, grip, photon insert and sound remain unchanged. Female owner approval pending. Library SHA-256: `0d2a21570a4e92be4606a4ccf47e34c5091550ba9b2a2877fb466123f45efbbe`.

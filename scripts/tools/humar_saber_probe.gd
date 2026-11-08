@@ -51,8 +51,8 @@ func _launch() -> void:
 		_pso_prefix = "pso_f_gb" if female else "pso_gb"
 		CharacterManager._characters[0].equipment.weapon = "axeon"
 	if OS.get_environment("PSZ_MELEE_WEAPON") == "handgun":
-		_native_prefix = "pmhg"
-		_pso_prefix = "pso_hg"
+		_native_prefix = "pwhg" if female else "pmhg"
+		_pso_prefix = "pso_f_hg" if female else "pso_hg"
 		CharacterManager._characters[0].equipment.weapon = "handgun"
 	CharacterManager.set_active_slot(0)
 	if OS.get_environment("PSZ_SABER_CHECK") == "1": _verify_shield_retirement()
@@ -146,7 +146,7 @@ func _verify(player) -> void:
 	_check(enemy.enemy_level == 1, "fixed enemy level")
 	_check(player.get_node("PlayerModel/Model").has_meta("psz_avatar_format"), "current VRM loaded")
 	_check(player.weapon_node != null, "saber attached")
-	if _native_prefix == "pmhg":
+	if _native_prefix in ["pmhg", "pwhg"]:
 		_check(player.weapon_node.get_parent().get_node_or_null("PhotonLight") == null, "handgun has no wrist light spill")
 		var surfaces: Array = []
 		player._collect_surfaces(player.weapon_node, surfaces)
@@ -200,7 +200,7 @@ func _verify(player) -> void:
 	if _native_prefix in ["pmsw", "pwsw"]: await _verify_sword_contacts(player, enemies)
 	if _native_prefix in ["pmda", "pwda", "pmcl", "pwcl", "pmds", "pwdss", "pmsp", "pwsp"] and OS.get_environment("PSZ_GUARD_FEEDBACK_ONLY") != "1": await _verify_multi_contacts(player, enemies)
 	if _native_prefix in ["pmsl", "pwsls"]: await _verify_slicer(player, enemies)
-	if _native_prefix in ["pmgb", "pwgbs", "pmhg"]: await _verify_gunblade(player, enemies)
+	if _native_prefix in ["pmgb", "pwgbs", "pmhg", "pwhg"]: await _verify_gunblade(player, enemies)
 	_verify_booma_detour(enemies[0])
 	_verify_lock_sound(player, enemies)
 	_verify_movement(player, enemies)
@@ -777,7 +777,7 @@ func _verify_slicer(player, enemies: Array) -> void:
 		enemies[i].current_hp = saved[i].hp
 
 func _verify_gunblade(player, enemies: Array) -> void:
-	var handgun := _native_prefix == "pmhg"
+	var handgun := _native_prefix in ["pmhg", "pwhg"]
 	var positions: Array = []
 	for target in enemies: positions.append(target.global_position)
 	var enemy = enemies[0]
