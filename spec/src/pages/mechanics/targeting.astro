@@ -4,6 +4,7 @@ import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Targeting, Hit Detection & Target Info" section="Mechanics">
+  <p><strong>Planned control work:</strong> the <a href={siteUrl('/mechanics/movement-lockon')}>November 9 shoulder-aim and lock-on proposal</a> defines a future stance mode. It is not implemented and does not yet supersede the current behavior below.</p>
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
   <p>Weapon targeting and melee hit resolution share <strong>one geometry</strong>: the per-weapon <em>hit cone</em>, reverse-engineered from PSO:BB (<code>check_enemy_is_targetable</code> + ItemPMT; values tabulated at <a href="https://wiki.pioneer2.net/w/Weapons">wiki.pioneer2.net/w/Weapons</a>) and tuned in the <a href="https://kion-dgl.github.io/psz-godot/#/combat-room">#/combat-room</a> web tool. Reticles, the target-info HUD, and damage all read the same cone — targeting and hits MUST NOT use different shapes.</p>

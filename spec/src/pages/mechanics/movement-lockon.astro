@@ -4,17 +4,81 @@ import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Movement & Lock-on" section="Mechanics">
-  <p><em>Placeholder — not yet specified.</em></p>
+  <p><strong>Proposed control design — November 9, 2026.</strong> This is the first design slice of <a href="https://github.com/kion-dgl/psz-godot/issues/775">#775</a>, not implemented behavior or a completed playtest. The owner direction is greater control through strafing, direct shoulder aiming and deliberate positioning before committing to an attack. Bindings and numeric tuning below are prototype proposals for review.</p>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong> and <strong>SHOULD</strong> describe the proposed implementation contract. Existing runtime contracts remain in force until the corresponding implementation lands.</p>
 
-  <h2>Scope</h2>
-  <p>Will define locomotion (walk / run / sprint speeds, footstep cadence) and target lock-on: how a target is acquired, switched, and released, and how lock-on steers attacks and the camera.</p>
+  <h2>Three control modes</h2>
+  <table>
+    <thead><tr><th>Mode</th><th>Facing and camera</th><th>Movement</th></tr></thead>
+    <tbody>
+      <tr><td>Explore</td><td>Existing orbit camera; character turns into travel.</td><td>Existing camera-relative walk/run/sprint.</td></tr>
+      <tr><td>Aim stance</td><td>Hold aim for shoulder framing. Mouse/right stick sets aim; character faces its horizontal direction.</td><td>Camera-relative forward/back/strafe movement without turning the character into travel.</td></tr>
+      <tr><td>Target lock</td><td>While aiming, explicitly select an enemy. Character faces it; camera tracks it.</td><td>Forward/back approach or retreat; left/right circle the target.</td></tr>
+    </tbody>
+  </table>
+  <p>Aim stance MUST work without any enemy present. Holding aim MUST NOT automatically choose the nearest enemy. A lock is a positioning aid, not proof that an attack can reach or hit.</p>
 
-  <h2>Implemented by</h2>
+  <h2>Proposed inputs</h2>
   <ul>
-    <li><code>scripts/3d/player/player.gd</code> (Player) — locomotion lives in <code>_handle_movement</code> (camera-relative input, walk/run/sprint speeds and the walk-to-run timer, turn-speed scaling) with floor/edge checks in <code>_can_move_to</code> / <code>_has_floor_at</code> and step climbing in <code>_apply_step_up</code>; target acquisition (the forward targeting box and reticles that lock-on rides on) is in <code>_update_combat_targets</code>.</li>
-    <li><code>scripts/3d/camera/orbit_camera.gd</code> (OrbitCamera node) — the orbit follow camera whose basis <code>_handle_movement</code> reads to make movement camera-relative; exposes <code>get_camera_rotation()</code> / <code>set_camera_rotation()</code> and recenters behind the player. Its behavior contract lives in <a href={siteUrl('/mechanics/camera')}>Camera</a>.</li>
+    <li><strong>Aim stance:</strong> hold right mouse button / left trigger. In combat, right mouse motion becomes direct yaw/pitch aiming rather than orbit dragging. Existing mouse orbit behavior remains in exploration outside this stance.</li>
+    <li><strong>Acquire/release target:</strong> middle mouse click / right-stick click while aiming. Without a candidate, remain in free aim. Release aim to clear the lock and return to exploration.</li>
+    <li><strong>Switch target:</strong> mouse wheel / a deliberate right-stick horizontal flick while locked. One switch per flick, rearmed when the stick returns to its deadzone. Free-aim stick motion MUST NOT select enemies.</li>
+    <li><strong>Recenter:</strong> preserve the existing keyboard recenter binding; propose right-stick click outside aim as the controller recenter. Left trigger currently belongs to <code>camera_lock</code>; implementation MUST migrate that binding explicitly rather than firing recenter and stance together.</li>
+    <li>Movement, palette, attack, technique and dodge inputs remain available through their existing actions. Menu/UI ownership MUST win over combat input. Binding changes require conflict checks against saved schemes, quick weapon menus and all supported controller layouts.</li>
   </ul>
-  <p>The full state machine these movement states belong to is documented in <a href={siteUrl('/states/player-state')}>Player State Machine</a>.</p>
+  <p>These are defaults to evaluate, not a new requirement for a general remapping UI. Touch controls need their own reviewed aim/lock affordance before this mode is claimed as supported on touch devices.</p>
 
+  <h2>Movement and animation</h2>
+  <ul>
+    <li>Stance MUST decouple travel from facing. Normalize diagonal movement; analog magnitude SHOULD permit small steps. Begin with the existing walk speed as the stance maximum; do not enter sprint while aiming.</li>
+    <li>Lock movement MUST derive forward from the horizontal player-to-target direction and right from its perpendicular, so forward approaches and sideways input circles consistently. If that direction is degenerate, retain the last valid facing.</li>
+    <li>Use forward, backward, left and right locomotion clips selected from local travel relative to facing. Inventory actual clip names and rig/weapon coverage before integration; the owner's report of strafe animations does not establish that every equipped rig currently loads them.</li>
+    <li>Collision, floor checks, steps and edge protection MUST apply to every travel direction. Strafing MUST NOT bypass existing movement constraints.</li>
+    <li>A dodge takes the held movement direction at admission, or current facing without movement. It MUST keep that heading for the roll; target tracking MUST NOT bend the roll. Restore stance facing after recovery if aim remains held.</li>
+  </ul>
+
+  <h2>Camera and direct fire</h2>
+  <p>Prototype shoulder framing starts at 3 units behind, 0.6 units to the right and a 1.5-unit look height, retaining the current 44° FOV. These are tuning values. Transition over approximately 0.15 seconds; collision clearance MUST take precedence over the desired offset. Vertical aim is available in this mode even when optional exploration pitch is disabled, with the player's inversion preference respected.</p>
+  <ul>
+    <li>A center reticle marks the aim ray. Raycast from the camera to the first world/target contact, otherwise use a point along that ray. Fire from the weapon muzzle toward that point, clamped to weapon travel range.</li>
+    <li>Close cover between the muzzle and aim point MUST block the shot; the camera seeing around a corner MUST NOT allow firing through it. Audit projectile/world collision before claiming this requirement is satisfied.</li>
+    <li>In free aim, the reticle direction MUST override nearest-enemy shot assistance. A shot MUST NOT silently redirect to a different enemy because it is nearer.</li>
+    <li>In target lock, eligible ranged shots aim toward the locked target's collision center at release. If it is not eligible for that weapon, use the current aim direction and show out-of-range/blocked feedback; do not substitute another enemy. Released projectiles do not home.</li>
+    <li>Release restores exploration framing without snapping the player's facing or resetting camera yaw/pitch. Shop focus, cutscenes and menus retain camera ownership.</li>
+  </ul>
+
+  <h2>Acquiring and keeping a lock</h2>
+  <ul>
+    <li>Initial proposal: living enemies within 20 world units, on screen, in front of the camera and visible from the player aim origin. Exclude drops, allies and destructible boxes from enemy lock candidates; boxes remain shootable in free aim.</li>
+    <li>Acquire the candidate nearest the screen reticle, breaking ties by world distance and then stable encounter identity. A nearer enemy entering the scene MUST NOT steal the current lock.</li>
+    <li>Switch left/right through visible candidates in screen-horizontal order; wrap at the ends. With no alternate candidate, retain the current lock.</li>
+    <li>Death, removal, scene transition, player death or explicit release clears immediately. Range beyond 24 units or loss of line of sight for 0.5 seconds clears to free aim if aim is still held. These hysteresis/grace values are prototype tuning, not source-game claims.</li>
+    <li>Occlusion grace preserves selection only: it MUST NOT permit hits through cover. Flying enemies use their collision center for selection and aim; weapon/technique range and height eligibility still apply.</li>
+    <li>Opening an input-owning overlay clears stance/lock. On dismissal, require a fresh aim press so a held input cannot unexpectedly move the camera or fire.</li>
+  </ul>
+
+  <h2>Attack commitment and class behavior</h2>
+  <p>The first slice changes pre-attack positioning and targeting. Melee keeps committed swing facing, hit windows and target caps. Attack/cast movement restrictions, dodge admission, invulnerability and recovery remain governed by their existing contracts. Turning on stance MUST NOT create attack cancellation or an extra defensive window.</p>
+  <ul>
+    <li><strong>Ranger:</strong> aim directly while moving between shots; stop/commit when the existing shot animation requires it. Simultaneous locomotion during firing is a separate animation/commitment decision to evaluate in the prototype, not implied by direct aim.</li>
+    <li><strong>Melee:</strong> step, circle and retreat while facing the threat, then commit the swing. Lock MUST NOT widen reach, rotate an active swing or teleport the player toward the target.</li>
+    <li><strong>Force:</strong> use stance for positioning and offensive target selection. Each technique retains its delivery rules; an enemy lock MUST NOT redirect healing/support effects away from their eligible ally/self targets. Define per-technique free-aim behavior before enabling it.</li>
+  </ul>
+
+  <h2>Reconciliation and implementation slices</h2>
+  <p><a href={siteUrl('/mechanics/camera')}>Camera</a> currently defines recenter/orbit controls. <a href={siteUrl('/mechanics/targeting')}>Targeting</a> currently requires nearest-cone-target ranged assistance and shared hit/reticle geometry. The proposed aim mode is an explicit future exception to nearest-target assistance: selection indicators MUST be visually separate from in-range hit reticles. Exploration retains its existing rules. Implementation MUST update those contracts and tests together; this proposal alone does not supersede them.</p>
+  <ol>
+    <li>Audit inputs and directional clips, then build a selectable Ranger shoulder-aim/strafe prototype with a real weapon, reticle and collision-aware shot delivery. Keep original exploration behavior reachable for comparison.</li>
+    <li>Add explicit lock acquisition/switch/release and target-relative locomotion with the same shared state. Validate melee and Force admission/commitment paths.</li>
+    <li>Run <a href="https://github.com/kion-dgl/psz-godot/issues/792">Ranger/Force playtesting #792</a>; resolve firing mobility, camera distance, stance speed and lock grace from observed play. Feed results into the later quest pass.</li>
+  </ol>
+
+  <h2>Acceptance evidence required for runtime work</h2>
+  <ul>
+    <li><strong>Seeded tests:</strong> stable candidate ordering; switch wrap/deadzone; acquisition versus retention ranges; occlusion grace; invalidation; normalized movement; facing/travel independence; fixed roll heading; committed swing facing; no nearest-target redirection in direct aim; support-technique eligibility; overlay release.</li>
+    <li><strong>Live real-rig probe:</strong> equipped Ranger strafes all directions and aims at two targets where the nearer enemy is off-reticle; fire across a physics tick and beside cover; exercise crowd switching, flying targets, death, range loss, overlay entry and scene exit. Include melee step → commit → recovery and Force offensive/support casts. Missing directional clips MUST be reported, not replaced by a passing synthetic-only test.</li>
+    <li><strong>Owner playtest:</strong> record revision, loadouts, enemies, keyboard/mouse and controller controls, plus observations about camera visibility, small-step control, dodge direction and attack commitment. Automated success does not establish feel or raise the Combat/Systems grades.</li>
+  </ul>
+  <p>Integration points: <code>scripts/3d/player/player.gd</code>, <code>scripts/3d/player/player_avatar.gd</code>, <code>scripts/3d/camera/orbit_camera.gd</code>, input configuration and projectile/technique delivery. Reuse shared targeting and movement logic rather than separate class-specific controllers.</p>
   <p><a href={siteUrl('/mechanics')}>← Mechanics</a></p>
 </Concept>

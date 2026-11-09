@@ -84,7 +84,7 @@
       "area": "Combat",
       "grade": "C",
       "assessment": "Basic mechanics exist; lock-on and better enemy behavior are still needed.",
-      "next": "Implement lock-on (#775) and continue enemy-family attack-rhythm review. Kion approved the #773 collision, obstacle-detour, Ghowl reach and post-hit protection changes in local Mac playtesting on 2026-11-05; recheck the final small Helion radius increase to 1.4 and crowded narrow passages. Playtest the shorter, model-sized box and wall destruction bursts. Playtest the opt-in #790 HUmar saber Coliseum prototype: PSO animation set, caution walking, automatic frontal guard and provisional combo/contact timing. Owner assessment pending; grade unchanged.",
+      "next": "Review and implement the shoulder-aim/strafe and optional target-lock proposal (#775), then run focused Ranger/Force playtesting (#792) before the next quest pass. The November 9 proposal is design-only; combat feel remains unassessed. Continue enemy-family attack-rhythm review. Kion approved the #773 collision, obstacle-detour, Ghowl reach and post-hit protection changes in local Mac playtesting on 2026-11-05; recheck the final small Helion radius increase to 1.4 and crowded narrow passages. Playtest the shorter, model-sized box and wall destruction bursts. Playtest the opt-in #790 HUmar saber Coliseum prototype: PSO animation set, caution walking, automatic frontal guard and provisional combo/contact timing. Owner assessment pending; grade unchanged.",
       "label": "score:combat"
     },
     {
