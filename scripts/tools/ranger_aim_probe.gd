@@ -220,9 +220,12 @@ func verify_cover(target) -> void:
 	player._start_attack()
 	await ticks(100)
 	_check(target.current_hp == hp, "cover blocks aimed shots during actual animation release")
-	wall.global_position = origin + Vector3(0, 1.5, 1)
+	var anchor: Vector3 = player.global_position + Vector3.UP * orbit.LOOK_HEIGHT
+	wall.global_transform = Transform3D(orbit.camera.global_basis, anchor + orbit.camera.global_basis.z)
 	await ticks(15)
-	_check(orbit.camera.global_position.distance_to(origin + Vector3.UP * orbit.LOOK_HEIGHT) < 1.3, "shoulder camera pulls in before world cover")
+	# Camera follows at render rate; physics ticks can be batched in one slow rendered frame.
+	for frame in range(2): await get_tree().process_frame
+	_check(orbit.camera.global_position.distance_to(player.global_position + Vector3.UP * orbit.LOOK_HEIGHT) < 1.3, "shoulder camera pulls in before world cover")
 	wall.queue_free()
 
 
