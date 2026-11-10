@@ -3,15 +3,13 @@ const Aim := preload("res://scripts/3d/player/combat_aim.gd")
 
 static func run(r: Node) -> void:
 	var aim := Aim.new()
-	aim.update_hold(true, true)
-	r.assert_true(aim.active, "aim admits a held input while allowed")
-	aim.update_hold(true, false)
-	r.assert_true(not aim.active, "overlay/death clears aim immediately")
-	aim.update_hold(true, true)
-	r.assert_true(not aim.active, "closing overlay with trigger held cannot re-enter aim")
-	aim.update_hold(false, true)
-	aim.update_hold(true, true)
-	r.assert_true(aim.active, "release then press re-arms aim")
+	aim.change_mode("combat_aim")
+	r.assert_true(aim.active and aim.mode == Aim.Mode.SHOULDER, "toggle enters shoulder mode")
+	aim.change_mode("combat_aim")
+	r.assert_true(not aim.active, "second toggle exits shoulder mode")
+	aim.change_mode("combat_aim")
+	aim.clear()
+	r.assert_true(not aim.active, "blocked state clears mode")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 775
 	for i in range(24):

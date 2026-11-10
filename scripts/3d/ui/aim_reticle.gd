@@ -1,5 +1,7 @@
 extends Control
 ## Direct-fire reticle and shared combo timing, visible without debug overlays.
+var locked := false
+var target_pixel := Vector2.ZERO
 var combo: Dictionary = {"step": 0, "fraction": 0.0, "open": 0.0, "close": 0.0, "state": "FIRE"}
 
 func set_combo(value: Dictionary) -> void:
@@ -14,6 +16,10 @@ func _draw() -> void:
 		draw_line(center + axis * 5, center + axis * 12, Color(0, 0, 0, 0.8), 4)
 		draw_line(center + axis * 5, center + axis * 12, tint, 2)
 	draw_circle(center, 1.5, tint)
+	if locked:
+		draw_arc(target_pixel, 20, 0, TAU, 32, Color(1.0, 0.8, 0.2), 2)
+	var mode_text := "LOCKED  ·  Q release  ·  Tab switch" if locked else "SHOULDER AIM  ·  Z exit"
+	draw_string(ThemeDB.fallback_font, center + Vector2(-110, -35), mode_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, tint)
 	_draw_combo(center, tint)
 
 func _draw_combo(center: Vector2, tint: Color) -> void:

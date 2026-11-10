@@ -1316,6 +1316,9 @@ func _held_movement_yaw() -> Variant:
 		input_dir.x += 1
 	if input_dir.is_zero_approx():
 		return null
+	if combat_aim != null and combat_aim.active and combat_aim.allowed():
+		var travel: Vector3 = combat_aim.travel(input_dir, combat_aim.facing() - PI)
+		return atan2(travel.x, travel.z)
 	var move_3d := Vector3(input_dir.x, 0, input_dir.y)
 	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
 	if cam:

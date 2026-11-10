@@ -73,7 +73,7 @@ func _process(delta: float) -> void:
 	# Shop view owns the camera pose while focused; don't fight its tween.
 	if _shop_focus:
 		return
-	if input_enabled and not PsoStartMenu.is_open() and not combat_aim.active:
+	if input_enabled and not PsoStartMenu.is_open() and not combat_aim.eligible():
 		var dir: float = 1.0 if InputConfig.invert_camera_x else -1.0
 		if Input.is_action_pressed("camera_left"):
 			camera_rotation -= rotation_speed * dir
@@ -99,6 +99,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if combat_aim.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
+	if combat_aim.eligible(): return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
@@ -221,6 +222,8 @@ func _exit_tree() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		if combat_aim.active: combat_aim.restore_locomotion()
-		combat_aim.update_hold(true, false)
+		combat_aim.focused = false
+		combat_aim.clear()
 		combat_aim.release_mouse()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		combat_aim.focused = true

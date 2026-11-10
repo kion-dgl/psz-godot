@@ -10,10 +10,8 @@ static func click(p) -> void:
 	release.pressed = false
 	Input.parse_input_event(release)
 
-static func run(probe, p) -> void:
-	Input.action_release("combat_aim")
-	await probe.ticks(3)
-	Input.action_press("combat_aim")
+static func run(probe, p, locked := false) -> void:
+	if not locked: probe.set_shoulder(true)
 	await probe.ticks(15)
 	p.transition_to(p.PlayerState.IDLE)
 	var releases: Array[int] = []
@@ -46,8 +44,8 @@ static func run(probe, p) -> void:
 	for frame in range(180):
 		if p.current_state != p.PlayerState.ATTACKING: break
 		await probe.ticks(1)
-	probe._check(p.combo_state == 0 and p.combat_aim.active, "finisher returns to aim without releasing the aim button")
+	probe._check(p.combo_state == 0 and p.combat_aim.active, "finisher returns to aim without leaving targeting mode")
 	for step in [1, 2, 3]:
 		probe._check(releases.has(step), "aim combo releases real projectiles on step %d" % step)
 	p.get_tree().current_scene.child_entered_tree.disconnect(on_shot)
-	Input.action_release("combat_aim")
+	if not locked: probe.set_shoulder(false)

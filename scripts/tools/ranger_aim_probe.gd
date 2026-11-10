@@ -17,10 +17,12 @@ func _run() -> void:
 		await verify_controls()
 		await verify_shots()
 		await preload("res://scripts/tools/ranger_aim_combo_check.gd").run(self, player)
+		await preload("res://scripts/tools/ranger_lock_check.gd").run(self)
 		print("[ranger-aim] DONE %s" % ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 
 func launch_fixture() -> void:
+	seed(775)
 	DebugConfig.invincible = false
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
@@ -47,13 +49,15 @@ func launch_fixture() -> void:
 		enemy.enemy_data = enemy.enemy_data.duplicate(true)
 		enemy.enemy_data.hp_base = 10000
 		enemy.current_hp = 10000
-		enemy.current_evasion = 0
+		# Trajectory checks must not randomly miss through the RPG accuracy roll.
+		enemy.current_evasion = -10000 if OS.get_environment("PSZ_AIM_CHECK") == "1" else 0
+		if OS.get_environment("PSZ_AIM_CHECK") == "1": enemy.current_defense = 0
 		# Toggle the opponents with T for a repeatable positioning/combat comparison.
-	DisplayServer.window_set_title("PSZ Ranger Aim — RMB / LT aim • LMB / J shoot • Space / LB dodge • T enemies • R reset")
+	DisplayServer.window_set_title("PSZ Ranger Aim — Z shoulder • Q lock • Tab switch • LMB / J shoot • Space / LB dodge • T enemies • R reset")
 	var layer := CanvasLayer.new()
 	get_tree().current_scene.add_child(layer)
 	var label := Label.new()
-	label.text = "RANGER AIM PROTOTYPE\nRMB / LT: aim   •   WASD / left stick: move   •   mouse / right stick: aim\nLMB / J / west face: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nClick when the crosshair says CLICK to chain all 3 shots. T activates enemies."
+	label.text = "RANGER AIM PROTOTYPE\nZ: shoulder toggle   •   Q: lock toggle   •   Tab: switch   •   WASD / left stick: move   •   mouse / right stick: aim\nLeft / right / middle click: palette   •   J: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nClick when the crosshair says CLICK to chain all 3 shots. T activates enemies."
 	label.position = Vector2(20, 145)
 	label.add_theme_font_size_override("font_size", 16)
 	layer.add_child(label)
@@ -94,9 +98,9 @@ func ticks(count: int) -> void:
 
 func verify_controls() -> void:
 	_check(player.animation_player != null and player.model != null, "real Ranger rig loaded")
-	Input.action_press("combat_aim")
+	set_shoulder(true)
 	await ticks(15)
-	_check(player.combat_aim.active and orbit.combat_aim.reticle.visible, "held input enables shoulder aim and reticle")
+	_check(player.combat_aim.active and orbit.combat_aim.reticle.visible, "Z toggle enables shoulder aim and reticle after key release")
 	for action in ["move_right", "move_left", "move_backward", "move_forward"]:
 		var before: Vector3 = player.global_position
 		Input.action_press(action)
@@ -118,46 +122,37 @@ func verify_controls() -> void:
 	await ticks(90)
 	await verify_input_lifecycle()
 	await verify_aim_axes()
+	await verify_mouse_palette()
 	await _snapshot("ranger-aim-strafe")
 
+static func key(code: int, echo := false) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = code
+	event.pressed = true
+	event.echo = echo
+	Input.parse_input_event(event)
+	event = event.duplicate()
+	event.pressed = false
+	event.echo = false
+	Input.parse_input_event(event)
+
+func set_shoulder(enabled: bool) -> void:
+	if (orbit.combat_aim.mode == orbit.combat_aim.Mode.SHOULDER) != enabled: key(KEY_Z)
+
 func verify_input_lifecycle() -> void:
+	key(KEY_Z, true)
+	await ticks(3)
+	_check(player.combat_aim.active, "key repeat does not toggle shoulder mode off")
+	key(KEY_Q)
+	await ticks(3)
+	_check(orbit.combat_aim.mode == orbit.combat_aim.Mode.SHOULDER, "Q cannot acquire lock in shoulder mode")
 	GameState.modal_stack += 1
 	await ticks(3)
 	_check(not player.combat_aim.active, "modal clears aim")
 	GameState.modal_stack -= 1
 	await ticks(3)
-	_check(not player.combat_aim.active, "held aim does not re-enter after modal")
-	Input.action_release("combat_aim")
-	await ticks(3)
-	Input.action_press("combat_aim")
-	await ticks(15)
-
-	Input.action_release("combat_aim")
-	await ticks(3)
-	var prior_mode := Input.mouse_mode
-	var mouse := InputEventMouseButton.new()
-	mouse.button_index = MOUSE_BUTTON_RIGHT
-	mouse.pressed = true
-	Input.parse_input_event(mouse)
-	await ticks(3)
-	_check(player.combat_aim.active, "real right mouse input enables aim")
-	if DisplayServer.get_name() != "headless":
-		_check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "rendered mouse capture engages")
-	mouse.pressed = false
-	Input.parse_input_event(mouse)
-	await ticks(3)
-	_check(not player.combat_aim.active and Input.mouse_mode == prior_mode, "right mouse release restores pointer mode")
-	var trigger := InputEventJoypadMotion.new()
-	trigger.axis = JOY_AXIS_TRIGGER_LEFT
-	trigger.axis_value = 1.0
-	var yaw: float = orbit.camera_rotation
-	Input.parse_input_event(trigger)
-	await ticks(3)
-	_check(player.combat_aim.active and is_equal_approx(orbit.camera_rotation, yaw), "left trigger aims without recentering")
-	trigger.axis_value = 0.0
-	Input.parse_input_event(trigger)
-	await ticks(3)
-	Input.action_press("combat_aim")
+	_check(not player.combat_aim.active, "closing modal does not restore stale toggle")
+	set_shoulder(true)
 	await ticks(3)
 	var weapon: String = CharacterManager.get_active_character().equipment.weapon
 	CharacterManager.get_active_character().equipment.weapon = "saber"
@@ -165,10 +160,29 @@ func verify_input_lifecycle() -> void:
 	_check(not player.combat_aim.active, "unsupported weapon clears stance")
 	CharacterManager.get_active_character().equipment.weapon = weapon
 	await ticks(3)
-	_check(not player.combat_aim.active, "weapon swap requires release before re-aiming")
-	Input.action_release("combat_aim")
+	_check(not player.combat_aim.active, "weapon swap does not restore stale toggle")
+	set_shoulder(true)
+	await ticks(15)
+
+func verify_mouse_palette() -> void:
+	player.transition_to(player.PlayerState.IDLE)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_RIGHT
+	click.pressed = true
+	Input.parse_input_event(click)
+	await ticks(2)
+	_check(player.current_state == player.PlayerState.ATTACKING and player._is_special_attack, "right mouse dispatches second palette action")
+	_check(orbit.combat_aim.mode == orbit.combat_aim.Mode.SHOULDER, "right mouse does not change aiming mode")
+	click = click.duplicate()
+	click.pressed = false
+	Input.parse_input_event(click)
+	await ticks(100)
+	orbit._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	_check(not orbit.combat_aim.active and not orbit.combat_aim._mouse_owned, "focus loss clears stance and releases mouse")
+	orbit._notification(NOTIFICATION_APPLICATION_FOCUS_IN)
 	await ticks(3)
-	Input.action_press("combat_aim")
+	_check(not orbit.combat_aim.active, "focus return does not restore stale stance")
+	set_shoulder(true)
 	await ticks(15)
 
 func verify_shots() -> void:
@@ -177,6 +191,7 @@ func verify_shots() -> void:
 	orbit.camera_rotation = 0.0
 	orbit.camera_pitch = -atan2(orbit.height, orbit.distance)
 	await ticks(15)
+	for frame in range(2): await get_tree().process_frame
 	var camera: Camera3D = orbit.camera
 	var aim_position: Vector3 = camera.global_position - camera.global_basis.z * 8.0
 	var target = enemies[0]
@@ -199,12 +214,12 @@ func verify_shots() -> void:
 	_check(player.current_state == player.PlayerState.ATTACKING, "mouse fire enters the real attack state")
 	_check(player.global_position.distance_to(committed) < 0.1, "shot animation retains movement commitment")
 	await ticks(100)
-	_check(target.current_hp < hp and enemies[1].current_hp == off_hp, "real animation releases a shot at reticle target, not nearer off-center enemy")
+	_check(target.current_hp < hp and enemies[1].current_hp == off_hp, "real animation releases a shot at reticle target, not nearer off-center enemy (HP %d -> %d, other %d -> %d)" % [hp, target.current_hp, off_hp, enemies[1].current_hp])
 	await verify_cover(target)
 	await verify_damage_commitment()
-	Input.action_release("combat_aim")
+	set_shoulder(false)
 	await ticks(15)
-	_check(not player.combat_aim.active and not orbit.combat_aim.reticle.visible, "release restores exploration and hides reticle")
+	_check(not player.combat_aim.active and not orbit.combat_aim.reticle.visible, "second Z restores exploration and hides reticle")
 
 func verify_cover(target) -> void:
 	var wall := StaticBody3D.new()

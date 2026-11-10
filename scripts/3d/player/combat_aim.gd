@@ -1,8 +1,12 @@
 extends RefCounted
 ## Opt-in Ranger control slice (#775). OrbitCamera owns the view; Player owns locomotion.
 const WEAPONS := [WeaponData.WeaponType.HANDGUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.MECH_GUN]
-var active := false
-var blocked_until_release := false
+enum Mode { NORMAL, SHOULDER, LOCKED }
+var mode := Mode.NORMAL
+var active: bool:
+	get: return mode != Mode.NORMAL
+var lock := preload("res://scripts/3d/player/combat_lock.gd").new()
+var focused := true
 var blend := 0.0
 var orbit: Node3D
 var reticle: Control
@@ -13,15 +17,11 @@ var _clip_speed := 1.0
 func setup(camera_rig: Node3D) -> void:
 	orbit = camera_rig
 	if OS.get_environment("PSZ_AIM_PROTOTYPE") != "1": return
-	if not InputMap.has_action("combat_aim"):
-		InputMap.add_action("combat_aim", 0.3)
-		var mouse := InputEventMouseButton.new()
-		mouse.button_index = MOUSE_BUTTON_RIGHT
-		InputMap.action_add_event("combat_aim", mouse)
-		var trigger := InputEventJoypadMotion.new()
-		trigger.axis = JOY_AXIS_TRIGGER_LEFT
-		trigger.axis_value = 1.0
-		InputMap.action_add_event("combat_aim", trigger)
+	for binding in [["combat_aim", KEY_Z], ["combat_lock", KEY_Q], ["combat_switch", KEY_TAB]]:
+		if not InputMap.has_action(binding[0]): InputMap.add_action(binding[0])
+		var key := InputEventKey.new()
+		key.physical_keycode = binding[1]
+		if not InputMap.action_has_event(binding[0], key): InputMap.action_add_event(binding[0], key)
 	# Dedicated keyboard dodge for this opt-in fixture; menus still own Space.
 	var dodge_key := InputEventKey.new()
 	dodge_key.physical_keycode = KEY_SPACE
@@ -46,50 +46,79 @@ func allowed() -> bool:
 func update(delta: float) -> void:
 	if not InputMap.has_action("combat_aim"): return
 	if is_instance_valid(orbit.target) and "combat_aim" in orbit.target: orbit.target.combat_aim = self
-	var held := Input.is_action_pressed("combat_aim")
-	var was_active := active
-	update_hold(held, allowed())
-	if was_active and not active: restore_locomotion()
-	blend = move_toward(blend, 1.0 if active else 0.0, delta / 0.15)
-	if is_instance_valid(reticle): reticle.visible = active
-	if not active:
+	if not allowed() or not focused:
+		clear()
 		release_mouse()
-		return
-	if is_instance_valid(reticle): reticle.set_combo(combo_feedback())
-	var direction := 1.0 if InputConfig.invert_camera_x else -1.0
-	orbit.camera_rotation += Input.get_axis("camera_left", "camera_right") * orbit.rotation_speed * direction * delta * 60.0
-	orbit.camera_pitch = clampf(orbit.camera_pitch + Input.get_axis("camera_down", "camera_up") * orbit.rotation_speed * delta * 60.0, orbit.min_pitch_offset, orbit.max_pitch_offset)
+	else:
+		capture_mouse()
+		if mode == Mode.LOCKED:
+			lock.update(orbit, delta)
+			if not is_instance_valid(lock.target): clear()
+			else: orbit.camera_rotation = facing() + PI
+		else:
+			var direction := 1.0 if InputConfig.invert_camera_x else -1.0
+			orbit.camera_rotation += Input.get_axis("camera_left", "camera_right") * orbit.rotation_speed * direction * delta * 60.0
+			orbit.camera_pitch = clampf(orbit.camera_pitch + Input.get_axis("camera_down", "camera_up") * orbit.rotation_speed * delta * 60.0, orbit.min_pitch_offset, orbit.max_pitch_offset)
+	blend = move_toward(blend, 1.0 if mode == Mode.SHOULDER else 0.0, delta / 0.15)
+	if is_instance_valid(reticle):
+		reticle.visible = active
+		if active:
+			reticle.locked = mode == Mode.LOCKED
+			reticle.target_pixel = orbit.camera.unproject_position(lock.point(lock.target)) if reticle.locked else Vector2.ZERO
+			reticle.set_combo(combo_feedback())
+
+func clear() -> void:
+	var was_active := active
+	mode = Mode.NORMAL
+	lock.clear()
+	if was_active and is_instance_valid(orbit): restore_locomotion()
+
+func capture_mouse() -> void:
+	if _mouse_owned: return
+	_previous_mouse_mode = Input.mouse_mode
+	_mouse_owned = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func restore_locomotion() -> void:
 	var p = orbit.target
 	if is_instance_valid(p) and p.current_state in [p.PlayerState.IDLE, p.PlayerState.WALKING, p.PlayerState.RUNNING]:
 		p.transition_to(p.current_state)
 
-func update_hold(held: bool, can_aim: bool) -> void:
-	if not held: blocked_until_release = false
-	elif not can_aim: blocked_until_release = true
-	active = held and can_aim and not blocked_until_release
-
 func handle_input(event: InputEvent) -> bool:
 	if not eligible(): return false
-	if event.is_action("combat_aim"):
-		update(0.0)
-		if active and event is InputEventMouseButton:
-			_previous_mouse_mode = Input.mouse_mode
-			_mouse_owned = true
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		return true
-	if not active or not allowed(): return false
+	if not allowed() or not focused: return true if event is InputEventMouseMotion else false
+	for action in ["combat_aim", "combat_lock", "combat_switch"]:
+		if event.is_action(action):
+			if event.is_action_pressed(action) and not event.is_echo(): change_mode(action)
+			return true
 	if event is InputEventMouseMotion:
-		orbit.camera_rotation -= event.relative.x * orbit.mouse_sensitivity * (-1.0 if InputConfig.invert_camera_x else 1.0)
-		orbit.camera_pitch = clampf(orbit.camera_pitch + event.relative.y * orbit.mouse_sensitivity, orbit.min_pitch_offset, orbit.max_pitch_offset)
+		if mode != Mode.LOCKED:
+			orbit.camera_rotation -= event.relative.x * orbit.mouse_sensitivity * (-1.0 if InputConfig.invert_camera_x else 1.0)
+			orbit.camera_pitch = clampf(orbit.camera_pitch + event.relative.y * orbit.mouse_sensitivity, orbit.min_pitch_offset, orbit.max_pitch_offset)
 		return true
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		var p = orbit.target
-		if event.pressed and p.current_state in [p.PlayerState.IDLE, p.PlayerState.WALKING, p.PlayerState.RUNNING, p.PlayerState.ATTACKING]:
-			p._start_attack()
-		return true
+	if event is InputEventMouseButton:
+		var buttons := [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MIDDLE]
+		var slot := buttons.find(event.button_index)
+		if slot >= 0:
+			var p = orbit.target
+			if p._freeze.remaining <= 0.0:
+				if event.pressed: p._on_palette_pressed(slot)
+				else: p._on_palette_released(slot)
+			return true
 	return false
+
+func change_mode(action: String) -> void:
+	if action == "combat_aim":
+		var shoulder := mode == Mode.SHOULDER
+		clear()
+		if not shoulder: mode = Mode.SHOULDER
+	elif action == "combat_lock" and mode != Mode.SHOULDER:
+		if mode == Mode.LOCKED: clear()
+		else:
+			lock.select(orbit)
+			if is_instance_valid(lock.target): mode = Mode.LOCKED
+	elif action == "combat_switch" and mode == Mode.LOCKED:
+		lock.select(orbit, true)
 
 func release_mouse() -> void:
 	if _mouse_owned:
@@ -97,6 +126,9 @@ func release_mouse() -> void:
 		_mouse_owned = false
 
 func facing() -> float:
+	if mode == Mode.LOCKED and is_instance_valid(lock.target):
+		var direction: Vector3 = lock.target.global_position - orbit.target.global_position
+		return atan2(direction.x, direction.z)
 	return orbit.camera_rotation + PI
 
 static func travel(input: Vector2, yaw: float) -> Vector3:
@@ -105,7 +137,7 @@ static func travel(input: Vector2, yaw: float) -> Vector3:
 func move_player(p) -> void:
 	p.player_rotation = facing()
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-	var movement := travel(input, orbit.camera_rotation)
+	var movement := travel(input, facing() - PI)
 	p.walk_timer = 0.0
 	var next: int = p.PlayerState.IDLE if input.is_zero_approx() else p.PlayerState.WALKING
 	if p.current_state != next: p.transition_to(next)
@@ -132,7 +164,7 @@ func play_step(p, input: Vector2) -> void:
 		_clip_speed = speed
 
 func apply_camera() -> void:
-	if blend <= 0.0 or not is_instance_valid(orbit.target) or orbit._shop_focus: return
+	if (blend <= 0.0 and mode != Mode.LOCKED) or not is_instance_valid(orbit.target) or orbit._shop_focus: return
 	var camera: Camera3D = orbit.camera
 	var anchor: Vector3 = orbit.target.global_position + Vector3.UP * orbit.LOOK_HEIGHT
 	anchor.y = orbit._follow_y + orbit.LOOK_HEIGHT
@@ -142,6 +174,8 @@ func apply_camera() -> void:
 	var fraction := ProjectileSweep.environment_fraction(orbit.get_world_3d().direct_space_state, anchor, desired - anchor, 0.2)
 	if fraction >= 0.0: desired = anchor.lerp(desired, maxf(0.0, fraction - 0.02))
 	camera.global_position = desired
+	if mode == Mode.LOCKED and is_instance_valid(lock.target):
+		camera.look_at(anchor.lerp(lock.point(lock.target), 0.5))
 
 func aim_point(max_range: float) -> Vector3:
 	var camera: Camera3D = orbit.camera
@@ -153,7 +187,8 @@ func aim_point(max_range: float) -> Vector3:
 	return hit.position if not hit.is_empty() else end
 
 func shot_direction(start: Vector3, max_range: float) -> Vector3:
-	return (aim_point(max_range) - start).normalized()
+	var point: Vector3 = lock.point(lock.target) if mode == Mode.LOCKED and is_instance_valid(lock.target) else aim_point(max_range)
+	return (point - start).normalized()
 
 func combo_feedback() -> Dictionary:
 	var p = orbit.target
