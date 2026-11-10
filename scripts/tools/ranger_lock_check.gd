@@ -19,6 +19,7 @@ static func run(probe) -> void:
 	probe.key(KEY_TAB)
 	await probe.ticks(3)
 	probe._check(aim.lock.target == probe.enemies[1], "Tab switches explicit target")
+	await probe._snapshot("ranger-lock")
 	var selected = aim.lock.target
 	Input.action_press("move_left")
 	await probe.ticks(12)

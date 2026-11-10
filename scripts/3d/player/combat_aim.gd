@@ -171,6 +171,7 @@ func apply_camera() -> void:
 	var basis := camera.global_basis
 	var desired := anchor + basis.z * 3.0 + basis.x * 0.6
 	desired = camera.global_position.lerp(desired, blend)
+	if mode == Mode.LOCKED: desired += basis.x * 1.0
 	var fraction := ProjectileSweep.environment_fraction(orbit.get_world_3d().direct_space_state, anchor, desired - anchor, 0.2)
 	if fraction >= 0.0: desired = anchor.lerp(desired, maxf(0.0, fraction - 0.02))
 	camera.global_position = desired
