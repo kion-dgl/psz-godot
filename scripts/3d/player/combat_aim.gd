@@ -55,6 +55,7 @@ func update(delta: float) -> void:
 	if not active:
 		release_mouse()
 		return
+	if is_instance_valid(reticle): reticle.set_combo(combo_feedback())
 	var direction := 1.0 if InputConfig.invert_camera_x else -1.0
 	orbit.camera_rotation += Input.get_axis("camera_left", "camera_right") * orbit.rotation_speed * direction * delta * 60.0
 	orbit.camera_pitch = clampf(orbit.camera_pitch + Input.get_axis("camera_down", "camera_up") * orbit.rotation_speed * delta * 60.0, orbit.min_pitch_offset, orbit.max_pitch_offset)
@@ -153,3 +154,21 @@ func aim_point(max_range: float) -> Vector3:
 
 func shot_direction(start: Vector3, max_range: float) -> Vector3:
 	return (aim_point(max_range) - start).normalized()
+
+func combo_feedback() -> Dictionary:
+	var p = orbit.target
+	var step: int = p.combo_state if p.current_state == p.PlayerState.ATTACKING else 0
+	var window: Array[float] = [0.0, 0.0]
+	if step > 0 and step < 3:
+		var timing: Dictionary = CombatManager.get_combo_timing(p._get_equipped_weapon_type(), step)
+		if not timing.is_empty(): window = p._chain_window(timing)
+	var fraction: float = p._attack_frac()
+	return {"step": step, "fraction": fraction, "open": window[0], "close": window[1],
+		"state": combo_prompt(step, fraction, window, p._combo_fumbled, p._queued_combo != p.ComboQueue.NONE)}
+
+static func combo_prompt(step: int, fraction: float, window: Array[float], fumbled: bool, queued: bool) -> String:
+	if step <= 0: return "FIRE"
+	if step >= 3: return "FINISHER"
+	if queued: return "QUEUED"
+	if fumbled or fraction > window[1]: return "MISSED"
+	return "CLICK" if fraction >= window[0] else "WAIT"

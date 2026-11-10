@@ -16,6 +16,7 @@ func _run() -> void:
 	if OS.get_environment("PSZ_AIM_CHECK") == "1":
 		await verify_controls()
 		await verify_shots()
+		await preload("res://scripts/tools/ranger_aim_combo_check.gd").run(self, player)
 		print("[ranger-aim] DONE %s" % ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 
@@ -52,7 +53,7 @@ func launch_fixture() -> void:
 	var layer := CanvasLayer.new()
 	get_tree().current_scene.add_child(layer)
 	var label := Label.new()
-	label.text = "RANGER AIM PROTOTYPE\nRMB / LT: aim   •   WASD / left stick: move   •   mouse / right stick: aim\nLMB / J / west face: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nEnemies start stationary. Release aim to compare normal movement."
+	label.text = "RANGER AIM PROTOTYPE\nRMB / LT: aim   •   WASD / left stick: move   •   mouse / right stick: aim\nLMB / J / west face: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nClick when the crosshair says CLICK to chain all 3 shots. T activates enemies."
 	label.position = Vector2(20, 145)
 	label.add_theme_font_size_override("font_size", 16)
 	layer.add_child(label)
