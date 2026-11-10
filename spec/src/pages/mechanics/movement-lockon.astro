@@ -4,10 +4,25 @@ import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Movement & Lock-on" section="Mechanics">
-  <p><em>Placeholder — not yet specified.</em></p>
-
-  <h2>Scope</h2>
-  <p>Will define locomotion (walk / run / sprint speeds, footstep cadence) and target lock-on: how a target is acquired, switched, and released, and how lock-on steers attacks and the camera.</p>
+  <p><strong>Ranger prototype (#775), November 9, 2026.</strong> The first playable slice is held shoulder aiming and strafing with handgun, rifle and mechgun. Explicit enemy lock/switching and melee/Force integration remain future slices. This is an intentional control experiment, not original-game behavior parity.</p>
+  <h2>Scope and launch</h2>
+  <p>Run <code>python3 scripts/tools/run_ranger_aim.py</code> for a separate Ranger test save in the Coliseum. Add <code>--female</code> for RAmarl or <code>--weapon rifle</code> / <code>--weapon mechgun</code>. Normal launches retain their existing controls; <code>PSZ_AIM_PROTOTYPE=1</code> enables the experiment. Grades remain unchanged pending owner playtest.</p>
+  <h2>Controls</h2>
+  <ul>
+    <li>Hold right mouse / left trigger to aim; release to explore normally. Left trigger MUST NOT also recenter while aiming. Mouse / right stick controls yaw and pitch; exploration's optional pitch setting does not disable aim pitch.</li>
+    <li>WASD / left stick moves independently of facing at walk speed, with analog magnitude preserved and diagonals capped. Sideways and backward travel MUST use the native <code>_stp_lr</code> / <code>_stp_fb</code> clips, reversed for the opposite direction. Female libraries contain shared male-named step clips; select their actual names. Strip root translation so motion is owned by the character controller.</li>
+    <li>Left click while aiming fires a normal attack; J / west face retains the normal palette attack. Space / left shoulder dodges. Existing palette controls remain available. Input-owning overlays MUST take precedence.</li>
+    <li>The fixture starts with stationary enemies: T toggles their AI and R resets positions/HP. Restart the launcher to rebuild the entire fixture.</li>
+  </ul>
+  <h2>Movement and commitment</h2>
+  <p>While freely moving in stance, facing MUST follow aim yaw and movement MUST retain the normal floor, wall, step and edge constraints. No stance sprint. Accepted attacks retain their existing movement commitment, hit timing and recovery. Attack admission/queued facing MUST use aim rather than strafe direction. Dodge MUST take the held travel direction (facing without input), keep it throughout the roll, and retain existing admission/damage rules. The camera may turn during a roll without bending its path.</p>
+  <h2>Shoulder camera and direct shots</h2>
+  <p>Initial tuning: 3 units behind, 0.6 units right, 1.5-unit look height, existing 44° FOV and a 0.15-second framing blend. Sphere clearance against world geometry takes precedence over the shoulder offset. A center crosshair marks direct aim, distinct from existing enemy cone markers. Releasing aim preserves camera yaw/pitch.</p>
+  <p>At shot release, cast the center camera ray to the first world/hurtbox contact or a distant point. Fire from the player's logical weapon origin (one unit above the feet) toward that point, preserving the weapon's travel-range cap and existing projectile hit semantics. Aimed shots MUST NOT snap to the nearest enemy. They MUST stop at world cover, including initial overlap and obstacles crossed in a single physics step; an earlier enemy contact still wins. Shots do not home. Ordinary exploration shots retain nearest-cone-target assistance. This slice uses the logical origin rather than an animated barrel socket.</p>
+  <h2>Lifecycle</h2>
+  <p>Menus, cutscenes, death and unsupported weapons clear aim. A held input MUST be released before re-entering after a blocked state. Captured mouse state MUST restore on release, loss of focus or leaving the scene. Shop focus keeps camera ownership. The feature is desktop/controller only in this slice; touch controls are not enabled.</p>
+  <h2>Validation</h2>
+  <p><code>combat_aim_tests.gd</code> runs in the seeded test runner and checks input rearming, travel axes, diagonal caps and analog movement. <code>run_ranger_aim.py --check</code> drives the actual Ranger, native clips, physics and projectile release: all four travel directions, fixed dodge heading, no dodge cancellation, overlay clearing/rearming, shot commitment, off-center nearest-target rejection, cover and release. The existing projectile physics probe checks collision ordering and range boundaries. Rendered checks and owner testing assess framing and animation feel; automated checks do not establish those.</p>
 
   <h2>Implemented by</h2>
   <ul>

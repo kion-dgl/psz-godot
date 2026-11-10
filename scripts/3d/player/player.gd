@@ -84,6 +84,7 @@ const DEFAULT_ANIM_PREFIX_W := "pwsa"
 
 # Current weapon animation prefix (changes when weapon changes)
 var _anim_prefix: String = DEFAULT_ANIM_PREFIX_M
+var combat_aim: RefCounted
 
 # Gender-aware walk/run/sprint animation names
 var _walk_anim: String = "pmsa_walk"
@@ -565,7 +566,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 
 		# Strip baked-in root translation from dodge clips — see
 		# _strip_root_translation_track for rationale.
-		if anim_name.ends_with("_esc_f"):
+		if anim_name.ends_with("_esc_f") or "_stp_" in anim_name:
 			_strip_root_translation_track(new_anim, skeleton.name)
 
 		lib.add_animation(anim_name, new_anim)
@@ -1322,7 +1323,14 @@ func _held_movement_yaw() -> Variant:
 	return atan2(move_3d.x, move_3d.z)
 
 
+func _attack_input_yaw() -> Variant:
+	return combat_aim.facing() if combat_aim != null and combat_aim.active and combat_aim.allowed() else _held_movement_yaw()
+
+
 func _handle_movement(delta: float) -> void:
+	if combat_aim != null and combat_aim.active and combat_aim.allowed():
+		combat_aim.move_player(self)
+		return
 	var desired_yaw: Variant = _held_movement_yaw()
 	var is_moving := desired_yaw != null
 	if is_moving:
@@ -1362,31 +1370,8 @@ func _handle_movement(delta: float) -> void:
 
 		# Calculate desired movement
 		var move_dir := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		var desired_velocity := move_dir * speed
+		_apply_walk_velocity(move_dir, speed)
 
-		# Check if movement would stay on floor using raycasts
-		# Check three points: center, left, and right of movement direction
-		if _can_move_to(move_dir):
-			velocity.x = desired_velocity.x
-			velocity.z = desired_velocity.z
-		else:
-			# Edge/wall ahead in the desired direction. Instead of stopping
-			# dead (the old behaviour, which made the autopilot stick on
-			# stage geometry seams and floor-mesh joins), try the axis
-			# components separately and walk whichever one keeps us on
-			# floor — effectively slide along the obstruction. Worst case
-			# both axes are blocked and we still stop.
-			var x_only := Vector3(sign(move_dir.x), 0, 0)
-			var z_only := Vector3(0, 0, sign(move_dir.z))
-			if move_dir.x != 0.0 and _can_move_to(x_only):
-				velocity.x = desired_velocity.x
-				velocity.z = 0
-			elif move_dir.z != 0.0 and _can_move_to(z_only):
-				velocity.x = 0
-				velocity.z = desired_velocity.z
-			else:
-				velocity.x = 0
-				velocity.z = 0
 	else:
 		_saber_retreat_elapsed = 0.0
 		# Stop horizontal movement
@@ -1402,6 +1387,34 @@ func _handle_movement(delta: float) -> void:
 			var idle_clip := SaberPrototype.idle_clip(self)
 			if animation_player and animation_player.current_animation != idle_clip:
 				play_animation(idle_clip, true)
+
+
+func _apply_walk_velocity(move_dir: Vector3, speed: float) -> void:
+	var desired_velocity := move_dir * speed
+
+	# Check if movement would stay on floor using raycasts
+	# Check three points: center, left, and right of movement direction
+	if _can_move_to(move_dir):
+		velocity.x = desired_velocity.x
+		velocity.z = desired_velocity.z
+	else:
+		# Edge/wall ahead in the desired direction. Instead of stopping
+		# dead (the old behaviour, which made the autopilot stick on
+		# stage geometry seams and floor-mesh joins), try the axis
+		# components separately and walk whichever one keeps us on
+		# floor — effectively slide along the obstruction. Worst case
+		# both axes are blocked and we still stop.
+		var x_only := Vector3(sign(move_dir.x), 0, 0)
+		var z_only := Vector3(0, 0, sign(move_dir.z))
+		if move_dir.x != 0.0 and _can_move_to(x_only):
+			velocity.x = desired_velocity.x
+			velocity.z = 0
+		elif move_dir.z != 0.0 and _can_move_to(z_only):
+			velocity.x = 0
+			velocity.z = desired_velocity.z
+		else:
+			velocity.x = 0
+			velocity.z = 0
 
 
 func _can_move_to(move_dir: Vector3) -> bool:
@@ -1539,6 +1552,7 @@ func _start_dodge() -> void:
 	# simultaneous-turn case).
 	var held: Variant = _held_movement_yaw()
 	dodge_direction = float(held) if held != null else player_rotation
+	if combat_aim != null and combat_aim.active: player_rotation = dodge_direction
 	dodge_timer = 0.0
 	dodge_cooldown = DODGE_ADMISSION_COOLDOWN
 	_dodge_run_seed = (MOVE_SPEED / 30.0) * 4096.0 if current_state == PlayerState.RUNNING else 0.0
@@ -1628,7 +1642,7 @@ func _start_attack() -> void:
 		return
 
 	# Start fresh attack combo
-	player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), 1, player_rotation, _held_movement_yaw())
+	player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), 1, player_rotation, _attack_input_yaw())
 	combo_state = 1
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_yaw = null
@@ -1675,7 +1689,7 @@ func _try_queue_combo(special: bool) -> void:
 	if frac >= open:
 		_queued_combo = ComboQueue.NORMAL
 		_queued_combo_special = special
-		_queued_combo_yaw = _held_movement_yaw()
+		_queued_combo_yaw = _attack_input_yaw()
 		_combo_ring_flash(Color(1.0, 0.8, 0.2) if special else Color(0.2, 1.0, 0.4))
 	else:
 		# Miss-early — the press fumbles the REST of this swing: nothing is
@@ -2297,7 +2311,7 @@ func _start_strong_attack() -> void:
 		return
 
 	# Start fresh combo step 1 as special
-	player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), 1, player_rotation, _held_movement_yaw())
+	player_rotation = CombatManager.get_combo_turn_yaw(_get_equipped_weapon_type(), 1, player_rotation, _attack_input_yaw())
 	combo_state = 1
 	_queued_combo = ComboQueue.NONE
 	_queued_combo_yaw = null
@@ -3264,23 +3278,10 @@ func _enemies_in_hit_cone(config: Dictionary, extra_dist: float = 0.0, extra_ang
 func _fire_projectile(atk: Dictionary) -> void:
 	var weapon_type: int = int(atk.get("weapon_type", 0))
 	var config: Dictionary = _weapon_combat_config(weapon_type)
-	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.MECH_GUN:
-		var hand: Node3D = weapon_node if _attack_hit_step % 2 == 0 else weapon_node_left
-		if is_instance_valid(hand): spawn_pos = hand.global_position + forward * 0.2
-	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
-	var candidates := _enemies_in_hit_cone(config)
-	if not candidates.is_empty():
-		var enemy: Node3D = candidates[0]
-		var height := 1.5
-		var data = enemy.get("enemy_data")
-		if data != null:
-			height = float(data.collision_height)
-		if enemy.get("target_height") != null: height = maxf(height, float(enemy.get("target_height")))
-		var aim := enemy.global_position + Vector3(0, height * 0.5, 0) - spawn_pos
-		if not aim.is_zero_approx():
-			forward = aim.normalized()
+	var aiming: bool = combat_aim != null and combat_aim.active and combat_aim.allowed()
+	var release := _projectile_release(weapon_type, config, aiming)
+	var spawn_pos: Vector3 = release.position
+	var forward: Vector3 = release.direction
 
 	for _i in range(int(atk.get("hits", 1))):
 		var proj: Projectile = preload("res://scripts/3d/combat/slicer_projectile.gd").new() if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SLICER else Projectile.new()
@@ -3295,6 +3296,7 @@ func _fire_projectile(atk: Dictionary) -> void:
 		proj.knockback = float(atk.get("knockback", 3.0))
 		proj.accuracy = int(atk.get("accuracy", 100))
 		proj.direction = forward
+		proj.collide_with_world = aiming
 		proj.max_range = float(config.get("hit_h_dist", 8.0))
 		proj.owner_node = self
 		proj.speed = 25.0
@@ -3308,6 +3310,33 @@ func _fire_projectile(atk: Dictionary) -> void:
 			proj.color = Color(0.7, 0.9, 1.0)
 		get_tree().current_scene.add_child(proj)
 		proj.global_position = spawn_pos
+
+
+func _projectile_release(weapon_type: int, config: Dictionary, aiming: bool) -> Dictionary:
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.MECH_GUN:
+		var hand: Node3D = weapon_node if _attack_hit_step % 2 == 0 else weapon_node_left
+		if is_instance_valid(hand): spawn_pos = hand.global_position + forward * 0.2
+	# Re-scan the weapon cone at release, not the technique-expanded HUD cache.
+	var candidates: Array = [] if aiming else _enemies_in_hit_cone(config)
+	if not candidates.is_empty():
+		var enemy: Node3D = candidates[0]
+		var height := 1.5
+		var data = enemy.get("enemy_data")
+		if data != null:
+			height = float(data.collision_height)
+		if enemy.get("target_height") != null: height = maxf(height, float(enemy.get("target_height")))
+		var aim := enemy.global_position + Vector3(0, height * 0.5, 0) - spawn_pos
+		if not aim.is_zero_approx():
+			forward = aim.normalized()
+
+	if aiming:
+		# Start at the logical weapon origin, not half a meter beyond nearby cover.
+		spawn_pos = global_position + Vector3.UP
+		forward = combat_aim.shot_direction(spawn_pos, float(config.get("hit_h_dist", 8.0)))
+
+	return {"position": spawn_pos, "direction": forward}
 
 
 func _deactivate_attack_hitbox() -> void:
@@ -3698,7 +3727,7 @@ func _add_scene_locomotion(lib: AnimationLibrary, anim_glb: String) -> void:
 					var source_anim := scene_player.get_animation(anim_name)
 					var new_anim := _remap_animation(source_anim, skeleton.name)
 					new_anim.loop_mode = Animation.LOOP_LINEAR
-					if anim_name.ends_with("_esc_f"):
+					if anim_name.ends_with("_esc_f") or "_stp_" in anim_name:
 						new_anim.loop_mode = Animation.LOOP_NONE
 						_strip_root_translation_track(new_anim, skeleton.name)
 					lib.add_animation(anim_name, new_anim)

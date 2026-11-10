@@ -23,6 +23,7 @@ var element_level: int = 0  # Element level (higher = more likely to proc)
 
 const COLLISION_RADIUS := 0.15
 var _spent := false
+var collide_with_world := false
 
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
@@ -68,11 +69,18 @@ func _physics_process(delta: float) -> void:
 	var distance := minf(maxf(speed * delta, 0.0), maxf(max_range - _distance_traveled, 0.0))
 	var motion := direction.normalized() * distance
 	var start := global_position
+	var wall := ProjectileSweep.environment_fraction(get_world_3d().direct_space_state, start, motion, COLLISION_RADIUS) if collide_with_world else -1.0
 	for hit in ProjectileSweep.contacts(get_world_3d().direct_space_state, start, motion, COLLISION_RADIUS):
+		if wall >= 0.0 and float(hit.fraction) >= wall: break
 		global_position = start + motion * float(hit.fraction)
 		_on_area_entered(hit.hurtbox)
 		if _spent:
 			return
+	if wall >= 0.0:
+		global_position = start + motion * wall
+		_spent = true
+		queue_free()
+		return
 	global_position = start + motion
 	_distance_traveled += distance
 	if _distance_traveled >= max_range:

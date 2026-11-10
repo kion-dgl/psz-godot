@@ -30,6 +30,7 @@ func _run() -> void:
 	await _check_order_and_pierce()
 	await _check_point_blank_and_exclusions()
 	await _check_enemy_deliveries()
+	await _check_aimed_cover()
 
 	print("[combat-fidelity] DONE %s" % ("ok" if _fail == 0 else "FAIL"))
 	get_tree().quit(0 if _fail == 0 else 1)
@@ -250,3 +251,21 @@ func _box(pos: Vector3, size: Vector3) -> void:
 	add_child(body)
 	body.position = pos
 	_fixtures.append(body)
+
+
+func _check_aimed_cover() -> void:
+	for mode in ["wall", "overlap", "before_wall", "range"]:
+		var target := _target(Vector3(0, 1, 4))
+		var shot := _shot(false, 1)
+		shot.collide_with_world = true
+		if mode == "range": shot.max_range = 2.0
+		else:
+			var wall_z := 6.0 if mode == "before_wall" else 0.0 if mode == "overlap" else 2.0
+			_box(Vector3(0, 1, wall_z), Vector3(5, 3, 0.05))
+		await _sync_physics()
+		shot._physics_process(1.0)
+		var expected := 1 if mode == "before_wall" else 0
+		_check(shot._spent and target.hits == expected, "aimed projectile slow-frame cover/range: " + mode)
+		shot._physics_process(1.0)
+		_check(target.hits == expected, "aimed cover consumes projectile exactly once")
+		_clear()
