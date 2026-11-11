@@ -1,5 +1,5 @@
 extends RefCounted
-## Imported Mag cutouts must write depth; alpha blending exposes rear faces (#795).
+## Imported equipment cutouts must write depth; alpha blending exposes rear faces (#795, #799).
 static var _binary_textures: Dictionary = {}
 
 static func binary_alpha(image: Image) -> bool:
@@ -15,7 +15,7 @@ static func cutout_copy(material: Material) -> Material:
 	if not material is StandardMaterial3D: return material
 	var source := material as StandardMaterial3D
 	if source.transparency not in [BaseMaterial3D.TRANSPARENCY_ALPHA, BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS]: return source
-	if source.blend_mode != BaseMaterial3D.BLEND_MODE_MIX or source.albedo_color.a < 1.0 or source.albedo_texture == null: return source
+	if source.blend_mode != BaseMaterial3D.BLEND_MODE_MIX or source.albedo_color.a < 1.0 or source.albedo_texture == null or source.vertex_color_use_as_albedo: return source
 	var texture := source.albedo_texture
 	if not _binary_textures.has(texture): _binary_textures[texture] = binary_alpha(texture.get_image())
 	if not _binary_textures[texture]: return source
@@ -26,7 +26,7 @@ static func cutout_copy(material: Material) -> Material:
 	return fixed
 
 static func apply(node: Node) -> void:
-	if node is MeshInstance3D:
+	if node is MeshInstance3D and node.mesh:
 		for surface in node.mesh.get_surface_count():
 			var source: Material = node.get_active_material(surface)
 			var fixed := cutout_copy(source)

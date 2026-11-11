@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Launch the Ranger aim prototype with a separate save; --check runs live assertions."""
+"""Launch the Ranger aim prototype with a separate save; --check runs live assertions.
+
+Equipment material checks use the same isolated launcher:
+  --check --scene res://scripts/tools/weapon_visual_probe.tscn
+  --check --rendered --scene res://scripts/tools/mag_visual_probe.tscn
+"""
 import argparse
 import os
 from pathlib import Path

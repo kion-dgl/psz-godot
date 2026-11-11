@@ -1,5 +1,5 @@
 extends RefCounted
-const Visuals := preload("res://scripts/3d/player/mag_visuals.gd")
+const Visuals := preload("res://scripts/utils/texture_cutouts.gd")
 
 static func run(r: Node) -> void:
 	var image := Image.create(2, 2, false, Image.FORMAT_RGBA8)
@@ -21,3 +21,16 @@ static func run(r: Node) -> void:
 	r.assert_true(not Visuals.binary_alpha(image), "genuine translucent Mag textures are not cutouts")
 	original.albedo_texture = ImageTexture.create_from_image(image)
 	r.assert_true(Visuals.cutout_copy(original) == original, "genuine translucent materials stay unchanged")
+
+	original.albedo_texture = fixed.albedo_texture
+	original.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	r.assert_true(Visuals.cutout_copy(original) == original, "additive photon materials are preserved")
+	original.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+	original.albedo_color.a = 0.5
+	r.assert_true(Visuals.cutout_copy(original) == original, "faded material alpha is preserved")
+	original.albedo_color.a = 1.0
+	original.vertex_color_use_as_albedo = true
+	r.assert_true(Visuals.cutout_copy(original) == original, "vertex alpha materials are preserved")
+	original.vertex_color_use_as_albedo = false
+	original.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+	r.assert_true(Visuals.cutout_copy(original) == original, "opaque materials remain unchanged")

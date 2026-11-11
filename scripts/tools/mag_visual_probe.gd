@@ -1,5 +1,5 @@
 extends "res://scripts/tools/probe_checks.gd"
-const Visuals := preload("res://scripts/3d/player/mag_visuals.gd")
+const Visuals := preload("res://scripts/utils/texture_cutouts.gd")
 var models: Array[Node3D] = []
 
 func _run() -> void:
