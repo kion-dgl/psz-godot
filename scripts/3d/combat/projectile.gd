@@ -22,6 +22,11 @@ var element: String = ""  # Element type for status effect procs
 var element_level: int = 0  # Element level (higher = more likely to proc)
 
 const COLLISION_RADIUS := 0.15
+const TechniqueVisual = preload("res://scripts/3d/effects/technique_visual.gd")
+var visual_kind := ""
+var _tech_visual: Node3D
+var _ice_spacing := 0.0
+var _ice_segment_index := 0
 var _spent := false
 var collide_with_world := false
 
@@ -53,6 +58,15 @@ func _ready() -> void:
 	_mesh.material_override = mat
 	add_child(_mesh)
 
+	if not visual_kind.is_empty():
+		_mesh.hide()
+		var visual := TechniqueVisual.new()
+		_tech_visual = visual
+		visual.kind = visual_kind
+		add_child(visual)
+		if direction.length_squared() > 0.001:
+			visual.basis = Basis.looking_at(direction.normalized(), Vector3.RIGHT if absf(direction.normalized().dot(Vector3.UP)) > 0.99 else Vector3.UP)
+
 	# Collision shape
 	var col := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
@@ -70,6 +84,8 @@ func _physics_process(delta: float) -> void:
 	var motion := direction.normalized() * distance
 	var start := global_position
 	var wall := ProjectileSweep.environment_fraction(get_world_3d().direct_space_state, start, motion, COLLISION_RADIUS) if collide_with_world else -1.0
+	if visual_kind == "ice_line":
+		_emit_ice_line(start, start + motion * (wall if wall >= 0.0 else 1.0))
 	for hit in ProjectileSweep.contacts(get_world_3d().direct_space_state, start, motion, COLLISION_RADIUS):
 		if wall >= 0.0 and float(hit.fraction) >= wall: break
 		global_position = start + motion * float(hit.fraction)
@@ -78,11 +94,14 @@ func _physics_process(delta: float) -> void:
 			return
 	if wall >= 0.0:
 		global_position = start + motion * wall
+		_contact_visual()
 		_spent = true
 		queue_free()
 		return
 	global_position = start + motion
 	_distance_traveled += distance
+	if is_instance_valid(_tech_visual):
+		_tech_visual.travel_alpha = clampf((max_range - _distance_traveled) / 1.5, 0.0, 1.0)
 	if _distance_traveled >= max_range:
 		_spent = true
 		queue_free()
@@ -105,6 +124,7 @@ func _on_area_entered(area: Area3D) -> void:
 	_spent = not pierce or (max_hits > 0 and _hit_targets.size() >= max_hits)
 	var hit_pos := hurtbox.owner_node.global_position
 	_deliver(hurtbox, direction * knockback)
+	_contact_visual()
 	if bounce_radius > 0.0:
 		_bounce_to_nearby(hit_pos)
 	if max_hits > 0 and _hit_targets.size() >= max_hits:
@@ -150,3 +170,21 @@ func _deliver(hurtbox: Hurtbox, push: Vector3) -> void:
 		hurtbox.take_attack(attack_packet, push, owner_node)
 	else:
 		hurtbox.take_hit(damage, push, accuracy, element, element_level, is_instance_valid(owner_node) and owner_node.is_in_group("player"), attack_kind, owner_node)
+
+
+func _contact_visual() -> void:
+	if not visual_kind.is_empty():
+		TechniqueVisual.burst(get_parent(), global_position, visual_kind + "_contact", 0.25, 0.35)
+
+
+func _emit_ice_line(start: Vector3, end: Vector3) -> void:
+	var length := start.distance_to(end)
+	if length <= 0.0001: return
+	# Distance-based emission keeps the line continuous across frame rates.
+	while _ice_spacing <= length:
+		var point := start.lerp(end, _ice_spacing / length) - Vector3.UP * 0.3
+		var segment := TechniqueVisual.burst(get_parent(), point, "ice_growth", 0.6)
+		segment.rotation.y = atan2(direction.x, direction.z)
+		_ice_segment_index += 1
+		_ice_spacing += 0.38 + 0.12 * (0.5 + 0.5 * sin(_ice_segment_index * 2.399))
+	_ice_spacing -= length

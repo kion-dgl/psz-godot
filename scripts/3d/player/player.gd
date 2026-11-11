@@ -1909,6 +1909,7 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 			var previous := GameState.hp
 			GameState.set_hp(GameState.hp + amount)
 			_spawn_heal_number("hp", GameState.hp - previous)
+			preload("res://scripts/3d/effects/technique_visual.gd").burst(get_tree().current_scene, global_position + Vector3.UP * 0.08, "heal" if GameState.hp > previous else "heal_empty", 0.7, 1.0 if GameState.hp > previous else 0.5)
 		"anti":
 			clear_status_effects()
 			_ailments.feedback(self, "Cured")
@@ -1943,6 +1944,7 @@ func _apply_element_to_proj(proj: Projectile, kind: String = "technique") -> voi
 
 func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
 	var proj := Projectile.new()
+	proj.visual_kind = "foie"
 	if combat_aim != null and combat_aim.active and combat_aim.allowed():
 		spawn_pos = global_position + Vector3.UP
 		forward = combat_aim.shot_direction(spawn_pos, 15.0)
@@ -1963,11 +1965,12 @@ func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -
 func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
 	var profile: Dictionary = preload("res://scripts/3d/combat/ice_technique.gd").profile("barta")
 	var proj := Projectile.new()
+	proj.visual_kind = "ice_line"
 	proj.damage = damage
 	proj.knockback = kb
 	proj.accuracy = 100
 	proj.direction = forward
-	proj.max_range = profile.range
+	proj.max_range = profile.player_range
 	proj.owner_node = self
 	proj.speed = profile.speed
 	proj.pierce = true
@@ -1976,7 +1979,7 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
 	if combat_aim != null and combat_aim.active and combat_aim.allowed():
 		ground_pos = global_position + Vector3.UP * 0.3
-		var aimed: Vector3 = combat_aim.shot_direction(ground_pos, profile.range)
+		var aimed: Vector3 = combat_aim.shot_direction(ground_pos, profile.player_range)
 		proj.direction = Vector3(aimed.x, 0, aimed.z).normalized()
 		proj.collide_with_world = true
 	_apply_element_to_proj(proj)
@@ -2112,7 +2115,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
 			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 
-	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
+	preload("res://scripts/3d/effects/technique_visual.gd").burst(get_tree().current_scene, explosion_pos + Vector3.UP * 0.08, "fire_area", 0.45, explosion_radius)
 
 
 func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
@@ -2155,6 +2158,7 @@ func _spawn_rabarta(damage: int, kb: float) -> void:
 		var angle: float = i * TAU / float(num_shards)
 		var dir := Vector3(sin(angle), 0, cos(angle))
 		var proj := Projectile.new()
+		proj.visual_kind = "ice"
 		proj.damage = damage
 		proj.knockback = kb
 		proj.accuracy = 100

@@ -1,0 +1,248 @@
+{
+  "loadout": "FOMAR / Rod",
+  "observations": [
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 22,
+      "hp_gain": 0,
+      "id": "foie",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 5,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 92,
+      "hp_gain": 0,
+      "id": "gifoie",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 20,
+      "status_after": false,
+      "status_before": false,
+      "tier": "mid"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 86,
+      "hp_gain": 0,
+      "id": "rafoie",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 30,
+      "status_after": false,
+      "status_before": false,
+      "tier": "advanced"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 40,
+      "hp_gain": 0,
+      "id": "barta",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 6,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 600,
+      "hp_gain": 0,
+      "id": "gibarta",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 22,
+      "status_after": false,
+      "status_before": false,
+      "tier": "mid"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 116,
+      "hp_gain": 0,
+      "id": "rabarta",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 35,
+      "status_after": false,
+      "status_before": false,
+      "tier": "advanced"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 20,
+      "hp_gain": 0,
+      "id": "zonde",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 4,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 74,
+      "hp_gain": 0,
+      "id": "gizonde",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 18,
+      "status_after": false,
+      "status_before": false,
+      "tier": "mid"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 88,
+      "hp_gain": 0,
+      "id": "razonde",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 28,
+      "status_after": false,
+      "status_before": false,
+      "tier": "advanced"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 78,
+      "hp_gain": 0,
+      "id": "grants",
+      "note": "generic Foie fallback; spell-specific delivery absent",
+      "pp_spent": 50,
+      "status_after": false,
+      "status_before": false,
+      "tier": "advanced"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 9,
+      "hp_gain": 0,
+      "id": "megid",
+      "note": "generic Foie fallback; spell-specific delivery absent",
+      "pp_spent": 40,
+      "status_after": false,
+      "status_before": false,
+      "tier": "advanced"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 20,
+      "id": "resta",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 10,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 0,
+      "id": "anti",
+      "note": "implemented delivery; visual/feel review pending",
+      "pp_spent": 8,
+      "status_after": false,
+      "status_before": true,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 0,
+      "id": "reverser",
+      "note": "blocked before cost: no 3D support recipient/resolver",
+      "pp_spent": 0,
+      "status_after": false,
+      "status_before": false,
+      "tier": "mid"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 0,
+      "id": "shifta",
+      "note": "blocked before cost: no 3D support recipient/resolver",
+      "pp_spent": 0,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 0,
+      "id": "deband",
+      "note": "blocked before cost: no 3D support recipient/resolver",
+      "pp_spent": 0,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 0,
+      "id": "jellen",
+      "note": "blocked before cost: no 3D support recipient/resolver",
+      "pp_spent": 0,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "effective_level": 1,
+      "enemy_hp_loss": 0,
+      "hp_gain": 0,
+      "id": "zalure",
+      "note": "blocked before cost: no 3D support recipient/resolver",
+      "pp_spent": 0,
+      "status_after": false,
+      "status_before": false,
+      "tier": "basic"
+    },
+    {
+      "base": "foie",
+      "charged": "rafoie",
+      "pp_spent": 30
+    },
+    {
+      "base": "barta",
+      "charged": "rabarta",
+      "pp_spent": 35
+    },
+    {
+      "base": "zonde",
+      "charged": "razonde",
+      "pp_spent": 28
+    },
+    {
+      "base": "resta",
+      "charged": "resta",
+      "pp_spent": 10
+    },
+    {
+      "base": "anti",
+      "charged": "anti",
+      "pp_spent": 8
+    },
+    {
+      "base": "shifta",
+      "charged": "shifta",
+      "pp_spent": 0
+    },
+    {
+      "base": "deband",
+      "charged": "deband",
+      "pp_spent": 0
+    },
+    {
+      "base": "jellen",
+      "charged": "jellen",
+      "pp_spent": 0
+    },
+    {
+      "base": "zalure",
+      "charged": "zalure",
+      "pp_spent": 0
+    }
+  ]
+}
