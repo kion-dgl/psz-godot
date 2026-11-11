@@ -50,7 +50,8 @@ func update(delta: float) -> void:
 		clear()
 		release_mouse()
 	else:
-		capture_mouse()
+		if mode == Mode.SHOULDER: capture_mouse()
+		else: release_mouse()
 		if mode == Mode.LOCKED:
 			lock.update(orbit, delta)
 			if not is_instance_valid(lock.target): clear()
@@ -70,6 +71,7 @@ func update(delta: float) -> void:
 func clear() -> void:
 	var was_active := active
 	mode = Mode.NORMAL
+	release_mouse()
 	lock.clear()
 	if was_active and is_instance_valid(orbit): restore_locomotion()
 
@@ -92,7 +94,7 @@ func handle_input(event: InputEvent) -> bool:
 			if event.is_action_pressed(action) and not event.is_echo(): change_mode(action)
 			return true
 	if event is InputEventMouseMotion:
-		if mode != Mode.LOCKED:
+		if mode == Mode.SHOULDER:
 			orbit.camera_rotation -= event.relative.x * orbit.mouse_sensitivity * (-1.0 if InputConfig.invert_camera_x else 1.0)
 			orbit.camera_pitch = clampf(orbit.camera_pitch + event.relative.y * orbit.mouse_sensitivity, orbit.min_pitch_offset, orbit.max_pitch_offset)
 		return true

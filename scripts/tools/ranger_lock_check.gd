@@ -16,6 +16,7 @@ static func run(probe) -> void:
 	probe.key(KEY_Q)
 	await probe.ticks(3)
 	probe._check(aim.mode == aim.Mode.LOCKED and aim.lock.target == probe.enemies[0], "Q acquires enemy nearest screen center")
+	probe._check(not aim._mouse_owned, "enemy lock leaves mouse cursor free")
 	probe.key(KEY_TAB)
 	await probe.ticks(3)
 	probe._check(aim.lock.target == probe.enemies[1], "Tab switches explicit target")

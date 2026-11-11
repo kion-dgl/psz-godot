@@ -150,6 +150,18 @@ func set_shoulder(enabled: bool) -> void:
 	if (orbit.combat_aim.mode == orbit.combat_aim.Mode.SHOULDER) != enabled: key(KEY_Z)
 
 func verify_input_lifecycle() -> void:
+	_check(orbit.combat_aim._mouse_owned, "shoulder view owns mouse capture")
+	set_shoulder(false)
+	await ticks(3)
+	_check(not orbit.combat_aim._mouse_owned, "Z exit releases mouse capture")
+	var yaw: float = orbit.camera_rotation
+	var motion := InputEventMouseMotion.new()
+	motion.relative = Vector2(20, 10)
+	Input.parse_input_event(motion)
+	await ticks(3)
+	_check(is_equal_approx(orbit.camera_rotation, yaw), "free cursor does not rotate normal camera")
+	set_shoulder(true)
+	await ticks(3)
 	key(KEY_Z, true)
 	await ticks(3)
 	_check(player.combat_aim.active, "key repeat does not toggle shoulder mode off")
