@@ -47,7 +47,7 @@ CANDIDATE_EXTS = (".gd", ".tscn")
 # path or, for .gd, use a class_name identifier).
 TEXT_EXTS = (
     ".gd", ".tscn", ".tres", ".godot", ".cfg", ".import", ".uid",
-    ".sh", ".yml", ".yaml", ".md", ".ts", ".tsx", ".js", ".json", ".txt",
+    ".sh", ".py", ".yml", ".yaml", ".md", ".ts", ".tsx", ".js", ".json", ".txt",
 )
 
 RES_PATH_RE = re.compile(r"res://[A-Za-z0-9_./\-]+")

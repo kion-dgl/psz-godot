@@ -33,6 +33,7 @@ var _mouse_dragging := false
 
 # Set false to pause camera rotation (e.g. gate nudge mode)
 var input_enabled := true
+var combat_aim := preload("res://scripts/3d/player/combat_aim.gd").new()
 
 # While true the orbit does NOT drive the camera — used by the diegetic shop
 # view, which tweens the camera to a fixed pose in front of the shopkeeper and
@@ -62,15 +63,17 @@ func _ready() -> void:
 	camera.set_as_top_level(true)
 	camera.fov = 44.0
 
+	combat_aim.setup(self)
 	if target:
 		_update_camera_position(0.0)
 
 
 func _process(delta: float) -> void:
+	combat_aim.update(delta)
 	# Shop view owns the camera pose while focused; don't fight its tween.
 	if _shop_focus:
 		return
-	if input_enabled and not PsoStartMenu.is_open():
+	if input_enabled and not PsoStartMenu.is_open() and not combat_aim.eligible():
 		var dir: float = 1.0 if InputConfig.invert_camera_x else -1.0
 		if Input.is_action_pressed("camera_left"):
 			camera_rotation -= rotation_speed * dir
@@ -89,9 +92,14 @@ func _process(delta: float) -> void:
 
 	if target and camera:
 		_update_camera_position(delta)
+		combat_aim.apply_camera()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if combat_aim.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
+	if combat_aim.eligible(): return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
@@ -206,3 +214,16 @@ func get_follow_transform() -> Transform3D:
 		target_pos.z + cos(camera_rotation) * horiz,
 	)
 	return Transform3D(Basis(), cam_pos).looking_at(look_at_pos, Vector3.UP)
+
+
+func _exit_tree() -> void:
+	combat_aim.release_mouse()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		combat_aim.focused = false
+		combat_aim.clear()
+		combat_aim.release_mouse()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		combat_aim.focused = true

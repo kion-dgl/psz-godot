@@ -39,6 +39,7 @@ func _ready() -> void:
 # Player state machine + combat: states, commitment, combos, damage math,
 # drops, and the combat-adjacent regression tests.
 func _run_tests_combat() -> void:
+	preload("res://scripts/tools/combat_aim_tests.gd").run(self)
 	preload("res://scripts/tools/player_hit_recovery_tests.gd").run(self)
 	preload("res://scripts/tools/enemy_sound_tests.gd").run(self)
 	preload("res://scripts/tools/dark_shrine_tests.gd").run(self)

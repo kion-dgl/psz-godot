@@ -8,6 +8,8 @@ import Concept from '../../layouts/Concept.astro';
 
   <p>A committed roll in the <em>steering</em> direction at the moment the dodge is admitted. Dodge is <strong>free</strong> — no stamina or resource cost — so its balancing cost is <em>commitment</em>: the full 41-frame action must play out, its displacement curve is front-loaded, and it grants <strong>no damage immunity</strong> — the roll is safe because it moves the player and passes through bodies, not because hits whiff (see <a href={siteUrl('/states/player-state')}>Player State Machine → Action commitment</a>).</p>
 
+  <p><strong>Opt-in Ranger prototype exception:</strong> the action and displacement curve are fitted to the actual roll clip duration. It MUST NOT attach idle while still executing roll displacement. Completion restores pre-roll facing immediately. This is prototype tuning; the normal-launch timing below is unchanged.</p>
+
   <h2>Phases and timing (30 fps action clock)</h2>
   <table>
     <thead><tr><th>Phase</th><th>Window</th><th>Behavior</th></tr></thead>
