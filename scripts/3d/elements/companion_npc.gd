@@ -96,6 +96,9 @@ var _move_intent: bool = false  # Set true by whichever state is steering this f
 var _was_moving: bool = false  # Track delayed state transitions
 var _stationary_anim_time: float = 0.0  # autopilot tripwire accumulator (#420)
 var _follow_cmd_speed: float = -1.0  # FOLLOW's commanded speed this frame; drives the clip (< 0 = not FOLLOW)
+var max_hp := 1
+var current_hp := 1
+var support_ailments: Dictionary = {}
 var _dismissed: bool = false  # When true, stop following and idle in place
 
 ## Trail replay — record every physics frame, interpolate on playback
@@ -121,6 +124,9 @@ var _combat_hits_landed: int = 0
 
 
 func _ready() -> void:
+	add_to_group("party_members")
+	max_hp = maxi(1, int(_companion_stats().get("hp", 100)))
+	current_hp = max_hp
 	_build_capsule()
 	_build_name_label()
 	_build_speech_bubble()
@@ -472,6 +478,10 @@ func _assign_bubble_texture() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	for status in support_ailments.keys():
+		support_ailments[status] -= delta
+		if support_ailments[status] <= 0: support_ailments.erase(status)
+	if current_hp <= 0: return
 	_process_speech_timer(delta)
 	if not _ensure_player_ref():
 		return
@@ -866,7 +876,7 @@ func _companion_stats() -> Dictionary:
 	if class_data == null:
 		return {"attack": 10, "accuracy": 100}
 	var s: Dictionary = class_data.get_stats_at_level(maxi(level, 1))
-	return {"attack": int(s.get("attack", 10)), "accuracy": int(s.get("accuracy", 100))}
+	return {"attack": int(float(s.get("attack", 10)) * (1.0 + preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self))), "accuracy": int(s.get("accuracy", 100)), "hp": int(s.get("hp", 100))}
 
 
 func _process_regroup(delta: float) -> void:
@@ -924,3 +934,30 @@ func show_speech(text: String, _speaker: String = "", duration: float = 4.0) -> 
 	_speech_timer = duration
 	_name_label.visible = false
 	speech_started.emit()
+
+
+## Runtime recipient state. Enemy retargeting and companion revive AI are separate.
+func can_receive_support() -> bool:
+	return current_hp > 0 and not _dismissed
+
+func receive_support(technique: String, amount: int) -> int:
+	if not can_receive_support(): return 0
+	if technique == "shifta":
+		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount)
+		return 1
+	if technique == "resta":
+		var before := current_hp
+		current_hp = mini(max_hp, current_hp + maxi(amount, 0))
+		return current_hp - before
+	if technique == "anti":
+		var count := support_ailments.size()
+		support_ailments.clear()
+		return count
+	return 0
+
+func apply_status_effect(kind: String) -> void:
+	if can_receive_support() and kind in CombatManager.STATUS_EFFECTS:
+		support_ailments[kind] = 20.0 if kind == "poison" else float(CombatManager.STATUS_EFFECTS[kind].duration)
+
+func has_status_effects() -> bool:
+	return not support_ailments.is_empty()

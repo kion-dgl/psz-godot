@@ -15,7 +15,7 @@ const TECHNIQUES := {
 	"grants":   {"name": "Grants",   "element": "light",     "power": 300, "pp": 50, "target": "single", "tier": "advanced", "group": "grants"},
 	"megid":    {"name": "Megid",    "element": "dark",      "power": 0,   "pp": 40, "target": "single", "tier": "advanced", "group": "megid"},
 	"resta":    {"name": "Resta",    "element": "none",      "power": 100, "pp": 10, "target": "party",  "tier": "basic", "group": "restaReverser"},
-	"anti":     {"name": "Anti",     "element": "none",      "power": 0,   "pp": 8,  "target": "self",   "tier": "basic", "group": "restaReverser"},
+	"anti":     {"name": "Anti",     "element": "none",      "power": 0,   "pp": 8,  "target": "party",   "tier": "basic", "group": "restaReverser"},
 	"reverser": {"name": "Reverser", "element": "none",      "power": 0,   "pp": 20, "target": "single", "tier": "mid",   "group": "restaReverser"},
 	"shifta":   {"name": "Shifta",   "element": "none",      "power": 0,   "pp": 15, "target": "party",  "tier": "basic", "group": "shiftaDeband"},
 	"deband":   {"name": "Deband",   "element": "none",      "power": 0,   "pp": 15, "target": "party",  "tier": "basic", "group": "shiftaDeband"},

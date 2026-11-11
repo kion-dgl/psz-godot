@@ -32,7 +32,30 @@ static func burst(parent: Node, at: Vector3, spell: String, lifetime := 0.35, si
 func _ready() -> void:
 	add_to_group("technique_visuals")
 	var tint := ICE if kind.begins_with("ice") else HEAL if kind.begins_with("heal") else FIRE
+	if kind == "cure": tint = Color(0.65, 0.85, 1.0)
 	if kind == "heal_empty": tint = Color(0.7, 0.8, 0.75)
+	if kind == "rafoie_blast":
+		for i in range(2):
+			var sphere := SphereMesh.new()
+			sphere.radius = 1.0 - i * 0.12
+			sphere.height = sphere.radius * 2.0
+			sphere.radial_segments = 48
+			sphere.rings = 24
+			var shell := _piece(sphere, FIRE, Vector3(0, 0.4, 0))
+			var material := ShaderMaterial.new()
+			material.shader = preload("res://scripts/3d/shaders/technique_fire.gdshader")
+			material.set_shader_parameter("phase", float(i) * 9.7)
+			material.set_shader_parameter("heat", 0.85 + i * 0.2)
+			shell.material_override = material
+			_fire_materials.append(material)
+		var ring := TorusMesh.new()
+		ring.inner_radius = 0.96
+		ring.outer_radius = 1.0
+		ring.rings = 64
+		ring.ring_segments = 8
+		var wave := _piece(ring, Color(1.0, 0.035, 0.01), Vector3(0, 0.012, 0))
+		wave.scale.y = 0.2
+		return
 	if kind == "ice_line":
 		_make_cloud(Vector2(1.9, 0.7), Vector3(0, -0.08, 0))
 		return
@@ -111,6 +134,17 @@ func _piece(mesh: Mesh, tint: Color, at: Vector3) -> MeshInstance3D:
 
 func _process(delta: float) -> void:
 	elapsed += delta
+	if kind == "rafoie_blast":
+		var growth := lerpf(0.08, 1.0, ease(clampf(elapsed / 0.16, 0.0, 1.0), 0.35))
+		for i in range(2):
+			_pieces[i].scale = Vector3.ONE * growth
+			_pieces[i].position.y = 0.4 * growth
+			_fire_materials[i].set_shader_parameter("fade", 1.0 - smoothstep(0.18 + i * 0.06, duration, elapsed))
+		var radius := lerpf(0.05, 1.0, smoothstep(0.0, 0.4, elapsed))
+		_pieces[2].scale = Vector3(radius, 0.2, radius)
+		_materials[2].albedo_color.a = 1.0 - smoothstep(0.4, duration, elapsed)
+		if elapsed >= duration: queue_free()
+		return
 	if kind == "ice_line":
 		_cloud_material.set_shader_parameter("opacity", travel_alpha * 0.85)
 		return
@@ -132,7 +166,7 @@ func _process(delta: float) -> void:
 			_pieces[i].position.y = sin(elapsed * 24.0 + i) * 0.025
 		return
 	var progress := clampf(elapsed / duration, 0.0, 1.0)
-	var healing := kind.begins_with("heal")
+	var healing := kind.begins_with("heal") or kind == "cure"
 	_pieces[0].scale = Vector3.ONE * (0.35 + progress * 0.65)
 	for i in range(1, _pieces.size()):
 		var angle := TAU * (i - 1) / 8.0 + progress * 0.4

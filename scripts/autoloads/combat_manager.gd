@@ -489,12 +489,15 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 	player_evasion += int(set_bonus.get("evasion", 0))
 	player_technique += int(set_bonus.get("mental", 0))
 
-	# Buff: shifta (ATK boost)
+	# Share the attack-stat hook; legacy and runtime Shifta do not multiply twice.
 	var buffs: Dictionary = character.get("combat_buffs", {})
-	if buffs.has("shifta"):
-		var buff: Dictionary = buffs["shifta"]
-		if int(buff.get("turns", 0)) > 0:
-			player_attack = int(float(player_attack) * (1.0 + float(buff.get("amount", 0.1))))
+	var shifta_amount := 0.0
+	if buffs.has("shifta") and int(buffs.shifta.get("turns", 0)) > 0:
+		shifta_amount = float(buffs.shifta.get("amount", 0.1))
+	var player := get_tree().get_first_node_in_group("player")
+	if character == CharacterManager.get_active_character():
+		shifta_amount = maxf(shifta_amount, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(player))
+	player_attack = int(float(player_attack) * (1.0 + shifta_amount))
 	# Buff: deband (DEF boost)
 	if buffs.has("deband"):
 		var buff: Dictionary = buffs["deband"]

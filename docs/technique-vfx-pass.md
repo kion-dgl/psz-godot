@@ -111,3 +111,117 @@ looking good. This approves the reviewed base effects, not the entire technique
 roster. Next focused playtest: charged Foie/Barta/Zonde (Rafoie/Rabarta/Razonde),
 then Resta and Anti. Blocked support and Grants/Megid fallback delivery remain
 implementation gaps from the roster audit.
+
+## Resta/Anti party support and PSO audio
+
+Owner requested party AoE, recipient particles and PSO sound cues for Resta,
+Anti, Foie, Barta and Zonde. Support now checks a 6-unit 3D radius at release,
+including caster and living registered companions, without a line-of-sight gate.
+Healing clamps per-recipient HP; Anti removes actual recipient ailment state.
+Out-of-range, dismissed and defeated allies are excluded, as are enemies.
+Success feedback follows only actual mutation; the caster still shows an area
+ring for an empty/full-health cast. Recipient particles last at most 1.5 seconds
+and follow their actor; the stationary radius ring fades in 0.55 seconds.
+
+Companions previously had no HP/status recipient contract. This adds runtime
+HP from class stats and curable ailment records. It does not implement enemy
+retargeting, companion damage/ailment combat behavior, resurrection, persistence
+between scenes, or multiplayer networking. The playtest explicitly injures and
+poisons stationary real companions to exercise this support path.
+
+PSO source mappings from data/sfx_labels.json:
+- Foie: common_132, SE_PL_FAIOSHOT
+- Barta: common_136, SE_TECH_BATA
+- Zonde: common_140, SE_TECH_ZOND
+- Resta: common_146, SE_TECH_RESTA
+- Anti: common_148, SE_TECH_ANTI — catalogue notes conflict with the label;
+  this is an audition candidate pending owner listening, not verified original timing.
+
+One positional cue plays at accepted release, respecting the SFX bus. No sound
+on rejected casts. Audio is staged in the ignored assets/sfx tree from the local
+PSO library; asset-pack publication is still required for distribution. Recreate
+with scripts/tools/prepare_playtest_audio.py --source PATH_TO_psobb_sfx.
+The support playtest starts on bank 2: F5 poisons the party, F6 lowers HP, F7
+moves Kai near/far; Sarisa starts nearby. Readouts expose HP and poison state.
+
+Validation: rendered party-support probe passed 23 checks, including actual
+near/far companion mutations, HP cap, defeated exclusion, enemy exclusion,
+recipient-only particles, cleanup, no-op cure, insufficient-PP suppression,
+and loading all five staged PSO cues. Normal-view screenshots show Resta and
+Anti particles attached to both caster and Sarisa. Owner sound/visual approval
+remains pending, especially the ambiguously annotated Anti sample.
+
+## Shifta party cast and persistent wrists
+
+Owner requested the same area delivery as Resta, a red cast circle and glowing
+red wrist clouds while active. Shifta now uses the shared 6-unit recipient query
+and its actual learned level. The existing +10% attack per level formula is
+reused; a provisional 60-second runtime duration replaces turn counting for the
+3D field. Recast refreshes duration and keeps the stronger amount, never stacks.
+Legacy and runtime player Shifta use the larger bonus once. Companion attacks
+consume the same runtime effect. This is an ATK stat buff, not technique power.
+
+The buff node owns its timer and two wrist clouds, positioned from actual
+070_RArm02 / 040_LArm02 skeleton poses each rendered frame. It reacquires the
+skeleton after model changes. Missing wrist bones suppress those indicators
+rather than inventing a body attachment. Expiry, defeat/dismissal and scene exit
+remove the runtime bonus and effects. Runtime Shifta is not saved.
+PSO SE_TECH_SIFTA/common_152 is staged alongside the existing technique cues.
+
+Rendered verification passed nine checks: cost, near/far recipients, actual
+player/companion attack stats, both wrist bones on both rigs, PSO cue loading,
+nonstacking refresh, defeat cleanup and simultaneous stat/visual expiry. Capture:
+/tmp/shifta-captures/party-shifta.png. Owner visual/tuning acceptance pending.
+
+## Owner sound audition corrections — November 11
+
+These supersede the initial filename-based selections and are recorded as owner
+listening feedback, not independently recovered original-game dispatch:
+
+| Use | Source label | common sample |
+|---|---|---|
+| Foie cast | SE_EP4ITEM_W44 | 120 |
+| Barta cast | SE_EP4ITEM_WH26 | 124 |
+| Zonde cast | SE_W27_SHOOT | 128 |
+| Shifta cast | SE_TECH_ZOND | 140 |
+| Resta cast | SE_TECH_RAFOIE1 | 134 |
+| Anti cast | SE_TECH_RAFOIE2 | 135 |
+| Shifta applied to recipient | SE_TECH_RAZONDE | 142 |
+| Poison HP tick | SE_PL_POISON | 011 |
+| Stun applied | SE_PL_PARALYSIS | 012 |
+| Slow (reserved mapping) | SE_PL_SLOW | 013 |
+
+Poison bubbles no longer own an independent audio loop. Poison's actual damage
+clock now emits the cue once per HP-loss tick, with none after curing. Stun emits
+its cue on accepted application. The slow cue is staged and mapped, but no 3D
+slow behavior is invented here. Shifta plays the cast cue once and the power-up
+cue at each successful recipient. Existing source labels/notes are preserved;
+remake-use annotations in data/sfx_labels.json record the owner correction.
+
+Rafoie, Rabarta and Razonde have completed owner playtesting for this pass.
+Deband is next in the support sequence and still needs delivery, defense bonus
+and presentation work.
+
+### Rafoie focused follow-up
+
+K is reserved for palette slot 2; Kai positioning remains on F7. The roster check now sends real K press/release events and checks charge readiness and PP timing. `PSZ_TECH_FOCUS=rafoie` starts the normal Foie/Barta/Zonde palette with stationary 10,000 HP targets (R restores them). Hold J to charge Foie into Rafoie, then release.
+
+Rafoie uses owner-selected SE_EP4ITEM_WH02 at cast and SE_EP4ITEM_WH11 at the target explosion. The blast grows into layered turbulent fire spheres with a five-unit radius and center two units above the impact ground, leaving 30% of its diameter below ground. The existing damage/range rules remain unchanged. Accepted during owner playtest.
+
+Rafoie revision: two fire shells plus a red ground ring expanding to the five-unit damage radius. Palette technique release now requires completed charge; early release cancels without casting or PP cost. Keyboard audit covers early-release cancellation as well as charged release.
+
+Palette follow-up: P refills PP only in the Force fixture; F5 retains poison and U refills HP/PP. Technique icons now desaturate and dim dynamically for insufficient charged-spell PP, unlearned/unsupported techniques, CAST restriction, defeat, attack-blocking ailments, and combat recovery. Empty consumables retain their count and also desaturate. Other combat-action availability is unchanged.
+
+### Rabarta radial ice pass
+
+Replaced ten shard projectiles with a continuous translucent, rumpled ice sheet spreading from the cast location at 12 units/sec to the existing eight-unit range. Staggered Barta ice clusters with rounded tilted caps and ground frost emerge along the sheet, then dissolve. The circular sweep damages each eligible enemy once when reached, with world-cover ray checks; it no longer leaves gaps between projectile spokes. `PSZ_TECH_FOCUS=rabarta` provides durable stationary targets; hold/release K, P refills PP. Accepted for now after the contrast revision below.
+
+Rabarta intensity revision: radius reduced from eight to four units; propagation increased from 12 to 28 units/sec (~0.14 seconds to full radius). Stronger blue/cyan translucent sheet, larger ice clusters, and 24 expanding ground-mist billboards. SE_EP4ITEM_S52 (common_126) plays on release.
+
+Rabarta contrast revision: five-unit radius at 16 units/sec (~0.31-second expansion). Fresh ice has an emissive white-cyan leading band, settling into softer translucent pale blue behind it. Mist trails inside the edge and fades relative to the propagation duration.
+
+### Razonde chain pass
+
+Replaces simultaneous overhead strikes with a caster-to-enemy jagged white-core/blue-halo bolt and sequential enemy-to-enemy links spaced 0.12 seconds apart. Prefers the selected eligible target, otherwise nearest; each enemy once, at most ten, eight-unit hop range within the existing twelve-unit cast area. World cover blocks links. SE_W27_HEY (common_130) plays on release. Focus fixture: hold/release L, P refill. Rabarta accepted for now; Razonde accepted after the shared-Zonde-shader revision below.
+
+Razonde visual consistency: chain links now use Zonde’s existing additive FBM lightning shader, matching colors, width and fade timing. An opt-in axis-facing mode orients the same effect between endpoints; default vertical Zonde rendering is unchanged.

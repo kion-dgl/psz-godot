@@ -1799,8 +1799,7 @@ func _on_palette_released(slot: int) -> void:
 	if charged:
 		var charged_id: String = TechniqueManager.get_charged_technique(tech_id)
 		_cast_technique(charged_id)
-	else:
-		_cast_technique(tech_id)
+	# Releasing before the charge completes cancels without spending PP.
 
 
 func _execute_palette_action(slot: int) -> void:
@@ -1840,7 +1839,7 @@ func _cast_technique(technique_id: String) -> void:
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
 		return
-	if technique_id in ["reverser", "shifta", "deband", "jellen", "zalure"]:
+	if technique_id in ["reverser", "deband", "jellen", "zalure"]:
 		# No 3D recipient/buff resolver yet: never turn support into a fireball.
 		_ailments.feedback(self, "No valid support target")
 		return
@@ -1882,6 +1881,7 @@ func _cast_technique(technique_id: String) -> void:
 	# than the name we asked for.
 	_arm_attack_step(animation_player.current_animation if animation_player else "")
 
+	preload("res://scripts/3d/combat/support_technique.gd").play_sound(self, technique_id)
 	_spawn_technique_effect(technique_id, tech_data)
 
 
@@ -1903,16 +1903,12 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 		_current_attack_element_level = TechniqueManager.get_technique_level(character, technique_id)
 
 	match technique_id:
-		"resta":
+		"shifta":
+			preload("res://scripts/3d/combat/support_technique.gd").cast(self, technique_id, _current_attack_element_level)
+		"resta", "anti":
 			var power := float(TechniqueManager.get_technique("resta").get("power", 0))
 			var amount := int(power * (1.0 + float(_current_attack_element_level) / 10.0))
-			var previous := GameState.hp
-			GameState.set_hp(GameState.hp + amount)
-			_spawn_heal_number("hp", GameState.hp - previous)
-			preload("res://scripts/3d/effects/technique_visual.gd").burst(get_tree().current_scene, global_position + Vector3.UP * 0.08, "heal" if GameState.hp > previous else "heal_empty", 0.7, 1.0 if GameState.hp > previous else 0.5)
-		"anti":
-			clear_status_effects()
-			_ailments.feedback(self, "Cured")
+			preload("res://scripts/3d/combat/support_technique.gd").cast(self, technique_id, amount)
 		"foie":
 			_spawn_foie(spawn_pos, forward, damage, kb)
 		"gifoie":
@@ -2099,6 +2095,8 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 	var explosion_pos: Vector3 = target_enemy.global_position
 	var explosion_radius := 5.0
 
+	SfxManager.play_at("res://assets/sfx/common/common_123.wav", explosion_pos, -5.0)
+
 	# Full damage to primary target
 	if target_enemy.hurtbox:
 		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
@@ -2115,7 +2113,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
 			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 
-	preload("res://scripts/3d/effects/technique_visual.gd").burst(get_tree().current_scene, explosion_pos + Vector3.UP * 0.08, "fire_area", 0.45, explosion_radius)
+	preload("res://scripts/3d/effects/technique_visual.gd").burst(get_tree().current_scene, explosion_pos, "rafoie_blast", 0.9, explosion_radius)
 
 
 func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
@@ -2152,26 +2150,14 @@ func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
 
 
 func _spawn_rabarta(damage: int, kb: float) -> void:
-	# Ice shards in a circle around the user — pierce, largest ice AoE
-	var num_shards := 10
-	for i in range(num_shards):
-		var angle: float = i * TAU / float(num_shards)
-		var dir := Vector3(sin(angle), 0, cos(angle))
-		var proj := Projectile.new()
-		proj.visual_kind = "ice"
-		proj.damage = damage
-		proj.knockback = kb
-		proj.accuracy = 100
-		proj.direction = dir
-		proj.max_range = 8.0
-		proj.owner_node = self
-		proj.speed = 12.0
-		proj.pierce = true
-		proj.max_hits = 0  # Unlimited — Rabarta shards traverse outward
-		proj.color = Color(0.5, 0.8, 1.0)
-		_apply_element_to_proj(proj)
-		get_tree().current_scene.add_child(proj)
-		proj.global_position = global_position + Vector3(0, 0.3, 0)
+	var wave = preload("res://scripts/3d/combat/rabarta_wave.gd").new()
+	wave.caster = self
+	wave.damage = damage
+	wave.knockback = kb
+	wave.element = _current_attack_element
+	wave.element_level = _current_attack_element_level
+	get_tree().current_scene.add_child(wave)
+	wave.global_position = global_position
 
 
 func _spawn_zonde(damage: int, kb: float) -> void:
@@ -2259,14 +2245,15 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 
 
 func _spawn_razonde(damage: int, kb: float) -> void:
-	# Lightning spiral around user — largest range, no target required
-	var nearby := _get_enemies_in_radius(12.0)
-	for enemy in nearby:
-		if enemy.hurtbox:
-			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
-		_spawn_zonde_visual(enemy.global_position)
-	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
+	var chain = preload("res://scripts/3d/combat/razonde_chain.gd").new()
+	chain.caster = self
+	chain.preferred = _targeted_enemies[0] if not _targeted_enemies.is_empty() else null
+	chain.damage = damage
+	chain.knockback = kb
+	chain.element = _current_attack_element
+	chain.element_level = _current_attack_element_level
+	get_tree().current_scene.add_child(chain)
+	chain.global_position = global_position
 
 
 func _get_enemies_in_radius(radius: float) -> Array:
@@ -3881,3 +3868,24 @@ func _prepare_native_roles(lib: AnimationLibrary, native: AnimationLibrary, anim
 			shot.length += prototype_profile.recovery[step]
 			lib.add_animation(str(prototype_profile.native_prefix) + "_shot_atk" + str(step + 1), shot)
 	return native_roles
+
+
+func can_receive_support() -> bool:
+	return not _is_defeated and GameState.hp > 0
+
+func receive_support(technique: String, amount: int) -> int:
+	if not can_receive_support(): return 0
+	if technique == "shifta":
+		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount)
+		return 1
+	if technique == "resta":
+		var before := GameState.hp
+		GameState.set_hp(GameState.hp + maxi(amount, 0))
+		var healed := GameState.hp - before
+		if healed > 0: _spawn_heal_number("hp", healed)
+		return healed
+	if technique == "anti" and has_status_effects():
+		clear_status_effects()
+		_ailments.feedback(self, "Cured")
+		return 1
+	return 0

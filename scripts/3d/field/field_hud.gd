@@ -357,6 +357,9 @@ class _ActionPalette extends Control:
 			tex_rect.position = Vector2(center.x - icon_display * 0.5, center.y - icon_display * 0.5)
 			tex_rect.size = Vector2(icon_display, icon_display)
 			add_child(tex_rect)
+			var availability_material := ShaderMaterial.new()
+			availability_material.shader = preload("res://scripts/3d/shaders/palette_availability.gdshader")
+			tex_rect.material = availability_material
 			_slot_icons.append(tex_rect)
 
 			var count_label := Label.new()
@@ -415,6 +418,14 @@ class _ActionPalette extends Control:
 		else:
 			label.visible = false
 			_slot_icons[slot].modulate = Color.WHITE
+
+	func _process(_delta: float) -> void:
+		var player = get_tree().get_first_node_in_group("player")
+		var slots: Array = ActionPalette.get_current_slots()
+		for i in range(_slot_icons.size()):
+			var action: String = slots[i] if i < slots.size() else ""
+			var available := preload("res://scripts/3d/player/combat_palette_cue.gd").available(player, action)
+			_slot_icons[i].material.set_shader_parameter("unavailable", not available)
 
 	func set_charging_slot(slot: int) -> void:
 		_charging_slot = slot

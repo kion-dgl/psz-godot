@@ -14,3 +14,20 @@ static func read(p) -> Dictionary:
 static func applies(cue: Dictionary, action: String, slot: int) -> bool:
 	if cue.get("charging", false): return slot == int(cue.slot)
 	return action in ["attack", "strong_attack"] or (cue.get("recovery", false) and TechniqueManager.TECHNIQUES.has(action))
+
+## Read-only checks: never roll damage just to render the HUD.
+static func available(p, action: String) -> bool:
+	if action.is_empty(): return false
+	if ActionPalette.is_consumable(action): return Inventory.get_item_count(action) > 0
+	if not TechniqueManager.TECHNIQUES.has(action): return true
+	if not is_instance_valid(p) or Inventory.can_use_traps(): return false
+	if p._is_defeated or GameState.hp <= 0 or p._freeze.remaining > 0.0 or p._ailments.blocks_attack(): return false
+	if p._recovery_left > 0.0 or p.current_state in [p.PlayerState.ATTACKING, p.PlayerState.DODGING, p.PlayerState.DAMAGED, p.PlayerState.DOWN]: return false
+	var character = CharacterManager.get_active_character()
+	if character == null: return false
+	var spell: String = TechniqueManager.get_charged_technique(action)
+	if spell in ["reverser", "deband", "jellen", "zalure"]: return false
+	var level: int = TechniqueManager.get_technique_level(character, spell)
+	if level <= 0: return false
+	var cost := maxi(1, int(TechniqueManager.TECHNIQUES[spell].get("pp", 5)) - int(float(level) / 5.0))
+	return PhotonBlast.flozir_left > 0.0 or GameState.mp >= cost

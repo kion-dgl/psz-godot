@@ -81,21 +81,27 @@
     "category": "common",
     "label": "SE_PL_POISON",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Poison HP tick",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_012.wav": {
     "file": "common_012.wav",
     "category": "common",
     "label": "SE_PL_PARALYSIS",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Stun feedback",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_013.wav": {
     "file": "common_013.wav",
     "category": "common",
     "label": "SE_PL_SLOW",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Slow feedback (3D slow delivery pending)",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_014.wav": {
     "file": "common_014.wav",
@@ -704,7 +710,9 @@
     "category": "common",
     "label": "SE_EP4ITEM_W44",
     "notes": "shot = flame visit/burning visit",
-    "starred": false
+    "starred": false,
+    "remake_use": "Foie cast",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_121.wav": {
     "file": "common_121.wav",
@@ -718,21 +726,27 @@
     "category": "common",
     "label": "SE_EP4ITEM_WH02",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Rafoie cast",
+    "remake_use_source": "Owner audition, 2026-11-11"
   },
   "common/common_123.wav": {
     "file": "common_123.wav",
     "category": "common",
     "label": "SE_EP4ITEM_WH11",
     "notes": "NUG2000 target impact sound plays this too",
-    "starred": false
+    "starred": false,
+    "remake_use": "Rafoie explosion",
+    "remake_use_source": "Owner audition, 2026-11-11"
   },
   "common/common_124.wav": {
     "file": "common_124.wav",
     "category": "common",
     "label": "SE_EP4ITEM_WH26",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Barta cast",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_125.wav": {
     "file": "common_125.wav",
@@ -746,7 +760,9 @@
     "category": "common",
     "label": "SE_EP4ITEM_S52",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Rabarta cast",
+    "remake_use_source": "Owner audition, 2026-11-11"
   },
   "common/common_127.wav": {
     "file": "common_127.wav",
@@ -760,7 +776,9 @@
     "category": "common",
     "label": "SE_W27_SHOOT",
     "notes": "wand = the sigh of a god, katana = raikiri",
-    "starred": false
+    "starred": false,
+    "remake_use": "Zonde cast",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_129.wav": {
     "file": "common_129.wav",
@@ -774,7 +792,9 @@
     "category": "common",
     "label": "SE_W27_HEY",
     "notes": "Identical CRC32 with #129. shot = maser beam's zonde, not the firing sound",
-    "starred": false
+    "starred": false,
+    "remake_use": "Razonde cast",
+    "remake_use_source": "Owner audition, 2026-11-11"
   },
   "common/common_131.wav": {
     "file": "common_131.wav",
@@ -802,14 +822,18 @@
     "category": "common",
     "label": "SE_TECH_RAFOIE1",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Resta cast",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_135.wav": {
     "file": "common_135.wav",
     "category": "common",
     "label": "SE_TECH_RAFOIE2",
     "notes": "this one doesn't interrupt #134 but is played simultaneously so that this shorter sound ends roughly when #134 ends",
-    "starred": false
+    "starred": false,
+    "remake_use": "Anti cast",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_136.wav": {
     "file": "common_136.wav",
@@ -837,7 +861,9 @@
     "category": "common",
     "label": "SE_TECH_ZOND",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Shifta cast",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_141.wav": {
     "file": "common_141.wav",
@@ -851,7 +877,9 @@
     "category": "common",
     "label": "SE_TECH_RAZONDE",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Shifta recipient power-up",
+    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
   },
   "common/common_143.wav": {
     "file": "common_143.wav",
