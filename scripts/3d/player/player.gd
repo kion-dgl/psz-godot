@@ -1977,6 +1977,11 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	proj.max_hits = 0  # Unlimited — Barta runs the full length of the cone
 	proj.color = profile.color
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+	if combat_aim != null and combat_aim.active and combat_aim.allowed():
+		ground_pos = global_position + Vector3.UP * 0.3
+		var aimed: Vector3 = combat_aim.shot_direction(ground_pos, profile.range)
+		proj.direction = Vector3(aimed.x, 0, aimed.z).normalized()
+		proj.collide_with_world = true
 	_apply_element_to_proj(proj)
 	get_tree().current_scene.add_child(proj)
 	proj.global_position = ground_pos

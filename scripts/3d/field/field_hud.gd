@@ -832,24 +832,29 @@ class _BossHealthBar extends Control:
 
 class _PaletteComboCue extends Control:
 	const Rules = preload("res://scripts/3d/player/humar_saber_prototype.gd")
+	const CombatCue = preload("res://scripts/3d/player/combat_palette_cue.gd")
 	var _cue: Dictionary = {}
 
 	func _process(_delta: float) -> void:
 		var player = get_tree().get_first_node_in_group("player")
-		_cue = Rules.palette_cue(player) if is_instance_valid(player) else {}
+		_cue = CombatCue.read(player)
+		if _cue.is_empty(): _cue = Rules.palette_cue(player) if is_instance_valid(player) else {}
 		queue_redraw()
 
 	func _draw() -> void:
 		if _cue.is_empty(): return
 		var progress: float = _cue.progress
-		var radius := lerpf(29.0, 21.0, clampf(progress / Rules.CHAIN[0], 0, 1))
+		var opening: float = _cue.get("open", Rules.CHAIN[0])
+		var closing: float = _cue.get("close", Rules.CHAIN[1])
+		var radius := lerpf(29.0, 21.0, clampf(progress / maxf(opening, 0.001), 0, 1))
 		var color := Color(0.8, 0.9, 1.0, 0.55)
 		if _cue.ready:
-			radius = lerpf(21.0, 15.0, inverse_lerp(Rules.CHAIN[0], Rules.CHAIN[1], progress))
+			radius = lerpf(21.0, 15.0, inverse_lerp(opening, maxf(closing, opening + 0.001), progress))
 			color = Color(0.35, 1.0, 0.65, 0.9)
+		if _cue.get("charging", false) or _cue.get("recovery", false): radius = lerpf(29.0, 15.0, progress)
 		if _cue.queued: color = Color(1.0, 0.8, 0.3, 0.9)
 		var slots: Array = ActionPalette.get_current_slots()
 		for i in mini(3, slots.size()):
-			if slots[i] not in ["attack", "strong_attack"]: continue
+			if not CombatCue.applies(_cue, slots[i], i): continue
 			var center: Vector2 = _ActionPalette.SLOT_CENTERS[i] * _ActionPalette.BG_SCALE
 			draw_arc(center, radius, 0, TAU, 48, color, 1.5, true)

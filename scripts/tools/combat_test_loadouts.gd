@@ -12,8 +12,8 @@ static func configure() -> void:
 	var character: Dictionary = CharacterManager._characters[0]
 	character.equipment.weapon = OS.get_environment("PSZ_AIM_WEAPON")
 	if id.begins_with("fo"):
-		character.techniques = {"foie": 1, "resta": 1}
-		character.action_palette = [["attack", "foie", "resta"], ["strong_attack", "foie", "monofluid"]]
+		character.techniques = {"foie": 1, "barta": 1, "resta": 1}
+		character.action_palette = [["foie", "barta", "resta"], ["attack", "strong_attack", "monofluid"]]
 
 static func next() -> void:
 	var current: Dictionary = CharacterManager.get_active_character()

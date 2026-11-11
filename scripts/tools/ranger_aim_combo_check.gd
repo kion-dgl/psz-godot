@@ -11,6 +11,8 @@ static func click(p) -> void:
 	Input.parse_input_event(release)
 
 static func run(probe, p, locked := false) -> void:
+	var original_page: int = ActionPalette.current_page
+	if str(CharacterManager.get_active_character().class_id).begins_with("fo"): ActionPalette.set_page(1)
 	if not locked: probe.set_shoulder(true)
 	await probe.ticks(15)
 	p.transition_to(p.PlayerState.IDLE)
@@ -33,10 +35,10 @@ static func run(probe, p, locked := false) -> void:
 		for frame in range(180):
 			if p._attack_frac() >= accept_at or p.combo_state != step: break
 			await probe.ticks(1)
-		probe._check(p.combat_aim.combo_feedback().state == "CLICK", "crosshair advertises actual chain window")
+		probe._check(preload("res://scripts/3d/player/combat_palette_cue.gd").read(p).ready, "palette circle advertises actual chain window")
 		click(p)
 		await probe.ticks(1)
-		probe._check(p.combat_aim.combo_feedback().state == "QUEUED", "crosshair confirms queued follow-up")
+		probe._check(preload("res://scripts/3d/player/combat_palette_cue.gd").read(p).queued, "palette circle confirms queued follow-up")
 		probe._check(p._queued_combo != p.ComboQueue.NONE, "mouse queues aimed step %d in its timing window" % (step + 1))
 		for frame in range(180):
 			if p.combo_state != step: break
@@ -49,3 +51,4 @@ static func run(probe, p, locked := false) -> void:
 		probe._check(releases.has(step), "aim combo releases real projectiles on step %d" % step)
 	p.get_tree().current_scene.child_entered_tree.disconnect(on_shot)
 	if not locked: probe.set_shoulder(false)
+	ActionPalette.set_page(original_page)

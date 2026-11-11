@@ -60,11 +60,11 @@ func launch_fixture() -> void:
 		enemy.current_evasion = -10000 if OS.get_environment("PSZ_AIM_CHECK") == "1" else 0
 		if OS.get_environment("PSZ_AIM_CHECK") == "1": enemy.current_defense = 0
 		# Toggle the opponents with T for a repeatable positioning/combat comparison.
-	DisplayServer.window_set_title(Loadouts.label() + " — Z shoulder • Q lock • Tab switch • LMB / J shoot • Space / LB dodge • T enemies • R reset")
+	DisplayServer.window_set_title(Loadouts.label() + " — Z shoulder • Q lock • Tab switch • LMB / J action • Space / LB dodge • T enemies • R reset")
 	var layer := CanvasLayer.new()
 	get_tree().current_scene.add_child(layer)
 	var label := Label.new()
-	label.text = Loadouts.label() + "  •  F1: next loadout  •  F2: restart\nZ: shoulder toggle   •   Q: lock toggle   •   Tab: switch   •   WASD / left stick: move   •   mouse / right stick: aim\nLeft / right / middle click: palette   •   J: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nCLICK chains attacks. Force: right click Foie, middle click Resta (hold to charge)."
+	label.text = Loadouts.label() + "  •  F1: next loadout  •  F2: restart\nZ: shoulder toggle   •   Q: lock toggle   •   Tab: switch   •   WASD / left stick: move   •   mouse / right stick: aim\nLeft / right / middle click: palette   •   J: palette 1   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nPalette circles show timing/recovery. Force: left Foie, right Barta, middle Resta. Shift: back palette."
 	label.position = Vector2(20, 145)
 	label.add_theme_font_size_override("font_size", 16)
 	layer.add_child(label)

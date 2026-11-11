@@ -67,7 +67,7 @@ func update(delta: float) -> void:
 		if active:
 			reticle.locked = mode == Mode.LOCKED
 			reticle.target_pixel = orbit.camera.unproject_position(lock.point(lock.target)) if reticle.locked else Vector2.ZERO
-			reticle.set_combo(combo_feedback())
+			reticle.queue_redraw()
 
 func clear() -> void:
 	var was_active := active

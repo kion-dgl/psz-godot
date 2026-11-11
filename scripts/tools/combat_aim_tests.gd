@@ -20,6 +20,11 @@ static func run(r: Node) -> void:
 	r.assert_true(not steps.crossed(0.4, 0.6, false, 1), "strafe skips the extra half-cycle footstep")
 	r.assert_true(steps.crossed(0.9, 0.1, false, 1), "strafe retains one footstep per full cycle")
 	r.assert_true(steps.crossed(0.1, 0.9, true, 1), "reverse strafe retains one footstep per cycle")
+	var cues := preload("res://scripts/3d/player/combat_palette_cue.gd")
+	r.assert_true(cues.applies({"charging": true, "slot": 1}, "barta", 1), "charge circle follows the selected technique slot")
+	r.assert_true(not cues.applies({"charging": true, "slot": 1}, "foie", 0), "charge circle excludes other slots")
+	r.assert_true(cues.applies({"recovery": true}, "foie", 0), "cast recovery circles include techniques")
+	r.assert_true(not cues.applies({"recovery": true}, "monofluid", 2), "cast recovery does not label consumables as techniques")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 775
 	for i in range(24):
