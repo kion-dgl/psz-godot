@@ -208,3 +208,12 @@ static func combo_prompt(step: int, fraction: float, window: Array[float], fumbl
 	if queued: return "QUEUED"
 	if fumbled or fraction > window[1]: return "MISSED"
 	return "CLICK" if fraction >= window[0] else "WAIT"
+
+static func dodge_motion(curve: PackedVector2Array, start: float, end: float) -> Vector2:
+	# Integrate fractional source frames: displacement is independent of tick rate.
+	var first := clampf(start, 0.0, 1.0) * curve.size()
+	var last := clampf(end, 0.0, 1.0) * curve.size()
+	var motion := Vector2.ZERO
+	for frame in range(int(floor(first)), mini(int(ceil(last)), curve.size())):
+		motion += curve[frame] * maxf(0.0, minf(last, frame + 1.0) - maxf(first, frame))
+	return motion

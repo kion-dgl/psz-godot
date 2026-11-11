@@ -35,6 +35,13 @@ static func run(r: Node) -> void:
 	player._dodge_return_facing = 2.0
 	player.transition_to(player.PlayerState.DAMAGED)
 	r.assert_true(player._dodge_return_facing == null and player.player_rotation == 1.0, "interruption discards saved facing without turning")
+	var expected := Vector2.ZERO
+	for motion in player.DODGE_MOTION_CURVE: expected += motion
+	for count in [20, 30, 60, 144]:
+		var total := Vector2.ZERO
+		for tick in range(count):
+			total += Aim.dodge_motion(player.DODGE_MOTION_CURVE, float(tick) / count, float(tick + 1) / count)
+		r.assert_true(total.distance_to(expected) < 0.02, "clip-fit dodge preserves curve displacement across tick rates")
 	player.free()
 
 	var window: Array[float] = [0.4, 0.8]

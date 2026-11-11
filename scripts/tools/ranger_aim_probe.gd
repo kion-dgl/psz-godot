@@ -122,7 +122,12 @@ func verify_controls() -> void:
 	_check(player.current_state == player.PlayerState.DODGING and player.dodge_direction == heading, "dodge heading stays fixed when aim moves")
 	player._start_attack()
 	_check(player.current_state == player.PlayerState.DODGING, "aim fire cannot cancel dodge")
-	while player.current_state == player.PlayerState.DODGING: await ticks(1)
+	var idle_during_roll := false
+	while player.current_state == player.PlayerState.DODGING:
+		idle_during_roll = idle_during_roll or player.animation_player.current_animation.ends_with("_wait")
+		await ticks(1)
+	_check(not idle_during_roll, "roll never attaches standing idle while still moving")
+	_check(player.dodge_timer <= player._dodge_clip_duration + 0.04, "recovery ends with the actual roll clip")
 	_check(absf(angle_difference(player.player_rotation, prior_facing)) < 0.001, "stand-up restores pre-roll facing even when camera turns")
 	await ticks(3)
 	await verify_input_lifecycle()

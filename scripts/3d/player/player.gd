@@ -293,6 +293,7 @@ const RACAST_CLASSES := ["racast", "racaseal"]
 # Dodge tracking
 var dodge_direction: float = 0.0
 var _dodge_return_facing: Variant = null
+var _dodge_clip_duration := 0.0
 var dodge_timer: float = 0.0
 # ROM dodge action (spec /mechanics/dodge): a 41-frame @30fps committed roll
 # whose displacement follows the original root-motion curve — burst, a
@@ -1562,15 +1563,21 @@ func _start_dodge() -> void:
 	dodge_cooldown = DODGE_ADMISSION_COOLDOWN
 	_dodge_run_seed = (MOVE_SPEED / 30.0) * 4096.0 if current_state == PlayerState.RUNNING else 0.0
 	transition_to(PlayerState.DODGING)
+	_dodge_clip_duration = 0.0
+	if combat_aim != null and combat_aim.eligible() and animation_player != null:
+		var clip := animation_player.current_animation
+		if animation_player.has_animation(clip): _dodge_clip_duration = animation_player.get_animation(clip).length
 
 
 func _handle_dodge(delta: float) -> void:
+	var previous := dodge_timer
 	dodge_timer += delta
+	var duration := _dodge_clip_duration if _dodge_clip_duration > 0.0 else DODGE_DURATION
 
 	# Completion (frame 41): the action ends, idle/run attaches with no blend,
 	# and the logical position rides the body (the curve's settle-back already
 	# delivered the final root).
-	if dodge_timer >= DODGE_DURATION:
+	if (previous >= duration if _dodge_clip_duration > 0.0 else dodge_timer >= duration):
 		if _dodge_return_facing != null: player_rotation = float(_dodge_return_facing)
 		velocity.x = 0
 		velocity.z = 0
@@ -1584,7 +1591,9 @@ func _handle_dodge(delta: float) -> void:
 	# direction before clearing it, so seed that step here.
 	var frame := int(dodge_timer * 30.0)
 	var local := _dodge_curve_delta(frame)
-	if frame == 0 and _dodge_run_seed > 0.0:
+	if _dodge_clip_duration > 0.0:
+		local = combat_aim.dodge_motion(DODGE_MOTION_CURVE, previous / duration, dodge_timer / duration)
+	if (previous == 0.0 if _dodge_clip_duration > 0.0 else frame == 0) and _dodge_run_seed > 0.0:
 		local += Vector2(0.0, _dodge_run_seed)
 	var world := Vector3(
 		local.x * cos(dodge_direction) + local.y * sin(dodge_direction), 0.0,
@@ -3009,6 +3018,7 @@ func play_animation(anim_name: String, _loop: bool = true) -> void:
 func _on_animation_finished(_anim_name: String) -> void:
 	match current_state:
 		PlayerState.DODGING:
+			if _dodge_clip_duration > 0.0: return # Physics completes the clip-aligned prototype roll.
 			# The roll clip ends at frame ~20, but the committed action runs to
 			# frame 41 (ROM roll + get-up; the extracted clip set has no get-up
 			# asset) — hold the DODGING state; _handle_dodge completes it.
