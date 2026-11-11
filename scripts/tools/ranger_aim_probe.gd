@@ -46,9 +46,11 @@ func launch_fixture() -> void:
 	enemies = get_tree().get_nodes_in_group("enemies").filter(func(e): return e is EnemyBase)
 	for enemy in enemies:
 		enemy.set_physics_process(false)
-		enemy.enemy_data = enemy.enemy_data.duplicate(true)
-		enemy.enemy_data.hp_base = 10000
-		enemy.current_hp = 10000
+		# Durable targets are only needed by the automated combo/trajectory checks.
+		if OS.get_environment("PSZ_AIM_CHECK") == "1":
+			enemy.enemy_data = enemy.enemy_data.duplicate(true)
+			enemy.enemy_data.hp_base = 10000
+			enemy.current_hp = 10000
 		# Trajectory checks must not randomly miss through the RPG accuracy roll.
 		enemy.current_evasion = -10000 if OS.get_environment("PSZ_AIM_CHECK") == "1" else 0
 		if OS.get_environment("PSZ_AIM_CHECK") == "1": enemy.current_defense = 0
@@ -89,9 +91,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		GameState.set_hp(GameState.max_hp)
 		player.transition_to(player.PlayerState.IDLE)
 		for i in range(enemies.size()):
-			if is_instance_valid(enemies[i]):
+			if is_instance_valid(enemies[i]) and enemies[i].is_alive:
 				enemies[i].global_position = origin + Vector3(3 * i, 0, -6)
-				enemies[i].current_hp = 10000
+				enemies[i].current_hp = enemies[i].enemy_data.hp_base
 
 func ticks(count: int) -> void:
 	for frame in range(count): await get_tree().physics_frame
