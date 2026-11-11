@@ -50,7 +50,7 @@ func play(path: String, volume_db: float = 0.0, soften_edges: bool = false) -> v
 
 
 ## Play a 3D positional sound effect at a world position.
-func play_at(path: String, position: Vector3, volume_db: float = 0.0) -> void:
+func play_at(path: String, position: Vector3, volume_db: float = 0.0, muffled: bool = false) -> void:
 	var stream := _load(path)
 	if not stream:
 		return
@@ -59,7 +59,21 @@ func play_at(path: String, position: Vector3, volume_db: float = 0.0) -> void:
 	player.stream = stream
 	player.volume_db = volume_db
 	player.global_position = position
+	player.bus = _muffled_steps_bus() if muffled else "SFX"
 	player.play()
+
+
+func _muffled_steps_bus() -> StringName:
+	const NAME := &"SoftFootsteps"
+	if AudioServer.get_bus_index(NAME) < 0:
+		var index := AudioServer.bus_count
+		AudioServer.add_bus(index)
+		AudioServer.set_bus_name(index, NAME)
+		AudioServer.set_bus_send(index, "SFX")
+		var filter := AudioEffectLowPassFilter.new()
+		filter.cutoff_hz = 1800.0
+		AudioServer.add_bus_effect(index, filter)
+	return NAME
 
 
 func _load(path: String) -> AudioStream:

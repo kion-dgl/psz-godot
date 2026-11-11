@@ -1,6 +1,7 @@
 extends RefCounted
 ## Opt-in Ranger control slice (#775). OrbitCamera owns the view; Player owns locomotion.
 const WEAPONS := [WeaponData.WeaponType.HANDGUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.MECH_GUN, WeaponData.WeaponType.SABER, WeaponData.WeaponType.SWORD, WeaponData.WeaponType.DAGGERS, WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND]
+const STRAFE_SPEED := 4.5
 enum Mode { NORMAL, SHOULDER, LOCKED }
 var mode := Mode.NORMAL
 var active: bool:
@@ -143,7 +144,7 @@ func move_player(p) -> void:
 	p.walk_timer = 0.0
 	var next: int = p.PlayerState.IDLE if input.is_zero_approx() else p.PlayerState.WALKING
 	if p.current_state != next: p.transition_to(next)
-	p._apply_walk_velocity(movement.normalized(), p.WALK_SPEED * input.length())
+	p._apply_walk_velocity(movement.normalized(), STRAFE_SPEED * input.length())
 	play_step(p, input)
 
 func play_step(p, input: Vector2) -> void:

@@ -5,13 +5,13 @@ var previous := 0.0
 var reverse := false
 var emitted := 0
 
-static func crossed(start: float, end: float, backwards: bool) -> bool:
+static func crossed(start: float, end: float, backwards: bool, contacts := 2) -> bool:
 	if is_equal_approx(start, end): return false
 	if backwards:
 		if end > start: end -= 1.0
-		return ceili(start * 2.0) != ceili(end * 2.0)
+		return ceili(start * contacts) != ceili(end * contacts)
 	if end < start: end += 1.0
-	return floori(start * 2.0) != floori(end * 2.0)
+	return floori(start * contacts) != floori(end * contacts)
 
 func tick(p, moved: float) -> void:
 	var ap: AnimationPlayer = p.animation_player
@@ -23,10 +23,11 @@ func tick(p, moved: float) -> void:
 	if length <= 0.0: return
 	var phase := fposmod(ap.current_animation_position / length, 1.0)
 	var backwards := ap.get_playing_speed() < 0.0
-	if clip == name and reverse == backwards and crossed(previous, phase, backwards):
+	var strafing: bool = p.combat_aim != null and p.combat_aim.active
+	if clip == name and reverse == backwards and crossed(previous, phase, backwards, 1 if strafing else 2):
 		var sound: String = p._resolve_footstep_clip()
 		if not sound.is_empty():
-			SfxManager.play_at(sound, p.global_position, -8.0)
+			SfxManager.play_at(sound, p.global_position, -16.0 if strafing else -8.0, strafing)
 			emitted += 1
 	clip = name
 	previous = phase

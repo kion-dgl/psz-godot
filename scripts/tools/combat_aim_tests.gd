@@ -17,6 +17,9 @@ static func run(r: Node) -> void:
 	r.assert_true(steps.crossed(0.1, 0.9, true), "reverse wrap retains contact")
 	r.assert_true(not steps.crossed(0.1, 0.2, false), "no timer footstep between animation contacts")
 	r.assert_true(not steps.crossed(0.5, 0.5, false), "paused animation has no repeated step")
+	r.assert_true(not steps.crossed(0.4, 0.6, false, 1), "strafe skips the extra half-cycle footstep")
+	r.assert_true(steps.crossed(0.9, 0.1, false, 1), "strafe retains one footstep per full cycle")
+	r.assert_true(steps.crossed(0.1, 0.9, true, 1), "reverse strafe retains one footstep per cycle")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 775
 	for i in range(24):
