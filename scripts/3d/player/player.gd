@@ -292,6 +292,7 @@ const RACAST_CLASSES := ["racast", "racaseal"]
 
 # Dodge tracking
 var dodge_direction: float = 0.0
+var _dodge_return_facing: Variant = null
 var dodge_timer: float = 0.0
 # ROM dodge action (spec /mechanics/dodge): a 41-frame @30fps committed roll
 # whose displacement follows the original root-motion curve — burst, a
@@ -1554,6 +1555,7 @@ func _start_dodge() -> void:
 	# pressed on the same frame does NOT redirect the roll (ROM replay
 	# simultaneous-turn case).
 	var held: Variant = _held_movement_yaw()
+	_dodge_return_facing = player_rotation
 	dodge_direction = float(held) if held != null else player_rotation
 	if combat_aim != null and combat_aim.active: player_rotation = dodge_direction
 	dodge_timer = 0.0
@@ -1569,6 +1571,7 @@ func _handle_dodge(delta: float) -> void:
 	# and the logical position rides the body (the curve's settle-back already
 	# delivered the final root).
 	if dodge_timer >= DODGE_DURATION:
+		if _dodge_return_facing != null: player_rotation = float(_dodge_return_facing)
 		velocity.x = 0
 		velocity.z = 0
 		transition_to(PlayerState.IDLE)
@@ -2916,6 +2919,8 @@ func _drop_charge() -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
+	if current_state == PlayerState.DODGING and new_state != PlayerState.DODGING:
+		_dodge_return_facing = null
 	if new_state not in [PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING]:
 		_saber_retreat_elapsed = 0.0
 	# A mid-charge technique drops on damage, knockdown, or dodging

@@ -20,6 +20,23 @@ static func run(r: Node) -> void:
 		r.assert_true(Aim.travel(Vector2(1, 1), yaw).length() <= 1.0001, "diagonal aim travel cannot accelerate")
 	r.assert_true(is_equal_approx(Aim.travel(Vector2(0.25, 0), 1.0).length(), 0.25), "analog aim travel preserves small steps")
 
+	var player = preload("res://scripts/3d/player/player.gd").new()
+	for sample in range(12):
+		var original := rng.randf_range(-PI, PI)
+		player.current_state = player.PlayerState.DODGING
+		player.player_rotation = original + PI * 0.5
+		player._dodge_return_facing = original
+		player.dodge_timer = player.DODGE_DURATION
+		player._handle_dodge(0.0)
+		r.assert_true(is_equal_approx(player.player_rotation, original), "completed roll restores saved facing")
+		r.assert_true(player._dodge_return_facing == null, "completed roll consumes saved facing")
+	player.current_state = player.PlayerState.DODGING
+	player.player_rotation = 1.0
+	player._dodge_return_facing = 2.0
+	player.transition_to(player.PlayerState.DAMAGED)
+	r.assert_true(player._dodge_return_facing == null and player.player_rotation == 1.0, "interruption discards saved facing without turning")
+	player.free()
+
 	var window: Array[float] = [0.4, 0.8]
 	r.assert_eq(Aim.combo_prompt(1, 0.39, window, false, false), "WAIT", "aim cue does not invite an early fumble")
 	for fraction in [0.4, 0.6, 0.8]:

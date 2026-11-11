@@ -113,6 +113,7 @@ func verify_controls() -> void:
 		Input.action_release(action)
 	player.dodge_cooldown = 0
 	Input.action_press("move_right")
+	var prior_facing: float = player.player_rotation
 	player._start_dodge()
 	var heading: float = player.dodge_direction
 	Input.action_release("move_right")
@@ -121,7 +122,9 @@ func verify_controls() -> void:
 	_check(player.current_state == player.PlayerState.DODGING and player.dodge_direction == heading, "dodge heading stays fixed when aim moves")
 	player._start_attack()
 	_check(player.current_state == player.PlayerState.DODGING, "aim fire cannot cancel dodge")
-	await ticks(90)
+	while player.current_state == player.PlayerState.DODGING: await ticks(1)
+	_check(absf(angle_difference(player.player_rotation, prior_facing)) < 0.001, "stand-up restores pre-roll facing even when camera turns")
+	await ticks(3)
 	await verify_input_lifecycle()
 	await verify_aim_axes()
 	await verify_mouse_palette()
