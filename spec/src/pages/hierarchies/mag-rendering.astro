@@ -1,0 +1,13 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Mag Rendering" section="Hierarchies">
+  <p>Issue #795: inconsistent faces refer to Mag surfaces, not character faces. The basic Mag imports as an unlit, double-sided alpha-blended material with a depth prepass, despite its texture containing only alpha 0 and 255. A rendered eight-angle comparison exposes incorrectly ordered rear surfaces. Alpha cutout restores surface visibility without modifying geometry or enabling back-face culling.</p>
+  <h2>Material contract</h2>
+  <p>Equipped Mags MUST normalize binary-alpha mixed-blend StandardMaterial3D textures to alpha scissor at 0.5 with opaque depth writing. The material MUST be duplicated per instance; imported resources, texture/UV data, colors, shading and culling MUST remain unchanged. Existing opaque/cutout materials and genuinely translucent, faded, additive, shader or unreadable textures MUST remain unchanged. Classification is cached by texture resource.</p>
+  <p>The shared <code>mag_visuals.gd</code> helper applies this contract when Player instantiates an equipped Mag. Mag statistics, evolution, attachment transforms and animation are unaffected.</p>
+  <h2>Evidence and validation</h2>
+  <p>All 23 nonempty Mag models/textures available in the investigated checkout use binary alpha; some other local asset files are empty, so this is not full-roster visual acceptance. <code>mag_visual_tests.gd</code> checks material isolation, idempotence and preservation of translucency. <code>mag_visual_probe.tscn</code> loads the actual basic Mag and renders original/corrected instances at eight angles. Set <code>PSZ_BOSS_SCREENSHOTS</code> to save comparison images. Owner visual acceptance is still required.</p>
+  <p><a href={siteUrl('/engineering')}>Engineering policy</a></p>
+</Concept>

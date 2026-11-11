@@ -647,6 +647,7 @@ func _setup_mag() -> void:
 
 	# Attach as child of PlayerModel so it follows character rotation
 	var node := packed.instantiate() as Node3D
+	preload("res://scripts/3d/player/mag_visuals.gd").apply(node)
 	node.name = "MagModel"
 	node.position = MAG_OFFSET
 	model.add_child(node)
