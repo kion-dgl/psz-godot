@@ -7,6 +7,8 @@ import Concept from '../layouts/Concept.astro';
   <p>Current review baselines: <a href={siteUrl('/fidelity')}>fidelity and quality grades</a> · <a href={siteUrl('/states/combat-roster')}>combat roster identity and coverage</a>.</p>
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119. These are the working rules for all Beta implementation work; they exist so the Alpha cleanup cost (#215's 50-item audit) doesn't repeat.</p>
 
+  <p>Rendering contracts: <a href={siteUrl("/hierarchies/mag-rendering")}>Mag material normalization</a>.</p>
+
   <h2>Class hierarchies: behavior in bases, leaves earn their existence</h2>
   <p>Shared behavior <strong>MUST</strong> live in a base class with a clear interface — <code>Enemy</code> owns AI dispatch, status handling, damage intake; <code>WolfEnemy</code> / <code>SmallEnemy</code>-style subclasses exist only where <em>behavior</em> genuinely diverges (a different FSM, a different movement model). This applies to enemies, player classes, weapons, and shops alike.</p>
   <ul>

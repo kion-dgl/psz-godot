@@ -107,6 +107,7 @@ func _run_tests_combat() -> void:
 # Registries, inventory, mags, shops, techniques, telepipe + the
 # recent playtest-fix regression tests (#357/#358/#359/#352).
 func _run_tests_core() -> void:
+	preload("res://scripts/tools/mag_visual_tests.gd").run(self)
 	test_registries()
 	test_inventory()
 	test_inventory_capacity()
