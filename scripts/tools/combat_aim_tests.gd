@@ -10,6 +10,13 @@ static func run(r: Node) -> void:
 	aim.change_mode("combat_aim")
 	aim.clear()
 	r.assert_true(not aim.active, "blocked state clears mode")
+	var steps := preload("res://scripts/3d/player/animation_footsteps.gd")
+	r.assert_true(steps.crossed(0.4, 0.6, false), "forward clip crosses alternating foot contact")
+	r.assert_true(steps.crossed(0.6, 0.4, true), "reverse strafe crosses alternating foot contact")
+	r.assert_true(steps.crossed(0.9, 0.1, false), "forward wrap retains contact")
+	r.assert_true(steps.crossed(0.1, 0.9, true), "reverse wrap retains contact")
+	r.assert_true(not steps.crossed(0.1, 0.2, false), "no timer footstep between animation contacts")
+	r.assert_true(not steps.crossed(0.5, 0.5, false), "paused animation has no repeated step")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 775
 	for i in range(24):

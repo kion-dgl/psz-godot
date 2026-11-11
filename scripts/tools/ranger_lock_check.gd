@@ -29,7 +29,7 @@ static func run(probe) -> void:
 	probe._check(aim.lock.target == selected, "movement does not steal explicit target")
 	var hp: int = selected.current_hp
 	await preload("res://scripts/tools/ranger_aim_combo_check.gd").run(probe, p, true)
-	probe._check(selected.current_hp < hp, "locked combo projectiles reach selected enemy")
+	if p._get_equipped_weapon_type() in p.RANGED_WEAPON_TYPES: probe._check(selected.current_hp < hp, "locked combo projectiles reach selected enemy")
 	probe._check(aim.lock.target == selected, "all three attacks retain selected target")
 	await check_dodge_and_cover(probe, selected)
 	probe.key(KEY_Q)

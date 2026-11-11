@@ -4,6 +4,8 @@ var player
 var orbit
 var enemies: Array = []
 var origin := Vector3.ZERO
+var switching := false
+const Loadouts := preload("res://scripts/tools/combat_test_loadouts.gd")
 
 func _run() -> void:
 	probe_label = "ranger-aim"
@@ -15,9 +17,13 @@ func _run() -> void:
 	await launch_fixture()
 	if OS.get_environment("PSZ_AIM_CHECK") == "1":
 		await verify_controls()
-		await verify_shots()
+		if player._get_equipped_weapon_type() in [WeaponData.WeaponType.HANDGUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.MECH_GUN]:
+			await verify_shots()
+		else:
+			await preload("res://scripts/tools/combat_class_check.gd").run(self)
 		await preload("res://scripts/tools/ranger_aim_combo_check.gd").run(self, player)
 		await preload("res://scripts/tools/ranger_lock_check.gd").run(self)
+		await verify_reload()
 		print("[ranger-aim] DONE %s" % ("ok" if _ok else "FAIL"))
 		get_tree().quit(0 if _ok else 1)
 
@@ -26,8 +32,7 @@ func launch_fixture() -> void:
 	DebugConfig.invincible = false
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
-	CharacterManager.create_character(0, "ramarl" if OS.get_environment("PSZ_AIM_FEMALE") == "1" else "ramar", "Aim Test")
-	CharacterManager._characters[0].equipment.weapon = OS.get_environment("PSZ_AIM_WEAPON")
+	Loadouts.configure()
 	CharacterManager.set_active_slot(0)
 	SessionManager.enter_quest("debug_coliseum", "normal")
 	ColiseumRoster.selected_enemy_level = 1
@@ -55,11 +60,11 @@ func launch_fixture() -> void:
 		enemy.current_evasion = -10000 if OS.get_environment("PSZ_AIM_CHECK") == "1" else 0
 		if OS.get_environment("PSZ_AIM_CHECK") == "1": enemy.current_defense = 0
 		# Toggle the opponents with T for a repeatable positioning/combat comparison.
-	DisplayServer.window_set_title("PSZ Ranger Aim — Z shoulder • Q lock • Tab switch • LMB / J shoot • Space / LB dodge • T enemies • R reset")
+	DisplayServer.window_set_title(Loadouts.label() + " — Z shoulder • Q lock • Tab switch • LMB / J shoot • Space / LB dodge • T enemies • R reset")
 	var layer := CanvasLayer.new()
 	get_tree().current_scene.add_child(layer)
 	var label := Label.new()
-	label.text = "RANGER AIM PROTOTYPE\nZ: shoulder toggle   •   Q: lock toggle   •   Tab: switch   •   WASD / left stick: move   •   mouse / right stick: aim\nLeft / right / middle click: palette   •   J: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nClick when the crosshair says CLICK to chain all 3 shots. T activates enemies."
+	label.text = Loadouts.label() + "  •  F1: next loadout  •  F2: restart\nZ: shoulder toggle   •   Q: lock toggle   •   Tab: switch   •   WASD / left stick: move   •   mouse / right stick: aim\nLeft / right / middle click: palette   •   J: shoot   •   Space / LB: dodge   •   T: toggle enemies   •   R: reset\nCLICK chains attacks. Force: right click Foie, middle click Resta (hold to charge)."
 	label.position = Vector2(20, 145)
 	label.add_theme_font_size_override("font_size", 16)
 	layer.add_child(label)
@@ -83,7 +88,13 @@ func add_practice_cover() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo or not is_instance_valid(player) or GameState.is_gameplay_blocked(): return
-	if event.physical_keycode == KEY_T:
+	if event.physical_keycode in [KEY_F1, KEY_F2]:
+		if not switching:
+			switching = true
+			if event.physical_keycode == KEY_F1: Loadouts.next()
+			reload_fixture.call_deferred()
+		get_viewport().set_input_as_handled()
+	elif event.physical_keycode == KEY_T:
 		for enemy in enemies:
 			if is_instance_valid(enemy): enemy.set_physics_process(not enemy.is_physics_processing())
 	elif event.physical_keycode == KEY_R:
@@ -94,6 +105,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			if is_instance_valid(enemies[i]) and enemies[i].is_alive:
 				enemies[i].global_position = origin + Vector3(3 * i, 0, -6)
 				enemies[i].current_hp = enemies[i].enemy_data.hp_base
+
+func reload_fixture() -> void:
+	if is_instance_valid(orbit): orbit.combat_aim.clear(); orbit.combat_aim.release_mouse()
+	await launch_fixture()
+	switching = false
 
 func ticks(count: int) -> void:
 	for frame in range(count): await get_tree().physics_frame
@@ -109,8 +125,17 @@ func verify_controls() -> void:
 		await ticks(12)
 		_check(player.global_position.distance_to(before) > 0.1, "real player moves: " + action)
 		_check(absf(angle_difference(player.player_rotation, orbit.combat_aim.facing())) < 0.01, "travel does not turn away from aim: " + action)
-		_check("_stp_" in player.animation_player.current_animation, "native step clip plays: " + action)
+		_check("_stp_" in player.animation_player.current_animation or "_step_" in player.animation_player.current_animation, "native step clip plays: " + action)
 		Input.action_release(action)
+	var steps_before: int = player._animation_footsteps.emitted
+	Input.action_press("move_right")
+	await ticks(60)
+	Input.action_release("move_right")
+	_check(player._animation_footsteps.emitted > steps_before, "native strafe animation drives footstep sounds")
+	await ticks(3)
+	steps_before = player._animation_footsteps.emitted
+	await ticks(20)
+	_check(player._animation_footsteps.emitted == steps_before, "stationary player has no lingering movement sounds")
 	player.dodge_cooldown = 0
 	Input.action_press("move_right")
 	var prior_facing: float = player.player_rotation
@@ -132,7 +157,7 @@ func verify_controls() -> void:
 	await ticks(3)
 	await verify_input_lifecycle()
 	await verify_aim_axes()
-	await verify_mouse_palette()
+	if not str(CharacterManager.get_active_character().class_id).begins_with("fo"): await verify_mouse_palette()
 	await _snapshot("ranger-aim-strafe")
 
 static func key(code: int, echo := false) -> void:
@@ -177,7 +202,7 @@ func verify_input_lifecycle() -> void:
 	set_shoulder(true)
 	await ticks(3)
 	var weapon: String = CharacterManager.get_active_character().equipment.weapon
-	CharacterManager.get_active_character().equipment.weapon = "saber"
+	CharacterManager.get_active_character().equipment.weapon = "shield"
 	await ticks(3)
 	_check(not player.combat_aim.active, "unsupported weapon clears stance")
 	CharacterManager.get_active_character().equipment.weapon = weapon
@@ -299,3 +324,14 @@ func verify_aim_axes() -> void:
 	await ticks(3)
 	Input.action_release("camera_right")
 	_check(angle_difference(before_yaw, orbit.camera_rotation) * sign_expected > 0, "right-stick direction agrees with mouse aim")
+
+func verify_reload() -> void:
+	var old_player = weakref(player)
+	key(KEY_F1)
+	await ticks(3)
+	for frame in range(600):
+		if not switching: break
+		await ticks(1)
+	_check(not switching and old_player.get_ref() == null, "F1 replaces old fixture without retaining the old player")
+	_check(CharacterManager.get_active_character().class_id == OS.get_environment("PSZ_AIM_CLASS"), "F1 loads the requested class")
+	_check(player.combat_aim != null and not player.combat_aim.active and not player.combat_aim._mouse_owned, "new loadout starts in normal view with free cursor")

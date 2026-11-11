@@ -45,7 +45,7 @@ static func run(probe, p, locked := false) -> void:
 		if p.current_state != p.PlayerState.ATTACKING: break
 		await probe.ticks(1)
 	probe._check(p.combo_state == 0 and p.combat_aim.active, "finisher returns to aim without leaving targeting mode")
-	for step in [1, 2, 3]:
+	for step in ([1, 2, 3] if p._get_equipped_weapon_type() in p.RANGED_WEAPON_TYPES else []):
 		probe._check(releases.has(step), "aim combo releases real projectiles on step %d" % step)
 	p.get_tree().current_scene.child_entered_tree.disconnect(on_shot)
 	if not locked: probe.set_shoulder(false)

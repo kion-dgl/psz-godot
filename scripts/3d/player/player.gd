@@ -254,6 +254,7 @@ const ZONDE_BOLT_FADE: float = 0.30
 
 # Footstep SFX
 var _footstep_timer: float = 0.0
+var _animation_footsteps := preload("res://scripts/3d/player/animation_footsteps.gd").new()
 const FOOTSTEP_WALK_INTERVAL := 0.55
 const FOOTSTEP_RUN_INTERVAL := 0.40
 
@@ -548,7 +549,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 		return null
 
 	# Looping animations: weapon-specific idle/wait + shared locomotion
-	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr", "_walk_ready"]
+	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr", "_step_fb", "_step_lr", "_walk_ready"]
 
 	# Build new library from the weapon animation GLB
 	var lib := AnimationLibrary.new()
@@ -568,7 +569,7 @@ func _build_animation_library(anim_glb: String) -> AnimationLibrary:
 
 		# Strip baked-in root translation from dodge clips — see
 		# _strip_root_translation_track for rationale.
-		if anim_name.ends_with("_esc_f") or "_stp_" in anim_name:
+		if anim_name.ends_with("_esc_f") or "_stp_" in anim_name or "_step_" in anim_name:
 			_strip_root_translation_track(new_anim, skeleton.name)
 
 		lib.add_animation(anim_name, new_anim)
@@ -1131,6 +1132,7 @@ func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("player_move_slide")
 	_sync_dodge_body_collisions()
 	# Apply movement
+	var before_move := global_position
 	move_and_slide()
 
 	# If we ran into a vertical step (≤ STEP_UP_MAX_HEIGHT) while moving
@@ -1144,7 +1146,11 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = player_rotation
 
 	# Footstep sounds
-	if is_on_floor() and current_state in [PlayerState.WALKING, PlayerState.RUNNING]:
+	if combat_aim != null and combat_aim.eligible():
+		var travel := Vector2(global_position.x - before_move.x, global_position.z - before_move.z)
+		_animation_footsteps.tick(self, travel.length_squared())
+		_footstep_timer = 0.0
+	elif is_on_floor() and current_state in [PlayerState.WALKING, PlayerState.RUNNING]:
 		var interval: float = FOOTSTEP_WALK_INTERVAL
 		if current_state == PlayerState.RUNNING:
 			interval = FOOTSTEP_RUN_INTERVAL
@@ -1863,6 +1869,8 @@ func _cast_technique(technique_id: String) -> void:
 	GameState.set_mp(GameState.mp - pp_cost)
 	print("[Player] Cast %s: damage=%d pp_cost=%d" % [technique_id, int(tech_data.get("damage", 0)), pp_cost])
 
+	_face_technique_aim()
+
 	# Play cast animation — no combo for techniques
 	transition_to(PlayerState.ATTACKING)
 	combo_state = 0
@@ -1878,6 +1886,10 @@ func _cast_technique(technique_id: String) -> void:
 	_arm_attack_step(animation_player.current_animation if animation_player else "")
 
 	_spawn_technique_effect(technique_id, tech_data)
+
+
+func _face_technique_aim() -> void:
+	if combat_aim != null and combat_aim.active and combat_aim.allowed(): player_rotation = combat_aim.facing()
 
 
 func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> void:
@@ -1934,6 +1946,10 @@ func _apply_element_to_proj(proj: Projectile, kind: String = "technique") -> voi
 
 func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
 	var proj := Projectile.new()
+	if combat_aim != null and combat_aim.active and combat_aim.allowed():
+		spawn_pos = global_position + Vector3.UP
+		forward = combat_aim.shot_direction(spawn_pos, 15.0)
+		proj.collide_with_world = true
 	proj.damage = damage
 	proj.knockback = kb
 	proj.accuracy = 100
@@ -3745,7 +3761,7 @@ func _add_scene_locomotion(lib: AnimationLibrary, anim_glb: String) -> void:
 					var source_anim := scene_player.get_animation(anim_name)
 					var new_anim := _remap_animation(source_anim, skeleton.name)
 					new_anim.loop_mode = Animation.LOOP_LINEAR
-					if anim_name.ends_with("_esc_f") or "_stp_" in anim_name:
+					if anim_name.ends_with("_esc_f") or "_stp_" in anim_name or "_step_" in anim_name:
 						new_anim.loop_mode = Animation.LOOP_NONE
 						_strip_root_translation_track(new_anim, skeleton.name)
 					lib.add_animation(anim_name, new_anim)

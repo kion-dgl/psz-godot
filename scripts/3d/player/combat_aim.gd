@@ -1,6 +1,6 @@
 extends RefCounted
 ## Opt-in Ranger control slice (#775). OrbitCamera owns the view; Player owns locomotion.
-const WEAPONS := [WeaponData.WeaponType.HANDGUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.MECH_GUN]
+const WEAPONS := [WeaponData.WeaponType.HANDGUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.MECH_GUN, WeaponData.WeaponType.SABER, WeaponData.WeaponType.SWORD, WeaponData.WeaponType.DAGGERS, WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND]
 enum Mode { NORMAL, SHOULDER, LOCKED }
 var mode := Mode.NORMAL
 var active: bool:
@@ -158,7 +158,7 @@ func play_step(p, input: Vector2) -> void:
 	# Female libraries use male-named shared step clips. Select by the actual suffix.
 	if not ap.has_animation(clip):
 		for candidate in ap.get_animation_list():
-			if candidate.ends_with(suffix): clip = candidate; break
+			if candidate.ends_with(suffix) or candidate.ends_with(suffix.replace("_stp_", "_step_")): clip = candidate; break
 	if not ap.has_animation(clip): return
 	var speed := (1.0 if input.x > 0 else -1.0) if lateral else (1.0 if input.y < 0 else -1.0)
 	if ap.current_animation != clip or _clip_speed != speed:

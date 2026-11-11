@@ -15,11 +15,14 @@ def main():
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--rendered', action='store_true')
     parser.add_argument('--female', action='store_true')
-    parser.add_argument('--weapon', choices=['handgun', 'rifle', 'mechgun'], default='handgun')
+    parser.add_argument('--class', dest='class_id', choices=['ramar', 'ramarl', 'racast', 'racaseal', 'humar', 'humarl', 'hunewearl', 'fomar', 'fomarl', 'fonewm', 'fonewearl'])
+    parser.add_argument('--weapon', choices=['handgun', 'rifle', 'mechgun', 'saber', 'sword', 'dagger', 'rod', 'wand'])
     parser.add_argument('--scene', default='res://scripts/tools/ranger_aim_probe.tscn', help='Alternate verification scene')
     mac_godot = Path.home() / 'Applications/Godot.app/Contents/MacOS/Godot'
     parser.add_argument('--godot', default=os.environ.get('GODOT') or shutil.which('godot') or (str(mac_godot) if mac_godot.exists() else None))
     args = parser.parse_args()
+    class_id = args.class_id or ('ramarl' if args.female else 'ramar')
+    weapon = args.weapon or ('rod' if class_id.startswith('fo') else 'saber' if class_id.startswith('hu') else 'handgun')
     if not args.godot:
         parser.error('Godot is required; pass --godot /path/to/Godot')
     with tempfile.TemporaryDirectory(prefix='psz-aim-') as temporary:
@@ -31,7 +34,7 @@ def main():
             'config/name="PSZ Godot"', 'config/name="PSZ Aim Prototype"')
         (project / 'project.godot').write_text(settings)
         env = dict(os.environ, PSZ_AIM_PROTOTYPE='1', PSZ_AIM_CHECK='1' if args.check else '0',
-                   PSZ_AIM_FEMALE='1' if args.female else '0', PSZ_AIM_WEAPON=args.weapon,
+                   PSZ_AIM_FEMALE='1' if args.female else '0', PSZ_AIM_WEAPON=weapon, PSZ_AIM_CLASS=class_id,
                    PSZ_HUMAR_SABER='0')
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
