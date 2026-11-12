@@ -191,6 +191,9 @@ func audit_roster() -> void:
 		if id == "resta": _check(GameState.hp > before_hp, "Resta increases actual HP")
 		if id == "anti": _check(before_status and not player.has_status_effects(), "Anti removes actual poison")
 		_check(get_tree().get_nodes_in_group("technique_visuals").is_empty(), id + " bounded new VFX cleanup")
+	await audit_charge_and_range()
+
+func audit_charge_and_range() -> void:
 	# Exercise real palette hold/release resolution for every learnable base.
 	for id in TechniqueManager.SHOP_BASIC_TECHS:
 		if not OS.get_environment("PSZ_TECH_ONLY").is_empty() and id not in OS.get_environment("PSZ_TECH_ONLY").split(","): continue

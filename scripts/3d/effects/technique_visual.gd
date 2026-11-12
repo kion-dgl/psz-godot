@@ -43,51 +43,10 @@ func _ready() -> void:
 		_piece(halo, Color(1.0, 0.88, 0.25, 0.9), Vector3(0, 2.05, 0))
 		return
 	if kind == "megid":
-		var sphere := SphereMesh.new()
-		sphere.radius = 0.32
-		sphere.height = 0.64
-		sphere.radial_segments = 24
-		sphere.rings = 12
-		var orb := _piece(sphere, Color(0.52, 0.08, 0.85, 0.48), Vector3.ZERO)
-		var drops := CPUParticles3D.new()
-		drops.amount = 12
-		drops.lifetime = 0.5
-		drops.local_coords = false
-		drops.direction = Vector3.DOWN
-		drops.spread = 15
-		drops.initial_velocity_min = 0.2
-		drops.initial_velocity_max = 0.5
-		drops.gravity = Vector3(0, -2, 0)
-		drops.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-		drops.emission_sphere_radius = 0.22
-		var drop := SphereMesh.new()
-		drop.radius = 0.025
-		drop.height = 0.1
-		drop.material = orb.material_override
-		drops.mesh = drop
-		add_child(drops)
+		_make_megid()
 		return
 	if kind == "rafoie_blast":
-		for i in range(2):
-			var sphere := SphereMesh.new()
-			sphere.radius = 1.0 - i * 0.12
-			sphere.height = sphere.radius * 2.0
-			sphere.radial_segments = 48
-			sphere.rings = 24
-			var shell := _piece(sphere, FIRE, Vector3(0, 0.4, 0))
-			var material := ShaderMaterial.new()
-			material.shader = preload("res://scripts/3d/shaders/technique_fire.gdshader")
-			material.set_shader_parameter("phase", float(i) * 9.7)
-			material.set_shader_parameter("heat", 0.85 + i * 0.2)
-			shell.material_override = material
-			_fire_materials.append(material)
-		var ring := TorusMesh.new()
-		ring.inner_radius = 0.96
-		ring.outer_radius = 1.0
-		ring.rings = 64
-		ring.ring_segments = 8
-		var wave := _piece(ring, Color(1.0, 0.035, 0.01), Vector3(0, 0.012, 0))
-		wave.scale.y = 0.2
+		_make_rafoie()
 		return
 	if kind == "ice_line":
 		_make_cloud(Vector2(1.9, 0.7), Vector3(0, -0.08, 0))
@@ -176,15 +135,7 @@ func _process(delta: float) -> void:
 		_materials[0].albedo_color.a = 0.48 * travel_alpha
 		return
 	if kind == "rafoie_blast":
-		var growth := lerpf(0.08, 1.0, ease(clampf(elapsed / 0.16, 0.0, 1.0), 0.35))
-		for i in range(2):
-			_pieces[i].scale = Vector3.ONE * growth
-			_pieces[i].position.y = 0.4 * growth
-			_fire_materials[i].set_shader_parameter("fade", 1.0 - smoothstep(0.18 + i * 0.06, duration, elapsed))
-		var radius := lerpf(0.05, 1.0, smoothstep(0.0, 0.4, elapsed))
-		_pieces[2].scale = Vector3(radius, 0.2, radius)
-		_materials[2].albedo_color.a = 1.0 - smoothstep(0.4, duration, elapsed)
-		if elapsed >= duration: queue_free()
+		_tick_rafoie()
 		return
 	if kind == "ice_line":
 		_cloud_material.set_shader_parameter("opacity", travel_alpha * 0.85)
@@ -259,3 +210,64 @@ func _ice_rock(rng: RandomNumberGenerator) -> ArrayMesh:
 		for index in [18, 18+side, 19+side]: surface.add_vertex(vertices[index])
 	surface.generate_normals()
 	return surface.commit()
+
+
+func _make_megid() -> void:
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.32
+	sphere.height = 0.64
+	sphere.radial_segments = 24
+	sphere.rings = 12
+	var orb := _piece(sphere, Color(0.52, 0.08, 0.85, 0.48), Vector3.ZERO)
+	var drops := CPUParticles3D.new()
+	drops.amount = 12
+	drops.lifetime = 0.5
+	drops.local_coords = false
+	drops.direction = Vector3.DOWN
+	drops.spread = 15
+	drops.initial_velocity_min = 0.2
+	drops.initial_velocity_max = 0.5
+	drops.gravity = Vector3(0, -2, 0)
+	drops.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	drops.emission_sphere_radius = 0.22
+	var drop := SphereMesh.new()
+	drop.radius = 0.025
+	drop.height = 0.1
+	drop.material = orb.material_override
+	drops.mesh = drop
+	add_child(drops)
+
+
+func _make_rafoie() -> void:
+	for i in range(2):
+		var sphere := SphereMesh.new()
+		sphere.radius = 1.0 - i * 0.12
+		sphere.height = sphere.radius * 2.0
+		sphere.radial_segments = 48
+		sphere.rings = 24
+		var shell := _piece(sphere, FIRE, Vector3(0, 0.4, 0))
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://scripts/3d/shaders/technique_fire.gdshader")
+		material.set_shader_parameter("phase", float(i) * 9.7)
+		material.set_shader_parameter("heat", 0.85 + i * 0.2)
+		shell.material_override = material
+		_fire_materials.append(material)
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.96
+	ring.outer_radius = 1.0
+	ring.rings = 64
+	ring.ring_segments = 8
+	var wave := _piece(ring, Color(1.0, 0.035, 0.01), Vector3(0, 0.012, 0))
+	wave.scale.y = 0.2
+
+
+func _tick_rafoie() -> void:
+	var growth := lerpf(0.08, 1.0, ease(clampf(elapsed / 0.16, 0.0, 1.0), 0.35))
+	for i in range(2):
+		_pieces[i].scale = Vector3.ONE * growth
+		_pieces[i].position.y = 0.4 * growth
+		_fire_materials[i].set_shader_parameter("fade", 1.0 - smoothstep(0.18 + i * 0.06, duration, elapsed))
+	var radius := lerpf(0.05, 1.0, smoothstep(0.0, 0.4, elapsed))
+	_pieces[2].scale = Vector3(radius, 0.2, radius)
+	_materials[2].albedo_color.a = 1.0 - smoothstep(0.4, duration, elapsed)
+	if elapsed >= duration: queue_free()

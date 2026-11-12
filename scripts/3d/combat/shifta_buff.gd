@@ -53,18 +53,7 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 	if not is_instance_valid(_skeleton) or not _skeleton.is_inside_tree():
-		_skeleton = NodeUtils.first_of_type(recipient, "Skeleton3D") as Skeleton3D
-		_bones.clear()
-		if _skeleton:
-			for bone_name in ["070_RArm02", "040_LArm02"]: _bones.append(_skeleton.find_bone(bone_name))
-			if _bones.has(-1):
-				_bones.clear()
-				for side in ["r", "l"]:
-					var found := -1
-					for bone in range(_skeleton.get_bone_count()):
-						var label := _skeleton.get_bone_name(bone).to_lower()
-						if (side + "arm" in label or side + "hand" in label or side + "wrist" in label or "_" + side in label) and ("arm" in label or "hand" in label or "wrist" in label): found = bone
-					_bones.append(found)
+		_find_wrist_bones(recipient)
 	for i in range(_clouds.size()):
 		_clouds[i].visible = _drips.is_empty()
 		if is_instance_valid(_skeleton) and _bones.size() == 2 and _bones[i] >= 0:
@@ -112,3 +101,17 @@ func _make_drips() -> void:
 	add_child(particles)
 	particles.emitting = true
 	_drips.append(particles)
+
+func _find_wrist_bones(recipient: Node) -> void:
+	_skeleton = NodeUtils.first_of_type(recipient, "Skeleton3D") as Skeleton3D
+	_bones.clear()
+	if _skeleton:
+		for bone_name in ["070_RArm02", "040_LArm02"]: _bones.append(_skeleton.find_bone(bone_name))
+		if _bones.has(-1):
+			_bones.clear()
+			for side in ["r", "l"]:
+				var found := -1
+				for bone in range(_skeleton.get_bone_count()):
+					var label := _skeleton.get_bone_name(bone).to_lower()
+					if (side + "arm" in label or side + "hand" in label or side + "wrist" in label or "_" + side in label) and ("arm" in label or "hand" in label or "wrist" in label): found = bone
+				_bones.append(found)

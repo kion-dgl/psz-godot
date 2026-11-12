@@ -247,3 +247,7 @@ Megid correction: a failed instant-defeat roll now delivers the calculated dark-
 Revive playtest: yellow Reverser cast circle and a rising golden halo on the revived recipient. Nearest defeated local companion within six units receives 10 + 2/level HP; no eligible recipient costs no PP. Sarisa starts at zero HP in the downed animation; N downs her again. The halo also accompanies the existing player Scape Doll revival. Player return-to-city defeat handling is unchanged. Grants and Megid now cast on press with no charge.
 
 Reverser now casts on quick release without requiring charge: nearest defeated ally, existing level-scaled HP. Optional full charge revives all defeated allies within six units to at least half HP. Both cost one normal cast; charge balance is provisional.
+
+### Merge validation and audio delivery
+
+Code-health cleanup split visual construction/ticking, support revival, wrist lookup, and light/dark dispatch without changing their behavior. Full local suite: 14,816 passed, zero failed. The development asset pack was rebuilt from the current published pack plus 19 selected technique/status sounds (raw WAV, import remap and sample per cue); all 20,954 original entries were verified byte-for-byte unchanged and the added streams loaded successfully. No existing packs were pruned. The updated asset manifest/tree deliver these cues to fresh installs.

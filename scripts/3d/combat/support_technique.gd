@@ -25,16 +25,7 @@ static func play_sound(caster: Node3D, technique: String) -> void:
 static func cast(caster: Node3D, technique: String, amount: int, charged_revive := false) -> Array:
 	var affected: Array = []
 	if technique == "reverser":
-		var targets: Array = [revive_target(caster)]
-		if charged_revive: targets = caster.get_tree().get_nodes_in_group("party_members")
-		for target in targets:
-			if not is_instance_valid(target) or not target.has_method("can_receive_revive") or not target.can_receive_revive(): continue
-			if caster.global_position.distance_squared_to(target.global_position) > RADIUS * RADIUS: continue
-			if target.receive_revive(amount, charged_revive):
-				Visual.burst(target, target.global_position, "revive", 1.5)
-				affected.append(target)
-		if not affected.is_empty(): _area(caster, technique)
-		return affected
+		return _revive(caster, amount, charged_revive)
 	var candidates: Array = [caster]
 	for member in caster.get_tree().get_nodes_in_group("party_members"):
 		if not candidates.has(member): candidates.append(member)
@@ -134,3 +125,16 @@ static func revive_target(caster: Node3D) -> Node3D:
 			distance = d
 			nearest = member
 	return nearest
+
+static func _revive(caster: Node3D, amount: int, charged_revive: bool) -> Array:
+	var affected: Array = []
+	var targets: Array = [revive_target(caster)]
+	if charged_revive: targets = caster.get_tree().get_nodes_in_group("party_members")
+	for target in targets:
+		if not is_instance_valid(target) or not target.has_method("can_receive_revive") or not target.can_receive_revive(): continue
+		if caster.global_position.distance_squared_to(target.global_position) > RADIUS * RADIUS: continue
+		if target.receive_revive(amount, charged_revive):
+			Visual.burst(target, target.global_position, "revive", 1.5)
+			affected.append(target)
+	if not affected.is_empty(): _area(caster, "reverser")
+	return affected

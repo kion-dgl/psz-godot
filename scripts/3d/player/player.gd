@@ -1837,16 +1837,8 @@ func _execute_palette_action(slot: int) -> void:
 
 
 func _cast_technique(technique_id: String, charged_revive := false) -> void:
-	if SaberPrototype.guarding(self): return
-	if PhotonBlast.is_presenting(self):
-		return
-	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
-		return
-	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
-		return
+	if not _can_cast_now(): return
 	if technique_id == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(self) == null:
-		return
-	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
 		return
 
 	var character = CharacterManager.get_active_character()
@@ -1932,27 +1924,8 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary, charge
 			_spawn_gizonde(damage, kb)
 		"razonde":
 			_spawn_razonde(damage, kb)
-		"grants":
-			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
-				var strike = preload("res://scripts/3d/combat/grants_strike.gd").new()
-				strike.target = _targeted_enemies[0]
-				strike.caster = self
-				strike.damage = damage
-				strike.level = _current_attack_element_level
-				get_tree().current_scene.add_child(strike)
-		"megid":
-			var orb = preload("res://scripts/3d/combat/megid_projectile.gd").new()
-			orb.visual_kind = "megid"
-			orb.damage = damage
-			orb.knockback = kb
-			orb.direction = combat_aim.shot_direction(spawn_pos, 15.0) if combat_aim != null and combat_aim.active and combat_aim.allowed() else forward
-			orb.speed = 12.0
-			orb.max_range = 15.0
-			orb.collide_with_world = true
-			orb.owner_node = self
-			_apply_element_to_proj(orb)
-			get_tree().current_scene.add_child(orb)
-			orb.global_position = spawn_pos
+		"grants", "megid":
+			_spawn_light_dark(technique_id, spawn_pos, forward, damage, kb)
 		_:
 			# Fallback: fire a basic projectile for unimplemented techniques
 			_spawn_foie(spawn_pos, forward, damage, kb)
@@ -2280,19 +2253,6 @@ func _spawn_razonde(damage: int, kb: float) -> void:
 	chain.element_level = _current_attack_element_level
 	get_tree().current_scene.add_child(chain)
 	chain.global_position = global_position
-
-
-func _get_enemies_in_radius(radius: float) -> Array:
-	var result: Array = []
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(enemy):
-			continue
-		if not enemy.get("is_alive"):
-			continue
-		var dist: float = enemy.global_position.distance_to(global_position)
-		if dist <= radius:
-			result.append(enemy)
-	return result
 
 
 func _spawn_aoe_visual(center: Vector3, aoe_color: Color, radius: float) -> void:
@@ -3915,3 +3875,41 @@ func receive_support(technique: String, amount: int) -> int:
 		_ailments.feedback(self, "Cured")
 		return 1
 	return 0
+
+
+func _can_cast_now() -> bool:
+	if SaberPrototype.guarding(self): return false
+	if PhotonBlast.is_presenting(self):
+		return false
+	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
+		return false
+	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
+		return false
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return false
+
+	return true
+
+func _spawn_light_dark(technique_id: String, spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	match technique_id:
+		"grants":
+			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+				var strike = preload("res://scripts/3d/combat/grants_strike.gd").new()
+				strike.target = _targeted_enemies[0]
+				strike.caster = self
+				strike.damage = damage
+				strike.level = _current_attack_element_level
+				get_tree().current_scene.add_child(strike)
+		"megid":
+			var orb = preload("res://scripts/3d/combat/megid_projectile.gd").new()
+			orb.visual_kind = "megid"
+			orb.damage = damage
+			orb.knockback = kb
+			orb.direction = combat_aim.shot_direction(spawn_pos, 15.0) if combat_aim != null and combat_aim.active and combat_aim.allowed() else forward
+			orb.speed = 12.0
+			orb.max_range = 15.0
+			orb.collide_with_world = true
+			orb.owner_node = self
+			_apply_element_to_proj(orb)
+			get_tree().current_scene.add_child(orb)
+			orb.global_position = spawn_pos
