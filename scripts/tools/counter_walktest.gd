@@ -447,6 +447,8 @@ func _load_stage() -> void:
 	var map_root := packed.instantiate() as Node3D
 	map_root.name = "Map"
 	add_child(map_root)
+	if _stage_id == "s00e_sa2":
+		preload("res://scripts/3d/city/counter_geometry.gd").apply(map_root)
 
 
 ## The blend_mul shader probe (extracted): the asymmetry experiment

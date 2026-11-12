@@ -52,6 +52,7 @@ const FLOOR_LIT_SURFACES := ["*"]
 
 
 func _ready() -> void:
+	preload("res://scripts/3d/city/counter_geometry.gd").apply(get_node("Counter"))
 	# Apply texture fixes from global config
 	_fix_city_materials()
 	# Override: disable vertex colors for SA2 — they're baked too dark
