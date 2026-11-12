@@ -171,6 +171,7 @@ func audit_roster() -> void:
 		var before_hp: int = GameState.hp
 		var before_pp: int = GameState.mp
 		var before_enemy: int = enemies[0].current_hp + enemies[1].current_hp
+		var no_revive_target: bool = id == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(player) == null
 		player._cast_technique(id)
 		var spent: int = before_pp - GameState.mp
 		await ticks(8)
@@ -186,7 +187,7 @@ func audit_roster() -> void:
 			"status_before": before_status, "status_after": player.has_status_effects(), "note": note}
 		observations.append(row)
 		print("[force-techniques] OBS ", JSON.stringify(row))
-		_check(spent == 0 if id in BLOCKED or (id == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(player) == null) else spent > 0, id + " cost matches current delivery gate")
+		_check(spent == 0 if id in BLOCKED or no_revive_target else spent > 0, id + " cost matches current delivery gate")
 		if id == "resta": _check(GameState.hp > before_hp, "Resta increases actual HP")
 		if id == "anti": _check(before_status and not player.has_status_effects(), "Anti removes actual poison")
 		_check(get_tree().get_nodes_in_group("technique_visuals").is_empty(), id + " bounded new VFX cleanup")
