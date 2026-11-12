@@ -3,6 +3,11 @@ extends RefCounted
 const RADIUS := 6.0
 const Visual = preload("res://scripts/3d/effects/technique_visual.gd")
 const SOUNDS := {
+	"grants": "res://assets/sfx/common/common_132.wav",
+	"megid": "res://assets/sfx/common/common_131.wav",
+	"deband": "res://assets/sfx/common/common_142.wav",
+	"jellen": "res://assets/sfx/common/common_141.wav",
+	"zalure": "res://assets/sfx/common/common_143.wav",
 	"razonde": "res://assets/sfx/common/common_130.wav",
 	"rabarta": "res://assets/sfx/common/common_126.wav",
 	"rafoie": "res://assets/sfx/common/common_122.wav",
@@ -17,18 +22,36 @@ const SOUNDS := {
 static func play_sound(caster: Node3D, technique: String) -> void:
 	if SOUNDS.has(technique): SfxManager.play_at(SOUNDS[technique], caster.global_position, -5.0)
 
-static func cast(caster: Node3D, technique: String, amount: int) -> Array:
+static func cast(caster: Node3D, technique: String, amount: int, charged_revive := false) -> Array:
 	var affected: Array = []
+	if technique == "reverser":
+		var targets: Array = [revive_target(caster)]
+		if charged_revive: targets = caster.get_tree().get_nodes_in_group("party_members")
+		for target in targets:
+			if not is_instance_valid(target) or not target.has_method("can_receive_revive") or not target.can_receive_revive(): continue
+			if caster.global_position.distance_squared_to(target.global_position) > RADIUS * RADIUS: continue
+			if target.receive_revive(amount, charged_revive):
+				Visual.burst(target, target.global_position, "revive", 1.5)
+				affected.append(target)
+		if not affected.is_empty(): _area(caster, technique)
+		return affected
 	var candidates: Array = [caster]
 	for member in caster.get_tree().get_nodes_in_group("party_members"):
 		if not candidates.has(member): candidates.append(member)
+	if technique in ["jellen", "zalure"]: candidates = caster.get_tree().get_nodes_in_group("enemies")
 	for member in candidates:
 		if not is_instance_valid(member) or member.is_queued_for_deletion() or not member is Node3D: continue
+		if technique in ["jellen", "zalure"]:
+			if member.get("is_alive") and caster.global_position.distance_squared_to(member.global_position) <= RADIUS * RADIUS:
+				preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(member, amount, technique)
+				affected.append(member)
+			continue
 		if not member.has_method("can_receive_support") or not member.can_receive_support(): continue
 		if caster.global_position.distance_squared_to(member.global_position) > RADIUS * RADIUS: continue
 		var changed: int = member.receive_support(technique, amount)
 		if changed <= 0: continue
 		affected.append(member)
+		if technique == "deband": continue
 		if technique == "shifta":
 			SfxManager.play_at("res://assets/sfx/common/common_142.wav", member.global_position, -8.0)
 			continue # Recipient power-up cue; persistent wrists are owned by the buff.
@@ -91,10 +114,23 @@ static func _area(caster: Node3D, technique: String) -> void:
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = Color(0.3, 1, 0.6, 0.45) if technique == "resta" else Color(0.6, 0.8, 1, 0.45)
-	if technique == "shifta": material.albedo_color = Color(1.0, 0.08, 0.03, 0.65)
+	if technique in ["shifta", "jellen"]: material.albedo_color = Color(1.0, 0.08, 0.03, 0.65)
+	if technique in ["deband", "zalure"]: material.albedo_color = Color(0.08, 0.35, 1.0, 0.65)
+	if technique == "reverser": material.albedo_color = Color(1.0, 0.85, 0.1, 0.8)
 	ring.material_override = material
 	caster.get_tree().current_scene.add_child(ring)
 	ring.global_position = caster.global_position + Vector3.UP * 0.06
 	var tween := ring.create_tween()
 	tween.tween_property(material, "albedo_color:a", 0.0, 0.55)
 	tween.tween_callback(ring.queue_free)
+
+static func revive_target(caster: Node3D) -> Node3D:
+	var nearest: Node3D = null
+	var distance := RADIUS * RADIUS
+	for member in caster.get_tree().get_nodes_in_group("party_members"):
+		if not is_instance_valid(member) or not member.has_method("can_receive_revive") or not member.can_receive_revive(): continue
+		var d: float = caster.global_position.distance_squared_to(member.global_position)
+		if d <= distance:
+			distance = d
+			nearest = member
+	return nearest

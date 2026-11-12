@@ -801,21 +801,27 @@
     "category": "common",
     "label": "SE_W27_HEY_V",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Megid cast (tentative owner identification)",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_132.wav": {
     "file": "common_132.wav",
     "category": "common",
     "label": "SE_PL_FAIOSHOT",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Grants cast (tentative owner identification)",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_133.wav": {
     "file": "common_133.wav",
     "category": "common",
     "label": "SE_TECH_GIFOIE",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Grants pillar impact",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_134.wav": {
     "file": "common_134.wav",
@@ -870,7 +876,9 @@
     "category": "common",
     "label": "SE_TECH_GIZONDE",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Jellen cast",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_142.wav": {
     "file": "common_142.wav",
@@ -878,15 +886,17 @@
     "label": "SE_TECH_RAZONDE",
     "notes": "",
     "starred": false,
-    "remake_use": "Shifta recipient power-up",
-    "remake_use_source": "Kion listening feedback, 2026-11-11; audition mapping, not verified original dispatch"
+    "remake_use": "Deband cast; Shifta recipient power-up",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_143.wav": {
     "file": "common_143.wav",
     "category": "common",
     "label": "SE_TECH_MEGIDO",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Zalure cast",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_144.wav": {
     "file": "common_144.wav",
@@ -970,7 +980,9 @@
     "category": "common",
     "label": "SE_TECH_CHARGEFIRE",
     "notes": "",
-    "starred": false
+    "starred": false,
+    "remake_use": "Box break",
+    "remake_use_source": "Owner audition, 2026-11-12"
   },
   "common/common_161.wav": {
     "file": "common_161.wav",

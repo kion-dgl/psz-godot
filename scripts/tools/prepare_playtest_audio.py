@@ -6,6 +6,13 @@ import argparse
 
 ROOT = Path(__file__).resolve().parents[2]
 CUES = (
+    "common/common_132.wav",  # Owner technique/box cue
+    "common/common_133.wav",  # Owner technique/box cue
+    "common/common_141.wav",  # Owner technique/box cue
+    "common/common_143.wav",  # Owner technique/box cue
+    "common/common_131.wav",  # Owner technique/box cue
+    "common/common_160.wav",  # Owner technique/box cue
+
     "common/common_130.wav",  # Razonde: SE_W27_HEY
     "common/common_126.wav",  # Rabarta: SE_EP4ITEM_S52
     "common/common_122.wav",  # Rafoie cast: SE_EP4ITEM_WH02

@@ -5,7 +5,7 @@ const BANKS := [
 	["deband", "jellen", "zalure"], ["gifoie", "gibarta", "gizonde"],
 	["rafoie", "rabarta", "razonde"], ["grants", "megid", "reverser"],
 ]
-const BLOCKED := ["reverser", "deband", "jellen", "zalure"]
+const BLOCKED := []
 var bank := 0
 var roster_label: Label
 var observations: Array = []
@@ -17,11 +17,19 @@ func _run() -> void:
 		get_tree().quit(1)
 		return
 	if OS.get_environment("PSZ_TECH_SUPPORT") == "1": bank = 1
+	if OS.get_environment("PSZ_TECH_FOCUS") == "buffs": bank = 2
+	if OS.get_environment("PSZ_TECH_FOCUS") in ["light_dark", "revive"]: bank = 5
 	get_tree().current_scene = null
 	await launch_fixture()
 	configure_panel()
 	if OS.get_environment("PSZ_AIM_CHECK") == "1":
-		if OS.get_environment("PSZ_TECH_ONLY") == "shifta" and OS.get_environment("PSZ_TECH_SUPPORT") == "1":
+		if OS.get_environment("PSZ_TECH_ONLY") == "revive":
+			await audit_revive()
+		elif OS.get_environment("PSZ_TECH_ONLY") == "light_dark":
+			await audit_light_dark()
+		elif OS.get_environment("PSZ_TECH_ONLY") == "buffs":
+			await audit_stat_buffs()
+		elif OS.get_environment("PSZ_TECH_ONLY") == "shifta" and OS.get_environment("PSZ_TECH_SUPPORT") == "1":
 			await audit_shifta()
 		else:
 			await audit_palette_availability()
@@ -38,7 +46,7 @@ func _run() -> void:
 		DisplayServer.window_set_title("Force Coliseum — F3 technique bank • F4 refill • T enemy AI • Z shoulder • Q lock")
 
 func configure_panel() -> void:
-	if OS.get_environment("PSZ_TECH_FOCUS") in ["rafoie", "rabarta", "razonde"]:
+	if OS.get_environment("PSZ_TECH_FOCUS") in ["rafoie", "rabarta", "razonde", "light_dark"]:
 		for enemy in enemies:
 			enemy.enemy_data = enemy.enemy_data.duplicate(true)
 			enemy.enemy_data.hp_base = 10000
@@ -55,11 +63,17 @@ func configure_panel() -> void:
 	roster_label.add_theme_font_size_override("font_size", 16)
 	layer.add_child(roster_label)
 	set_bank()
+	if OS.get_environment("PSZ_TECH_FOCUS") == "light_dark":
+		for i in range(enemies.size()): enemies[i].global_position = origin + Vector3(0, 0, 4 + i * 3)
+	if OS.get_environment("PSZ_TECH_FOCUS") == "buffs":
+		for i in range(enemies.size()): enemies[i].global_position = origin + Vector3(-1.5 + i * 3, 0, 3)
 	if OS.get_environment("PSZ_TECH_SUPPORT") == "1":
 		GameState.set_hp(maxi(1, GameState.max_hp / 2))
 		support_members.clear()
 		support_members.append(make_support_member("sarisa", Vector3(-2, 0, 1)))
 		support_members.append(make_support_member("kai", Vector3(8, 0, 0)))
+		if OS.get_environment("PSZ_TECH_FOCUS") == "revive":
+			for member in support_members: member.set_defeated_for_test()
 
 func reload_fixture() -> void:
 	await super.reload_fixture()
@@ -80,8 +94,10 @@ func set_bank() -> void:
 	if OS.get_environment("PSZ_TECH_FOCUS") == "rafoie": roster_label.text += "\nRAFOIE: hold J until charged, release to blast • Q lock • R reset targets"
 	if OS.get_environment("PSZ_TECH_FOCUS") == "rabarta": roster_label.text += "\nRABARTA: hold K until charged, release • P refill PP • R reset targets"
 	if OS.get_environment("PSZ_TECH_FOCUS") == "razonde": roster_label.text += "\nRAZONDE: hold L until charged, release • P refill PP • R reset targets"
+	if OS.get_environment("PSZ_TECH_FOCUS") == "buffs": roster_label.text += "\nJ Deband (blue party) • K Jellen (red enemies) • L Zalure (blue enemies) • P refill PP"
+	if OS.get_environment("PSZ_TECH_FOCUS") == "revive": roster_label.text += "\nSarisa down beside you • Tap L to revive • Charge L for group/half HP • N down allies again • P refill PP"
 	if bank == 1: roster_label.text += "\nMiddle-click Shifta: red wrist glow = ATK buff (60 seconds)."
-	if bank in [2, 5]: roster_label.text += "\nDeband/debuffs/revive remain unavailable; Grants/Megid use fallback."
+	if bank in [2, 5]: roster_label.text += "\nTap J Grants • Tap K Megid • Tap L Reverser (hold: group)."
 	if bank >= 3: roster_label.text += "\nAdvanced spells granted for this test only."
 
 
@@ -90,7 +106,7 @@ func _input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo: return
 	if not is_instance_valid(player) or GameState.is_gameplay_blocked(): return
 	var code: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
-	if code not in [KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_B, KEY_U, KEY_P, KEY_H]: return
+	if code not in [KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_B, KEY_U, KEY_P, KEY_H, KEY_N]: return
 	var shortcut := event.duplicate() as InputEventKey
 	shortcut.physical_keycode = code
 	_unhandled_input(shortcut)
@@ -120,6 +136,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				if support_members.size() > 1 and is_instance_valid(support_members[1]):
 					var ally = support_members[1]
 					ally.global_position = player.global_position + Vector3(2.5 if ally.global_position.distance_to(player.global_position) > 6 else 8, 0, 0)
+				return
+			KEY_N:
+				for member in support_members:
+					if is_instance_valid(member): member.set_defeated_for_test()
 				return
 			KEY_F6, KEY_H:
 				if not player._is_defeated: GameState.set_hp(maxi(1, GameState.hp - 30))
@@ -157,8 +177,8 @@ func audit_roster() -> void:
 		await _snapshot("tech-" + id)
 		await ticks(172)
 		var note := "implemented delivery; visual/feel review pending"
-		if id in BLOCKED: note = "blocked before cost: no 3D support recipient/resolver"
-		if id in ["grants", "megid"]: note = "generic Foie fallback; spell-specific delivery absent"
+		if id == "reverser" and spent == 0: note = "no defeated party recipient in range"
+
 		var row := {"id": id, "tier": TechniqueManager.TECHNIQUES[id].tier,
 			"effective_level": TechniqueManager.get_technique_level(CharacterManager.get_active_character(), id),
 			"pp_spent": spent, "hp_gain": GameState.hp - before_hp,
@@ -166,7 +186,7 @@ func audit_roster() -> void:
 			"status_before": before_status, "status_after": player.has_status_effects(), "note": note}
 		observations.append(row)
 		print("[force-techniques] OBS ", JSON.stringify(row))
-		_check(spent == 0 if id in BLOCKED else spent > 0, id + " cost matches current delivery gate")
+		_check(spent == 0 if id in BLOCKED or (id == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(player) == null) else spent > 0, id + " cost matches current delivery gate")
 		if id == "resta": _check(GameState.hp > before_hp, "Resta increases actual HP")
 		if id == "anti": _check(before_status and not player.has_status_effects(), "Anti removes actual poison")
 		_check(get_tree().get_nodes_in_group("technique_visuals").is_empty(), id + " bounded new VFX cleanup")
@@ -383,4 +403,153 @@ func audit_palette_availability() -> void:
 	_check(GameState.mp == GameState.max_mp and GameState.hp == hp_before, "P refills PP without changing HP")
 	_check(not player.has_status_effects(), "P no longer poisons player")
 	_check(cue.available(player, "foie"), "refill restores technique availability")
-	_check(not cue.available(player, "deband"), "unimplemented support is unavailable")
+	_check(not cue.available(player, "reverser"), "unimplemented support is unavailable")
+
+func audit_stat_buffs() -> void:
+	await prepare_case()
+	var buff_script = preload("res://scripts/3d/combat/shifta_buff.gd")
+	var support = preload("res://scripts/3d/combat/support_technique.gd")
+	var character: Dictionary = CharacterManager.get_active_character()
+	var defense: int = CombatManager._get_player_stats(character).defense
+	var recipients: Array = support.cast(player, "deband", 1)
+	_check(player in recipients and support_members[0] in recipients and support_members[1] not in recipients, "Deband affects self and nearby party only")
+	_check(CombatManager._get_player_stats(character).defense > defense, "Deband raises actual player defense")
+	_check(buff_script.amount_for(enemies[0], "deband") == 0, "Deband excludes enemies")
+	var enemy = enemies[0]
+	enemy.enemy_data = enemy.enemy_data.duplicate(true)
+	enemy.enemy_data.original_attack_stats = false
+	enemy.enemy_data.attack_base = 100
+	var attack: int = enemy._attack_damage({})
+	recipients = support.cast(player, "jellen", 1)
+	_check(enemy in recipients and player not in recipients, "Jellen affects enemies only")
+	_check(enemy._attack_damage({}) < attack, "Jellen reduces actual outgoing enemy damage")
+	support.cast(player, "zalure", 1)
+	_check(buff_script.amount_for(enemy, "zalure") > 0 and buff_script.amount_for(player, "zalure") == 0, "Zalure affects enemy defense only")
+	await ticks(3)
+	var buff = enemy.get_node("JellenBuff")
+	_check(buff._drips.size() == 2 and buff._drips[0].emitting and not buff._clouds[0].visible, "enemy debuffs drip instead of glowing")
+	_check(enemy.get_node("ZalureBuff")._clouds[0].material_override.get_shader_parameter("defense"), "Zalure uses blue defense cloud")
+	_check(not buff._clouds[0].material_override.get_shader_parameter("defense"), "Jellen uses red attack cloud")
+	var baseline_defense: int = enemy.current_defense
+	enemy.current_defense = 100
+	var zalure = enemy.get_node("ZalureBuff")
+	zalure.remaining = 0.0
+	seed(42)
+	var hp: int = enemy.current_hp
+	enemy._on_hit_received(200, Vector3.ZERO, 10000)
+	var normal_loss: int = hp - enemy.current_hp
+	zalure.remaining = 60.0
+	seed(42)
+	hp = enemy.current_hp
+	enemy._on_hit_received(200, Vector3.ZERO, 10000)
+	_check(hp - enemy.current_hp > normal_loss, "Zalure increases damage through reduced enemy defense")
+	enemy.current_defense = baseline_defense
+	support.cast(player, "jellen", 1)
+	_check(enemy._attack_damage({}) == int(attack * 0.9), "recast refreshes without stacking")
+	buff.remaining = 0.0
+	_check(enemy._attack_damage({}) == attack, "expired Jellen restores attack")
+	player.get_node("DebandBuff").remaining = 0.0
+	_check(CombatManager._get_player_stats(character).defense == defense, "expired Deband restores defense")
+	for id in ["deband", "jellen", "zalure", "grants", "megid"]:
+		_check(load(support.SOUNDS[id]) is AudioStream, id + " sound loads")
+
+func audit_light_dark() -> void:
+	await prepare_case()
+	player._cast_technique("grants")
+	await ticks(30)
+	_check(enemies[0].current_hp == 10000, "Grants buildup deals no early damage")
+	await ticks(40)
+	_check(enemies[0].current_hp < 10000 and enemies[1].current_hp == 10000, "Grants pillar damages only selected target")
+	await ticks(40)
+	_check(get_tree().get_nodes_in_group("technique_visuals").is_empty(), "Grants visuals clean up")
+	await prepare_case()
+	var strike = preload("res://scripts/3d/combat/grants_strike.gd").new()
+	strike.target = enemies[0]
+	strike.caster = player
+	strike.damage = 100
+	get_tree().current_scene.add_child(strike)
+	strike.target = null
+	await ticks(2)
+	_check(not is_instance_valid(strike), "Grants safely cancels when target disappears")
+	var orb = preload("res://scripts/3d/combat/megid_projectile.gd").new()
+	orb.owner_node = player
+	orb.element_level = 1
+	orb.element = "dark"
+	orb.attack_kind = "technique"
+	orb.damage = 100
+	orb.accuracy = 10000
+	orb.visual_kind = "megid"
+	get_tree().current_scene.add_child(orb)
+	orb.set_physics_process(false)
+	var success_seed := 0
+	var failure_seed := 0
+	for candidate in range(100):
+		seed(candidate)
+		if randf() < 0.21: success_seed = candidate
+		else: failure_seed = candidate
+	var enemy = enemies[0]
+	seed(failure_seed)
+	orb._on_area_entered(enemy.hurtbox)
+	_check(not orb._spent and not orb.is_queued_for_deletion(), "Megid continues after first contact")
+	seed(failure_seed)
+	orb._on_area_entered(enemies[1].hurtbox)
+	_check(orb._hit_targets.size() == 2 and not orb._spent, "Megid contacts multiple distinct targets")
+	orb._on_area_entered(enemy.hurtbox)
+	_check(orb._hit_targets.size() == 2, "Megid never repeats a target")
+	var before_damage: int = enemy.current_hp
+	seed(failure_seed)
+	orb._deliver(enemy.hurtbox, Vector3.ZERO)
+	_check(enemy.is_alive and enemy.current_hp < before_damage, "Megid deals normal damage when instant defeat fails")
+	enemy.enemy_data = enemy.enemy_data.duplicate(true)
+	enemy.enemy_data.is_boss = true
+	before_damage = enemy.current_hp
+	seed(success_seed)
+	orb._deliver(enemy.hurtbox, Vector3.ZERO)
+	_check(enemy.is_alive and enemy.current_hp < before_damage, "boss resists instant defeat but takes Megid damage")
+	enemy.enemy_data.is_boss = false
+	seed(success_seed)
+	orb._deliver(enemy.hurtbox, Vector3.ZERO)
+	_check(not enemy.is_alive and enemy.current_hp == 0, "successful Megid uses enemy defeat lifecycle")
+	orb.queue_free()
+
+func audit_revive() -> void:
+	await prepare_case()
+	var near = support_members[0]
+	var far = support_members[1]
+	near.set_defeated_for_test()
+	far.set_defeated_for_test()
+	_check(near._anim_player.has_animation("down") and near._current_anim == "down", "Sarisa has a downed animation at zero HP")
+	var before: int = GameState.mp
+	ActionPalette.pages = [["grants", "megid", "reverser"], ["attack", "resta", "monofluid"]]
+	ActionPalette.current_page = 0
+	player._on_palette_pressed(2)
+	player._on_palette_released(2)
+	_check(near.current_hp > 0 and far.current_hp == 0, "Reverser restores nearby defeated ally only")
+	_check(GameState.mp < before, "Reverser consumes PP on valid cast")
+	_check(not get_tree().get_nodes_in_group("technique_visuals").is_empty(), "revived ally receives halo")
+	await ticks(120)
+	_check(get_tree().get_nodes_in_group("technique_visuals").is_empty(), "revive halo cleans up")
+	before = GameState.mp
+	player._cast_technique("reverser")
+	_check(GameState.mp == before, "no defeated ally in range means no PP cost")
+	await prepare_case()
+	near.set_defeated_for_test()
+	far.set_defeated_for_test()
+	far.global_position = player.global_position + Vector3(3, 0, 0)
+	player._on_palette_pressed(2)
+	await ticks(90)
+	_check(near.current_hp == 0 and far.current_hp == 0, "charging revive waits for release")
+	player._on_palette_released(2)
+	_check(near.current_hp >= ceili(near.max_hp * 0.5) and far.current_hp >= ceili(far.max_hp * 0.5), "charged revive restores nearby party to at least half HP")
+	await ticks(120)
+	await prepare_case()
+	ActionPalette.pages = [["grants", "megid", "reverser"], ["attack", "resta", "monofluid"]]
+	ActionPalette.current_page = 0
+	before = GameState.mp
+	player._on_palette_pressed(0)
+	_check(GameState.mp < before and player._charging_slot == -1, "Grants casts immediately without charging")
+	await ticks(120)
+	await prepare_case()
+	before = GameState.mp
+	player._on_palette_pressed(1)
+	_check(GameState.mp < before and player._charging_slot == -1, "Megid casts immediately without charging")

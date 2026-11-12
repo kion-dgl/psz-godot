@@ -498,11 +498,12 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 	if character == CharacterManager.get_active_character():
 		shifta_amount = maxf(shifta_amount, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(player))
 	player_attack = int(float(player_attack) * (1.0 + shifta_amount))
-	# Buff: deband (DEF boost)
-	if buffs.has("deband"):
-		var buff: Dictionary = buffs["deband"]
-		if int(buff.get("turns", 0)) > 0:
-			player_defense = int(float(player_defense) * (1.0 + float(buff.get("amount", 0.1))))
+	var deband_amount := 0.0
+	if buffs.has("deband") and int(buffs.deband.get("turns", 0)) > 0:
+		deband_amount = float(buffs.deband.get("amount", 0.1))
+	if player != null and character == CharacterManager.get_active_character():
+		deband_amount = maxf(deband_amount, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(player, "deband"))
+	player_defense = ceili(float(player_defense) * (1.0 + deband_amount))
 
 	return {
 		"attack": player_attack,

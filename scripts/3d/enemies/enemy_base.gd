@@ -1624,9 +1624,11 @@ func _attack_damage(def: Dictionary) -> int:
 	var base_attack: int = enemy_data.attack_base if enemy_data else 10
 	if enemy_data and enemy_data.original_attack_stats:
 		base_attack = randi_range(enemy_data.attack_min, enemy_data.attack_base)
+		base_attack = int(base_attack * (1.0 - minf(0.9, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self, "jellen"))))
 		var ch = CharacterManager.get_active_character()
 		var stats: Dictionary = CombatManager._get_player_stats(ch) if ch else {}
 		return CombatManager.Math.damage(int(base_attack * attack_multiplier * float(def.get("damage_mult", 1.0))), int(stats.get("defense", 0)) + int(stats.get("armor_defense", 0)))
+	base_attack = int(base_attack * (1.0 - minf(0.9, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self, "jellen"))))
 	return int(round(float(base_attack) * attack_multiplier * float(def.get("damage_mult", 1.0))))
 
 
@@ -1789,7 +1791,8 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 		if fx_def.has("damage_taken_mult"):
 			damage_mult *= float(fx_def.damage_taken_mult)
 
-	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy, attack_kind)
+	var effective_defense := int(current_defense * (1.0 - minf(0.9, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self, "zalure"))))
+	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, effective_defense, current_evasion, accuracy, attack_kind)
 	if not result.get("hit", true):
 		_spawn_damage_number("MISS", Color(1.0, 0.15, 0.15))
 		return

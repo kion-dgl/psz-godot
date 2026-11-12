@@ -225,3 +225,25 @@ Rabarta contrast revision: five-unit radius at 16 units/sec (~0.31-second expans
 Replaces simultaneous overhead strikes with a caster-to-enemy jagged white-core/blue-halo bolt and sequential enemy-to-enemy links spaced 0.12 seconds apart. Prefers the selected eligible target, otherwise nearest; each enemy once, at most ten, eight-unit hop range within the existing twelve-unit cast area. World cover blocks links. SE_W27_HEY (common_130) plays on release. Focus fixture: hold/release L, P refill. Rabarta accepted for now; Razonde accepted after the shared-Zonde-shader revision below.
 
 Razonde visual consistency: chain links now use Zonde’s existing additive FBM lightning shader, matching colors, width and fade timing. An opt-in axis-facing mode orients the same effect between endpoints; default vertical Zonde rendering is unchanged.
+
+### Deband, Jellen and Zalure (2026-11-12)
+
+All three use Shifta's six-unit area, sixty-second refreshable duration and ten-percent-per-level modifier. Deband applies to living self/party and increases defense; Jellen and Zalure apply only to living enemies, reducing attack and defense respectively (capped at 90% reduction). Recasts retain the stronger amount without stacking. Attack clouds/circles are red; defense clouds/circles are blue. Humanoids resolve wrist bones; creatures without arm bones use paired side indicators. Companion defense is exposed in their stats, but enemy retargeting/damage to companions remains separate work.
+
+Owner audio mapping: Deband common_142 (SE_TECH_RAZONDE), Jellen common_141 (SE_TECH_GIZONDE), Zalure common_143 (SE_TECH_MEGIDO). Grants cast common_132 and Megid common_131 are tentative audition mappings; Grants impact common_133 is reserved until its dedicated delivery replaces the existing fallback. Box break already uses common_160 (SE_TECH_CHARGEFIRE). Audio copied locally using the preparation script, not published.
+
+Playtest: PSZ_TECH_SUPPORT=1 PSZ_TECH_FOCUS=buffs; hold/release J/K/L, P refills PP.
+
+Debuff differentiation: Jellen and Zalure now emit paired downward red/blue droplets at their wrist/side anchors instead of showing buff clouds. Droplets fall in world space, fade within 0.55 seconds, and are owned by the status node so expiry/death removes them. Shifta and Deband retain their glowing clouds.
+
+### Grants and Megid prototype
+
+Debuff droplets reduced from 18 to 6 per anchor. Grants replaces its Foie fallback with a 0.95-second rainbow shimmer on one target, then a rising light pillar and one damage event; it retains the level-one 50 PP cost, plays common_132 on cast and common_133 on impact, and cancels safely if the target disappears. No target means no PP cost. Megid is a translucent purple straight projectile with sparse falling droplets, speed 12/range 15 and world collision. It retains 40 PP and uses the existing turn-combat 20% + 1%/level instant-death chance; resisted hits do no fallback damage, bosses are immune in this prototype. Successful hits use the enemy death lifecycle. Focus light_dark: J Grants, K Megid, P refill. These remain diagnostic grants, not new learnable disks.
+
+Megid now pierces an unlimited number of distinct targets along its straight path, rolling once per target. Enemy contact does not consume the orb; its 15-unit range or world collision ends it.
+
+Megid correction: a failed instant-defeat roll now delivers the calculated dark-technique damage through the normal hurtbox path. Boss immunity applies only to instant defeat, not ordinary damage. Piercing and once-per-target contact remain unchanged.
+
+Revive playtest: yellow Reverser cast circle and a rising golden halo on the revived recipient. Nearest defeated local companion within six units receives 10 + 2/level HP; no eligible recipient costs no PP. Sarisa starts at zero HP in the downed animation; N downs her again. The halo also accompanies the existing player Scape Doll revival. Player return-to-city defeat handling is unchanged. Grants and Megid now cast on press with no charge.
+
+Reverser now casts on quick release without requiring charge: nearest defeated ally, existing level-scaled HP. Optional full charge revives all defeated allies within six units to at least half HP. Both cost one normal cast; charge balance is provisional.

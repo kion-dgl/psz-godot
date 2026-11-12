@@ -34,6 +34,39 @@ func _ready() -> void:
 	var tint := ICE if kind.begins_with("ice") else HEAL if kind.begins_with("heal") else FIRE
 	if kind == "cure": tint = Color(0.65, 0.85, 1.0)
 	if kind == "heal_empty": tint = Color(0.7, 0.8, 0.75)
+	if kind == "revive":
+		var halo := TorusMesh.new()
+		halo.inner_radius = 0.28
+		halo.outer_radius = 0.34
+		halo.rings = 48
+		halo.ring_segments = 8
+		_piece(halo, Color(1.0, 0.88, 0.25, 0.9), Vector3(0, 2.05, 0))
+		return
+	if kind == "megid":
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.32
+		sphere.height = 0.64
+		sphere.radial_segments = 24
+		sphere.rings = 12
+		var orb := _piece(sphere, Color(0.52, 0.08, 0.85, 0.48), Vector3.ZERO)
+		var drops := CPUParticles3D.new()
+		drops.amount = 12
+		drops.lifetime = 0.5
+		drops.local_coords = false
+		drops.direction = Vector3.DOWN
+		drops.spread = 15
+		drops.initial_velocity_min = 0.2
+		drops.initial_velocity_max = 0.5
+		drops.gravity = Vector3(0, -2, 0)
+		drops.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		drops.emission_sphere_radius = 0.22
+		var drop := SphereMesh.new()
+		drop.radius = 0.025
+		drop.height = 0.1
+		drop.material = orb.material_override
+		drops.mesh = drop
+		add_child(drops)
+		return
 	if kind == "rafoie_blast":
 		for i in range(2):
 			var sphere := SphereMesh.new()
@@ -134,6 +167,14 @@ func _piece(mesh: Mesh, tint: Color, at: Vector3) -> MeshInstance3D:
 
 func _process(delta: float) -> void:
 	elapsed += delta
+	if kind == "revive":
+		_pieces[0].position.y = 1.9 + minf(elapsed, 0.5) * 0.3
+		_materials[0].albedo_color.a = smoothstep(0.0, 0.1, elapsed) * (1.0 - smoothstep(0.9, duration, elapsed))
+		if elapsed >= duration: queue_free()
+		return
+	if kind == "megid":
+		_materials[0].albedo_color.a = 0.48 * travel_alpha
+		return
 	if kind == "rafoie_blast":
 		var growth := lerpf(0.08, 1.0, ease(clampf(elapsed / 0.16, 0.0, 1.0), 0.35))
 		for i in range(2):

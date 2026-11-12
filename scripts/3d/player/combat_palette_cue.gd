@@ -26,7 +26,7 @@ static func available(p, action: String) -> bool:
 	var character = CharacterManager.get_active_character()
 	if character == null: return false
 	var spell: String = TechniqueManager.get_charged_technique(action)
-	if spell in ["reverser", "deband", "jellen", "zalure"]: return false
+	if spell == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(p) == null: return false
 	var level: int = TechniqueManager.get_technique_level(character, spell)
 	if level <= 0: return false
 	var cost := maxi(1, int(TechniqueManager.TECHNIQUES[spell].get("pp", 5)) - int(float(level) / 5.0))

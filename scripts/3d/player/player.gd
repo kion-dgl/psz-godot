@@ -1776,6 +1776,9 @@ func _on_palette_pressed(slot: int) -> void:
 			return
 		if current_state in [PlayerState.ATTACKING, PlayerState.DODGING]:
 			return
+		if action_id in ["grants", "megid"]:
+			_cast_technique(action_id)
+			return
 		_charging_slot = slot
 		_charging_tech_id = action_id
 		_tech_charge_timer = 0.0
@@ -1798,7 +1801,9 @@ func _on_palette_released(slot: int) -> void:
 	tech_charge_released.emit(slot)
 	if charged:
 		var charged_id: String = TechniqueManager.get_charged_technique(tech_id)
-		_cast_technique(charged_id)
+		_cast_technique(charged_id, tech_id == "reverser")
+	elif tech_id == "reverser":
+		_cast_technique(tech_id)
 	# Releasing before the charge completes cancels without spending PP.
 
 
@@ -1831,7 +1836,7 @@ func _execute_palette_action(slot: int) -> void:
 				_cast_technique(action_id)
 
 
-func _cast_technique(technique_id: String) -> void:
+func _cast_technique(technique_id: String, charged_revive := false) -> void:
 	if SaberPrototype.guarding(self): return
 	if PhotonBlast.is_presenting(self):
 		return
@@ -1839,9 +1844,7 @@ func _cast_technique(technique_id: String) -> void:
 		return
 	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
 		return
-	if technique_id in ["reverser", "deband", "jellen", "zalure"]:
-		# No 3D recipient/buff resolver yet: never turn support into a fireball.
-		_ailments.feedback(self, "No valid support target")
+	if technique_id == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(self) == null:
 		return
 	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
 		return
@@ -1855,6 +1858,8 @@ func _cast_technique(technique_id: String) -> void:
 		print("[Player] Technique %s not learned" % technique_id)
 		return
 
+	if technique_id == "grants" and (_targeted_enemies.is_empty() or not is_instance_valid(_targeted_enemies[0]) or not _targeted_enemies[0].get("is_alive")):
+		return
 	var tech_data: Dictionary = CombatManager.calculate_technique_damage(technique_id)
 	var pp_cost: int = 0 if PhotonBlast.flozir_left > 0.0 else int(tech_data.get("pp_cost", 5))
 
@@ -1882,14 +1887,14 @@ func _cast_technique(technique_id: String) -> void:
 	_arm_attack_step(animation_player.current_animation if animation_player else "")
 
 	preload("res://scripts/3d/combat/support_technique.gd").play_sound(self, technique_id)
-	_spawn_technique_effect(technique_id, tech_data)
+	_spawn_technique_effect(technique_id, tech_data, charged_revive)
 
 
 func _face_technique_aim() -> void:
 	if combat_aim != null and combat_aim.active and combat_aim.allowed(): player_rotation = combat_aim.facing()
 
 
-func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> void:
+func _spawn_technique_effect(technique_id: String, tech_data: Dictionary, charged_revive := false) -> void:
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
 	var damage: int = int(tech_data.get("damage", 10))
@@ -1903,8 +1908,8 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 		_current_attack_element_level = TechniqueManager.get_technique_level(character, technique_id)
 
 	match technique_id:
-		"shifta":
-			preload("res://scripts/3d/combat/support_technique.gd").cast(self, technique_id, _current_attack_element_level)
+		"shifta", "deband", "jellen", "zalure", "reverser":
+			preload("res://scripts/3d/combat/support_technique.gd").cast(self, technique_id, _current_attack_element_level, charged_revive)
 		"resta", "anti":
 			var power := float(TechniqueManager.get_technique("resta").get("power", 0))
 			var amount := int(power * (1.0 + float(_current_attack_element_level) / 10.0))
@@ -1927,6 +1932,27 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 			_spawn_gizonde(damage, kb)
 		"razonde":
 			_spawn_razonde(damage, kb)
+		"grants":
+			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+				var strike = preload("res://scripts/3d/combat/grants_strike.gd").new()
+				strike.target = _targeted_enemies[0]
+				strike.caster = self
+				strike.damage = damage
+				strike.level = _current_attack_element_level
+				get_tree().current_scene.add_child(strike)
+		"megid":
+			var orb = preload("res://scripts/3d/combat/megid_projectile.gd").new()
+			orb.visual_kind = "megid"
+			orb.damage = damage
+			orb.knockback = kb
+			orb.direction = combat_aim.shot_direction(spawn_pos, 15.0) if combat_aim != null and combat_aim.active and combat_aim.allowed() else forward
+			orb.speed = 12.0
+			orb.max_range = 15.0
+			orb.collide_with_world = true
+			orb.owner_node = self
+			_apply_element_to_proj(orb)
+			get_tree().current_scene.add_child(orb)
+			orb.global_position = spawn_pos
 		_:
 			# Fallback: fire a basic projectile for unimplemented techniques
 			_spawn_foie(spawn_pos, forward, damage, kb)
@@ -3399,7 +3425,7 @@ func _get_technique_targeting() -> Dictionary:
 			"barta", "gibarta", "rabarta":
 				best_range = maxf(best_range, 15.0)
 				best_width = maxf(best_width, 1.0)
-			"zonde", "gizonde", "razonde":
+			"zonde", "gizonde", "razonde", "grants":
 				has_zonde = true
 				best_range = maxf(best_range, 12.0)
 				best_width = maxf(best_width, 4.0)
@@ -3875,8 +3901,8 @@ func can_receive_support() -> bool:
 
 func receive_support(technique: String, amount: int) -> int:
 	if not can_receive_support(): return 0
-	if technique == "shifta":
-		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount)
+	if technique in ["shifta", "deband"]:
+		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount, technique)
 		return 1
 	if technique == "resta":
 		var before := GameState.hp

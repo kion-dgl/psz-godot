@@ -230,6 +230,8 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	_add_remapped_anim(lib, skel, lsrc, "run", [lpref + "_run_pso", lpref + "_run"], true)
 	_add_remapped_anim(lib, skel, lsrc, "walk", [lpref + "_walk", lpref + "_run"], true)
 
+	_add_remapped_anim(lib, skel, lsrc, "down", [lpref + "_dam_d_lp", lpref + "_dam_d"], false)
+	_add_remapped_anim(lib, skel, lsrc, "revive", [lpref + "_dam_d_wa"], false)
 	_anim_player = AnimationPlayer.new()
 	_anim_player.name = "CompanionAnimPlayer"
 	skel.get_parent().add_child(_anim_player)
@@ -876,7 +878,7 @@ func _companion_stats() -> Dictionary:
 	if class_data == null:
 		return {"attack": 10, "accuracy": 100}
 	var s: Dictionary = class_data.get_stats_at_level(maxi(level, 1))
-	return {"attack": int(float(s.get("attack", 10)) * (1.0 + preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self))), "accuracy": int(s.get("accuracy", 100)), "hp": int(s.get("hp", 100))}
+	return {"attack": int(float(s.get("attack", 10)) * (1.0 + preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self))), "defense": ceili(float(s.get("defense", 0)) * (1.0 + preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self, "deband"))), "accuracy": int(s.get("accuracy", 100)), "hp": int(s.get("hp", 100))}
 
 
 func _process_regroup(delta: float) -> void:
@@ -942,8 +944,8 @@ func can_receive_support() -> bool:
 
 func receive_support(technique: String, amount: int) -> int:
 	if not can_receive_support(): return 0
-	if technique == "shifta":
-		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount)
+	if technique in ["shifta", "deband"]:
+		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount, technique)
 		return 1
 	if technique == "resta":
 		var before := current_hp
@@ -961,3 +963,27 @@ func apply_status_effect(kind: String) -> void:
 
 func has_status_effects() -> bool:
 	return not support_ailments.is_empty()
+
+func can_receive_revive() -> bool:
+	return current_hp <= 0 and not _dismissed
+
+func receive_revive(level: int, charged := false) -> bool:
+	if not can_receive_revive(): return false
+	current_hp = mini(max_hp, maxi(ceili(max_hp * 0.5) if charged else 0, maxi(10, 10 + level * 2)))
+	support_ailments.clear()
+	if _anim_player and _anim_player.has_animation("revive"):
+		_play_companion_anim("revive")
+		var tween := create_tween()
+		tween.tween_interval(_anim_player.get_animation("revive").length)
+		tween.tween_callback(func():
+			if current_hp > 0: _play_companion_anim("wait"))
+	else:
+		_play_companion_anim("wait")
+	return true
+
+func set_defeated_for_test() -> void:
+	current_hp = 0
+	if _anim_player and _anim_player.has_animation("down"):
+		_play_companion_anim("down")
+		_anim_player.seek(_anim_player.get_animation("down").length, true)
+		_anim_player.pause()
