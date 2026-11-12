@@ -8,6 +8,7 @@ const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
+const COUNTER_WATER_SHADER := preload("res://scripts/3d/city/counter_water.gdshader")
 
 ## Textures that are baked shadow/lightmap overlays — hide meshes using them.
 const SHADOW_TEXTURES := ["s00_1_gr1.png", "s00_0_gr1.png"]
@@ -901,7 +902,7 @@ func _fix_materials_recursive(node: Node) -> void:
 					str(fix.get("wrapT", "repeat")) == "mirror")
 				if is_waterfall:
 					var shader_mat := ShaderMaterial.new()
-					shader_mat.shader = WATERFALL_SHADER
+					shader_mat.shader = _city_water_shader(std_mat)
 					if std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
@@ -968,3 +969,9 @@ func _add_flair_critters(spots: Array) -> void:
 		critter.critter_model = "o0c_butterfly"
 		add_child(critter)
 		critter.position = spot
+
+
+static func _city_water_shader(mat: StandardMaterial3D) -> Shader:
+	if mat.albedo_texture and mat.albedo_texture.resource_path.get_file() == "s00e_sa2_m_s00_0_bwat00.png":
+		return COUNTER_WATER_SHADER
+	return WATERFALL_SHADER
