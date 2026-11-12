@@ -33,6 +33,8 @@ uniform float X_Size = 1.0;
 uniform float Emission_Power = 2.0;
 uniform float Fade : hint_range(0.0, 1.0) = 1.0;
 uniform float Seed = 0.0;
+uniform bool Follow_Mesh_Axis = false;
+
 uniform float Top_Taper : hint_range(0.0, 1.0) = 0.25;
 
 float Hash12(vec2 UV_)
@@ -81,6 +83,18 @@ float FBM(vec2 UV_)
 
 void vertex()
 {
+	if (Follow_Mesh_Axis) {
+		// Chain links retain their endpoint axis while facing the camera.
+		vec3 axis = normalize(MODEL_MATRIX[1].xyz);
+		vec3 across = cross(axis, INV_VIEW_MATRIX[2].xyz);
+		if (length(across) < 0.001) across = cross(axis, INV_VIEW_MATRIX[1].xyz);
+		across = normalize(across);
+		vec3 normal = normalize(cross(across, axis));
+		MODELVIEW_MATRIX = VIEW_MATRIX * mat4(
+			vec4(across * length(MODEL_MATRIX[0].xyz), 0.0),
+			vec4(axis * length(MODEL_MATRIX[1].xyz), 0.0),
+			vec4(normal * length(MODEL_MATRIX[2].xyz), 0.0), MODEL_MATRIX[3]);
+	} else {
 	// Y-billboard that keeps the mesh's own scale: the quad yaws to face the
 	// camera but stays upright, so the bolt always falls straight down.
 	mat4 Facing = VIEW_MATRIX * mat4(
@@ -93,6 +107,7 @@ void vertex()
 		vec4(0.0, length(MODEL_MATRIX[1].xyz), 0.0, 0.0),
 		vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0),
 		vec4(0.0, 0.0, 0.0, 1.0));
+	}
 }
 
 void fragment()

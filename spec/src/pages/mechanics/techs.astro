@@ -27,6 +27,19 @@ import Concept from '../../layouts/Concept.astro';
 
   <p>Disk availability, class caps and saved-level compatibility follow <a href={siteUrl('/states/technique-progression')}>Technique progression integrity</a>.</p>
 
+  <h2>Player Barta reach</h2>
+  <p>Base Barta travels at 20 units/second with a maximum projectile travel distance of 9 units, tuned from the Force Coliseum playtest. Its visible ice follows that path and may dissolve briefly after the damaging front passes. Lingering ice MUST NOT deal additional damage. Enemy-authored technique ranges and charged Rabarta are separate.</p>
+
+  <h2>Resta and Anti party delivery</h2>
+  <p>Resta and Anti affect the caster and living local party recipients within 6 units in 3D at release. Resta retains its learned-level healing amount, capped at each recipient’s maximum HP. Anti clears the recipient’s current ailments. Neither spell revives defeated allies or affects enemies. Range is a radius check without a line-of-sight gate. A single cast consumes PP once and plays one positional sound; a brief ground ring marks the radius. Success particles attach only to recipients whose HP or ailments actually changed, then expire. Full-health and already-clean allies MUST NOT display success particles.</p>
+  <p>Companion HP and curable ailments are runtime state. This delivery does not establish enemy targeting of companions, companion ailment combat behavior, network replication, or persistent companion health across scene changes.</p>
+
+  <h2>Shifta</h2>
+  <p>Shifta uses the same 6-unit living-party radius, with a red cast circle. The runtime buff raises the attack stat by 10% per learned level (the existing Shifta strength formula) for a provisional 60 seconds. Recasting refreshes the timer and retains the stronger amount without stacking. Legacy turn-based and runtime Shifta use the stronger amount rather than multiplying twice. Red glowing clouds follow both wrist bones while the buff is active; expiry, defeat, dismissal or removal of the recipient clears the indicator and runtime bonus. The buff is scene-local and is not saved.</p>
+
+  <h2>Deband, Jellen and Zalure</h2>
+  <p>These use Shifta’s 6-unit cast radius and provisional 60-second refreshable duration. Deband raises defense for living self and party recipients. Jellen reduces enemy attack; Zalure reduces enemy defense. Enemy reductions are capped at 90%. Recasts retain the stronger amount without stacking. Attack circles and clouds are red; defense circles and clouds are blue. Wrist bones are used where available; creatures without arm bones display paired side indicators. Effects expire with their runtime stat changes. Companion defense is exposed in runtime stats; enemy targeting of companions remains outside this delivery.</p>
+
   <h2>Scope</h2>
   <p>PP costs, elements and status procs, and level scaling per learned disk. Disks learned from the item shop unlock <em>basic</em> techniques only.</p>
 

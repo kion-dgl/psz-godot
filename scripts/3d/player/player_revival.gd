@@ -37,6 +37,7 @@ func tick(player: Node3D, delta: float) -> void:
 	elapsed += delta
 	if previous < down_seconds and elapsed >= down_seconds:
 		_spawn_particles(player)
+		preload("res://scripts/3d/effects/technique_visual.gd").burst(player, player.global_position, "revive", 1.5)
 	if elapsed < down_seconds + PARTICLE_SECONDS:
 		return
 	active = false

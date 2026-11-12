@@ -1,6 +1,8 @@
 extends RefCounted
 ## 3D delivery for the existing project trap payloads. Values are remake tuning,
 ## not a complete original status specification; see /states/gameplay-recovery-traps.
+# Owner-auditioned PSO cues. Slow is reserved until its 3D delivery exists.
+const STATUS_SOUNDS := {"poison": "res://assets/sfx/common/common_011.wav", "stun": "res://assets/sfx/common/common_012.wav", "slow": "res://assets/sfx/common/common_013.wav"}
 var effects: Dictionary = {}
 var _label: Label3D
 var _poison_effect: Node3D
@@ -14,6 +16,7 @@ func apply(player: Node3D, kind: String) -> void:
 	elif kind in ["burn", "stun", "poison"] and not effects.has(kind):
 		effects[kind] = {"remaining": 20.0 if kind == "poison" else float(CombatManager.STATUS_EFFECTS[kind].duration), "elapsed": 0.0}
 		player._drop_charge()
+		if kind == "stun": SfxManager.play_at(STATUS_SOUNDS.stun, player.global_position, -5.0)
 	_update_label(player)
 
 ## Combat record 6: level 3/4/5, default 1230/1380/1530 updates and
@@ -52,6 +55,7 @@ func tick(player: Node3D, delta: float) -> bool:
 			var interval := 5.0 if kind == "poison" else 1.0
 			var ticks := int(float(fx.elapsed)/interval) - int(old_elapsed/interval)
 			for _tick in ticks:
+				if kind == "poison": SfxManager.play_at(STATUS_SOUNDS.poison, player.global_position, -5.0)
 				player.take_damage(maxi(1, int(GameState.max_hp * float(CombatManager.STATUS_EFFECTS[kind].dot_percent))), Vector3.ZERO, false, true)
 				if not effects.has(kind):
 					break # Lethal damage/recovery cleared the collection.
@@ -66,7 +70,6 @@ func tick(player: Node3D, delta: float) -> bool:
 func _sync_poison_effect(player: Node3D) -> void:
 	if not effects.has("poison"):
 		if is_instance_valid(_poison_effect):
-			_poison_effect.stop_sound()
 			_poison_effect.hide()
 			_poison_effect.queue_free()
 		_poison_effect = null

@@ -1776,6 +1776,9 @@ func _on_palette_pressed(slot: int) -> void:
 			return
 		if current_state in [PlayerState.ATTACKING, PlayerState.DODGING]:
 			return
+		if action_id in ["grants", "megid"]:
+			_cast_technique(action_id)
+			return
 		_charging_slot = slot
 		_charging_tech_id = action_id
 		_tech_charge_timer = 0.0
@@ -1798,9 +1801,10 @@ func _on_palette_released(slot: int) -> void:
 	tech_charge_released.emit(slot)
 	if charged:
 		var charged_id: String = TechniqueManager.get_charged_technique(tech_id)
-		_cast_technique(charged_id)
-	else:
+		_cast_technique(charged_id, tech_id == "reverser")
+	elif tech_id == "reverser":
 		_cast_technique(tech_id)
+	# Releasing before the charge completes cancels without spending PP.
 
 
 func _execute_palette_action(slot: int) -> void:
@@ -1832,19 +1836,9 @@ func _execute_palette_action(slot: int) -> void:
 				_cast_technique(action_id)
 
 
-func _cast_technique(technique_id: String) -> void:
-	if SaberPrototype.guarding(self): return
-	if PhotonBlast.is_presenting(self):
-		return
-	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
-		return
-	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
-		return
-	if technique_id in ["reverser", "shifta", "deband", "jellen", "zalure"]:
-		# No 3D recipient/buff resolver yet: never turn support into a fireball.
-		_ailments.feedback(self, "No valid support target")
-		return
-	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+func _cast_technique(technique_id: String, charged_revive := false) -> void:
+	if not _can_cast_now(): return
+	if technique_id == "reverser" and preload("res://scripts/3d/combat/support_technique.gd").revive_target(self) == null:
 		return
 
 	var character = CharacterManager.get_active_character()
@@ -1856,6 +1850,8 @@ func _cast_technique(technique_id: String) -> void:
 		print("[Player] Technique %s not learned" % technique_id)
 		return
 
+	if technique_id == "grants" and (_targeted_enemies.is_empty() or not is_instance_valid(_targeted_enemies[0]) or not _targeted_enemies[0].get("is_alive")):
+		return
 	var tech_data: Dictionary = CombatManager.calculate_technique_damage(technique_id)
 	var pp_cost: int = 0 if PhotonBlast.flozir_left > 0.0 else int(tech_data.get("pp_cost", 5))
 
@@ -1882,14 +1878,15 @@ func _cast_technique(technique_id: String) -> void:
 	# than the name we asked for.
 	_arm_attack_step(animation_player.current_animation if animation_player else "")
 
-	_spawn_technique_effect(technique_id, tech_data)
+	preload("res://scripts/3d/combat/support_technique.gd").play_sound(self, technique_id)
+	_spawn_technique_effect(technique_id, tech_data, charged_revive)
 
 
 func _face_technique_aim() -> void:
 	if combat_aim != null and combat_aim.active and combat_aim.allowed(): player_rotation = combat_aim.facing()
 
 
-func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> void:
+func _spawn_technique_effect(technique_id: String, tech_data: Dictionary, charged_revive := false) -> void:
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
 	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
 	var damage: int = int(tech_data.get("damage", 10))
@@ -1903,15 +1900,12 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 		_current_attack_element_level = TechniqueManager.get_technique_level(character, technique_id)
 
 	match technique_id:
-		"resta":
+		"shifta", "deband", "jellen", "zalure", "reverser":
+			preload("res://scripts/3d/combat/support_technique.gd").cast(self, technique_id, _current_attack_element_level, charged_revive)
+		"resta", "anti":
 			var power := float(TechniqueManager.get_technique("resta").get("power", 0))
 			var amount := int(power * (1.0 + float(_current_attack_element_level) / 10.0))
-			var previous := GameState.hp
-			GameState.set_hp(GameState.hp + amount)
-			_spawn_heal_number("hp", GameState.hp - previous)
-		"anti":
-			clear_status_effects()
-			_ailments.feedback(self, "Cured")
+			preload("res://scripts/3d/combat/support_technique.gd").cast(self, technique_id, amount)
 		"foie":
 			_spawn_foie(spawn_pos, forward, damage, kb)
 		"gifoie":
@@ -1930,6 +1924,8 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 			_spawn_gizonde(damage, kb)
 		"razonde":
 			_spawn_razonde(damage, kb)
+		"grants", "megid":
+			_spawn_light_dark(technique_id, spawn_pos, forward, damage, kb)
 		_:
 			# Fallback: fire a basic projectile for unimplemented techniques
 			_spawn_foie(spawn_pos, forward, damage, kb)
@@ -1943,6 +1939,7 @@ func _apply_element_to_proj(proj: Projectile, kind: String = "technique") -> voi
 
 func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
 	var proj := Projectile.new()
+	proj.visual_kind = "foie"
 	if combat_aim != null and combat_aim.active and combat_aim.allowed():
 		spawn_pos = global_position + Vector3.UP
 		forward = combat_aim.shot_direction(spawn_pos, 15.0)
@@ -1963,11 +1960,12 @@ func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -
 func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
 	var profile: Dictionary = preload("res://scripts/3d/combat/ice_technique.gd").profile("barta")
 	var proj := Projectile.new()
+	proj.visual_kind = "ice_line"
 	proj.damage = damage
 	proj.knockback = kb
 	proj.accuracy = 100
 	proj.direction = forward
-	proj.max_range = profile.range
+	proj.max_range = profile.player_range
 	proj.owner_node = self
 	proj.speed = profile.speed
 	proj.pierce = true
@@ -1976,7 +1974,7 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
 	if combat_aim != null and combat_aim.active and combat_aim.allowed():
 		ground_pos = global_position + Vector3.UP * 0.3
-		var aimed: Vector3 = combat_aim.shot_direction(ground_pos, profile.range)
+		var aimed: Vector3 = combat_aim.shot_direction(ground_pos, profile.player_range)
 		proj.direction = Vector3(aimed.x, 0, aimed.z).normalized()
 		proj.collide_with_world = true
 	_apply_element_to_proj(proj)
@@ -2096,6 +2094,8 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 	var explosion_pos: Vector3 = target_enemy.global_position
 	var explosion_radius := 5.0
 
+	SfxManager.play_at("res://assets/sfx/common/common_123.wav", explosion_pos, -5.0)
+
 	# Full damage to primary target
 	if target_enemy.hurtbox:
 		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
@@ -2112,7 +2112,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
 			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
 
-	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
+	preload("res://scripts/3d/effects/technique_visual.gd").burst(get_tree().current_scene, explosion_pos, "rafoie_blast", 0.9, explosion_radius)
 
 
 func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
@@ -2149,25 +2149,14 @@ func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
 
 
 func _spawn_rabarta(damage: int, kb: float) -> void:
-	# Ice shards in a circle around the user — pierce, largest ice AoE
-	var num_shards := 10
-	for i in range(num_shards):
-		var angle: float = i * TAU / float(num_shards)
-		var dir := Vector3(sin(angle), 0, cos(angle))
-		var proj := Projectile.new()
-		proj.damage = damage
-		proj.knockback = kb
-		proj.accuracy = 100
-		proj.direction = dir
-		proj.max_range = 8.0
-		proj.owner_node = self
-		proj.speed = 12.0
-		proj.pierce = true
-		proj.max_hits = 0  # Unlimited — Rabarta shards traverse outward
-		proj.color = Color(0.5, 0.8, 1.0)
-		_apply_element_to_proj(proj)
-		get_tree().current_scene.add_child(proj)
-		proj.global_position = global_position + Vector3(0, 0.3, 0)
+	var wave = preload("res://scripts/3d/combat/rabarta_wave.gd").new()
+	wave.caster = self
+	wave.damage = damage
+	wave.knockback = kb
+	wave.element = _current_attack_element
+	wave.element_level = _current_attack_element_level
+	get_tree().current_scene.add_child(wave)
+	wave.global_position = global_position
 
 
 func _spawn_zonde(damage: int, kb: float) -> void:
@@ -2255,27 +2244,15 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 
 
 func _spawn_razonde(damage: int, kb: float) -> void:
-	# Lightning spiral around user — largest range, no target required
-	var nearby := _get_enemies_in_radius(12.0)
-	for enemy in nearby:
-		if enemy.hurtbox:
-			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level, true, "technique", self)
-		_spawn_zonde_visual(enemy.global_position)
-	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
-
-
-func _get_enemies_in_radius(radius: float) -> Array:
-	var result: Array = []
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(enemy):
-			continue
-		if not enemy.get("is_alive"):
-			continue
-		var dist: float = enemy.global_position.distance_to(global_position)
-		if dist <= radius:
-			result.append(enemy)
-	return result
+	var chain = preload("res://scripts/3d/combat/razonde_chain.gd").new()
+	chain.caster = self
+	chain.preferred = _targeted_enemies[0] if not _targeted_enemies.is_empty() else null
+	chain.damage = damage
+	chain.knockback = kb
+	chain.element = _current_attack_element
+	chain.element_level = _current_attack_element_level
+	get_tree().current_scene.add_child(chain)
+	chain.global_position = global_position
 
 
 func _spawn_aoe_visual(center: Vector3, aoe_color: Color, radius: float) -> void:
@@ -3408,7 +3385,7 @@ func _get_technique_targeting() -> Dictionary:
 			"barta", "gibarta", "rabarta":
 				best_range = maxf(best_range, 15.0)
 				best_width = maxf(best_width, 1.0)
-			"zonde", "gizonde", "razonde":
+			"zonde", "gizonde", "razonde", "grants":
 				has_zonde = true
 				best_range = maxf(best_range, 12.0)
 				best_width = maxf(best_width, 4.0)
@@ -3877,3 +3854,62 @@ func _prepare_native_roles(lib: AnimationLibrary, native: AnimationLibrary, anim
 			shot.length += prototype_profile.recovery[step]
 			lib.add_animation(str(prototype_profile.native_prefix) + "_shot_atk" + str(step + 1), shot)
 	return native_roles
+
+
+func can_receive_support() -> bool:
+	return not _is_defeated and GameState.hp > 0
+
+func receive_support(technique: String, amount: int) -> int:
+	if not can_receive_support(): return 0
+	if technique in ["shifta", "deband"]:
+		preload("res://scripts/3d/combat/shifta_buff.gd").apply_to(self, amount, technique)
+		return 1
+	if technique == "resta":
+		var before := GameState.hp
+		GameState.set_hp(GameState.hp + maxi(amount, 0))
+		var healed := GameState.hp - before
+		if healed > 0: _spawn_heal_number("hp", healed)
+		return healed
+	if technique == "anti" and has_status_effects():
+		clear_status_effects()
+		_ailments.feedback(self, "Cured")
+		return 1
+	return 0
+
+
+func _can_cast_now() -> bool:
+	if SaberPrototype.guarding(self): return false
+	if PhotonBlast.is_presenting(self):
+		return false
+	if Inventory.can_use_traps(): # CASTs cannot cast, including stale palette entries.
+		return false
+	if _freeze.remaining > 0.0 or _ailments.blocks_attack() or _is_defeated or _recovery_left > 0.0 or GameState.hp <= 0:
+		return false
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return false
+
+	return true
+
+func _spawn_light_dark(technique_id: String, spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	match technique_id:
+		"grants":
+			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+				var strike = preload("res://scripts/3d/combat/grants_strike.gd").new()
+				strike.target = _targeted_enemies[0]
+				strike.caster = self
+				strike.damage = damage
+				strike.level = _current_attack_element_level
+				get_tree().current_scene.add_child(strike)
+		"megid":
+			var orb = preload("res://scripts/3d/combat/megid_projectile.gd").new()
+			orb.visual_kind = "megid"
+			orb.damage = damage
+			orb.knockback = kb
+			orb.direction = combat_aim.shot_direction(spawn_pos, 15.0) if combat_aim != null and combat_aim.active and combat_aim.allowed() else forward
+			orb.speed = 12.0
+			orb.max_range = 15.0
+			orb.collide_with_world = true
+			orb.owner_node = self
+			_apply_element_to_proj(orb)
+			get_tree().current_scene.add_child(orb)
+			orb.global_position = spawn_pos

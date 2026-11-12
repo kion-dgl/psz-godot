@@ -3,9 +3,10 @@ extends Node3D
 ## Shared player/enemy ice delivery profiles. Enemy casts keep their authored
 ## damage/range and one resolution per target across the whole fan.
 
+## Player Barta reach tuned in the Force playtest; enemy authored range is separate.
 static func profile(technique: String) -> Dictionary:
 	match technique:
-		"barta": return {"speed": 20.0, "range": 15.0, "waves": 1, "angles": [0.0], "interval": 0.15, "color": Color(0.3, 0.7, 1.0)}
+		"barta": return {"speed": 20.0, "range": 15.0, "player_range": 9.0, "waves": 1, "angles": [0.0], "interval": 0.15, "color": Color(0.3, 0.7, 1.0)}
 		"gibarta": return {"speed": 18.0, "range": 10.0, "waves": 3, "angles": [-0.12, 0.0, 0.12], "interval": 0.15, "color": Color(0.3, 0.7, 1.0)}
 	return {}
 
