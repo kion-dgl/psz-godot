@@ -1,0 +1,18 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+<Concept title="Autopilot reliability" section="Engineering">
+  <p>The autopilot MUST collect quest items on the first visit to an ordinary transit
+    room after clearing its enemies. It MUST NOT schedule a later detour solely for
+    that collection. Gate, switch, dialog and NPC dependencies MUST retain their
+    scheduled visits. Terminal and section-transition cells MUST retain their role.</p>
+  <p>Counter NPC and warp-pad interactions MUST observe the expected overlay after
+    each press. If absent after two seconds, retry up to three total attempts, then
+    fail with the player position and nearest interactable. Observing the expected
+    overlay MUST cancel retries even if it closes before the deadline. Scene changes
+    MUST cancel obsolete attempts. Negative menu-input probes expecting no interaction
+    are exempt.</p>
+  <p>These are test-infrastructure rules, not claims about original PSZ behavior.
+    Original gate/key dependencies remain governed by /states/field-gates and psz-re
+    evidence. Grades remain unchanged pending owner playtesting.</p>
+</Concept>

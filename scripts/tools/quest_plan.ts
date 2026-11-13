@@ -16,7 +16,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, dirname, resolve, basename } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '..', '..');
@@ -514,10 +514,16 @@ function buildHubAndSpokeSteps(
   return steps;
 }
 
-// Build the flat step list for one section. Ported from
-// autopilot.gd:_build_steps_from_plan (lines 369-531). Behaviour is
-// intended to be bit-for-bit identical to the GDScript version so the
-// regression harness sees no semantic change after this refactor.
+// Ordinary rooms have no deferred gate/dialog/switch work. Their first transit
+// visit can do all useful work, removing later item-only detours (#619).
+function canCompleteOnTransit(cell: CellPlan): boolean {
+  return !cell.isStart && !cell.isEnd && !cell.warpEdge && !cell.keyGate &&
+    !cell.keyDrop && !cell.switches.length && !cell.fences.length &&
+    !cell.dialogTriggers.length && !cell.npcs.length && !cell.storyProps.length;
+}
+
+// Build the flat step list for one section. Ordinary transit rooms finish
+// their pickups immediately; dependency-bearing rooms keep scheduled actions.
 function buildStepsForSection(
   cells: CellPlan[],
   section: QuestPlan['sections'][number],
@@ -556,20 +562,27 @@ function buildStepsForSection(
   }
 
   // Insert BFS passthroughs whenever consecutive cells aren't directly
-  // connected. A "passthrough" is an intermediate cell visited only as
-  // transit — kill_all action only, walk to the next cell.
+  // connected. A first transit through an ordinary room performs its pickups;
+  // later transits and rooms with deferred dependencies only clear enemies.
   const entries: PreStep[] = [];
+  const completedTransit = new Set<string>();
   for (let ci = 0; ci < sortedCells.length; ci++) {
     const cell = sortedCells[ci];
-    if (ci > 0) {
-      const prevCell = sortedCells[ci - 1];
+    if (completedTransit.has(cell.pos)) continue;
+    if (entries.length > 0) {
+      const prevCell = entries[entries.length - 1].cell;
       const directlyConnected = Object.values(prevCell.connections)
         .some((next) => next === cell.pos);
       if (!directlyConnected) {
         const detour = bfsCellPath(prevCell.pos, cell.pos, byPos);
         for (let di = 1; di < detour.length - 1; di++) {
           const passthroughCell = byPos.get(detour[di]);
-          if (passthroughCell) entries.push({ cell: passthroughCell, isPassthrough: true });
+          if (passthroughCell) {
+            const complete = canCompleteOnTransit(passthroughCell) &&
+              !entries.some(e => e.cell.pos === passthroughCell.pos);
+            entries.push({ cell: passthroughCell, isPassthrough: !complete });
+            if (complete) completedTransit.add(passthroughCell.pos);
+          }
         }
       }
     }
@@ -667,7 +680,7 @@ function buildStepsForSection(
   return steps;
 }
 
-function planQuest(quest: Quest): QuestPlan {
+export function planQuest(quest: Quest): QuestPlan {
   const sectionMetas = quest.sections.map((s) => ({
     type: s.type,
     area: s.area,
@@ -841,4 +854,4 @@ function runOneSafe(p: string) {
   }
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main();
