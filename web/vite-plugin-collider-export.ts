@@ -1,28 +1,23 @@
-// Dev-only Vite plugin: write a floor-collider GLB built by the floor-collider
-// builder tool back into the repo.
+// Dev-only Vite plugin: write floor-collider GLBs and city boundary JSON
+// sidecars built by `#/floor-collider-builder` back into the repo.
 //
 //   POST /api/collider/export?path=<repo-relative>   body: raw GLB bytes
 //     → writes the bytes to <repoRoot>/<path>, creating parent dirs.
 //   POST /api/collider/reset   body: { path }
 //     → `git checkout HEAD -- <path>` if tracked, else deletes the file.
-//
-// The client (FloorColliderBuilder) serialises the selected triangles to a
-// binary GLB via three's GLTFExporter and POSTs the ArrayBuffer here — the
-// server just validates the path and writes bytes, so there's no GLB encoding
-// logic to keep in sync between client and server.
-//
-// Path safety: the target must resolve under assets/stages/.../lndmd/ and end
-// in -floor.glb. Anything else is rejected — this endpoint only writes floor
-// colliders, never arbitrary files.
+//   GET  /api/collider/boundary?area=<market|underground|office|counter>
+//     → reads <repoRoot>/data/stage_configs/city-boundaries/<area>.json.
+//   POST /api/collider/save-boundary   body: { areaId, config }
+//     → writes <repoRoot>/data/stage_configs/city-boundaries/<areaId>.json.
 
 import type { Plugin } from 'vite';
-import { writeFileSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
+const ALLOWED_CITY_AREAS = new Set(['market', 'underground', 'office', 'counter']);
+
 function resolveSafe(repoRoot: string, rel: string): string | null {
-  // Normalise and confine to any -floor.glb under assets/stages/ (covers both
-  // the lndmd/ stage layout and the flat market/ layout where dairon2 lives).
   const cleaned = rel.replace(/^\/+/, '');
   const abs = path.resolve(repoRoot, cleaned);
   const within = path.relative(repoRoot, abs).replace(/\\/g, '/');
@@ -31,6 +26,12 @@ function resolveSafe(repoRoot: string, rel: string): string | null {
     return null;
   }
   return abs;
+}
+
+function resolveSafeBoundary(repoRoot: string, areaId: string): string | null {
+  const key = areaId.trim().toLowerCase();
+  if (!ALLOWED_CITY_AREAS.has(key)) return null;
+  return path.resolve(repoRoot, 'data/stage_configs/city-boundaries', `${key}.json`);
 }
 
 export default function colliderExportPlugin(repoRoot: string): Plugin {
@@ -72,8 +73,6 @@ export default function colliderExportPlugin(repoRoot: string): Plugin {
         }
       });
 
-      // Undo: restore the collider to git HEAD, or delete it if it's a new
-      // (untracked) file. Lets the tool offer a one-tap bailout.
       server.middlewares.use('/api/collider/reset', async (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405;
@@ -98,7 +97,6 @@ export default function colliderExportPlugin(repoRoot: string): Plugin {
         }
         const rel = path.relative(repoRoot, abs);
         try {
-          // Tracked in git? → checkout. Untracked? → unlink.
           let tracked = true;
           try {
             execFileSync('git', ['cat-file', '-e', `HEAD:${rel.replace(/\\/g, '/')}`], {
@@ -119,6 +117,79 @@ export default function colliderExportPlugin(repoRoot: string): Plugin {
         } catch (err) {
           res.statusCode = 500;
           res.end(`reset failed: ${(err as Error).message}`);
+        }
+      });
+
+      server.middlewares.use('/api/collider/boundary', (req, res) => {
+        if (req.method !== 'GET') {
+          res.statusCode = 405;
+          res.end('GET only');
+          return;
+        }
+        const url = new URL(req.url ?? '', 'http://localhost');
+        const area = url.searchParams.get('area') ?? '';
+        const abs = resolveSafeBoundary(repoRoot, area);
+        if (!abs) {
+          res.statusCode = 400;
+          res.end(`bad area (must be market|underground|office|counter): ${area}`);
+          return;
+        }
+        if (!existsSync(abs)) {
+          res.statusCode = 404;
+          res.end(`boundary config not found: ${area}`);
+          return;
+        }
+        try {
+          const text = readFileSync(abs, 'utf8');
+          res.statusCode = 200;
+          res.setHeader('content-type', 'application/json');
+          res.end(text);
+        } catch (err) {
+          res.statusCode = 500;
+          res.end(`read failed: ${(err as Error).message}`);
+        }
+      });
+
+      server.middlewares.use('/api/collider/save-boundary', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end('POST only');
+          return;
+        }
+        let raw = '';
+        for await (const chunk of req) raw += chunk;
+        let body: { areaId?: string; config?: Record<string, unknown> };
+        try {
+          body = JSON.parse(raw);
+        } catch (e) {
+          res.statusCode = 400;
+          res.end(`bad JSON: ${(e as Error).message}`);
+          return;
+        }
+        const areaId = String(body.areaId ?? '');
+        const abs = resolveSafeBoundary(repoRoot, areaId);
+        if (!abs) {
+          res.statusCode = 400;
+          res.end(`bad areaId (must be market|underground|office|counter): ${areaId}`);
+          return;
+        }
+        const cfg = body.config;
+        if (!cfg || typeof cfg !== 'object' || !Array.isArray(cfg.perimeter) || cfg.perimeter.length < 3) {
+          res.statusCode = 400;
+          res.end('invalid boundary config (perimeter must have >= 3 points)');
+          return;
+        }
+        try {
+          mkdirSync(path.dirname(abs), { recursive: true });
+          const serialized = JSON.stringify({ ...cfg, areaId }, null, 2) + '\n';
+          writeFileSync(abs, serialized, 'utf8');
+          const rel = path.relative(repoRoot, abs).replace(/\\/g, '/');
+          res.statusCode = 200;
+          res.setHeader('content-type', 'application/json');
+          res.end(JSON.stringify({ ok: true, path: rel, bytes: Buffer.byteLength(serialized, 'utf8') }));
+        } catch (err) {
+          res.statusCode = 500;
+          res.end(`write failed: ${(err as Error).message}`);
         }
       });
     },

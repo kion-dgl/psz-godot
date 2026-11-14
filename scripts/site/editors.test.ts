@@ -50,8 +50,32 @@ describe('retained local editor endpoints', () => {
     expect(response.status).toBe(200);
     expect(JSON.parse(readFileSync(join(root, 'data/stage_configs/city-lights/s00e_sa2.json'), 'utf8'))).toEqual(doc);
   });
+  it('saves and reads city boundary sidecars while rejecting unknown areaIds', async () => {
+    const cfg = {
+      version: 1,
+      areaId: 'market',
+      stageId: 's00e_sa1',
+      buildFloor: true,
+      floorY: 0,
+      wallHeight: 4,
+      fallRespawnY: -10,
+      perimeter: [[-4, 14], [4, 14], [4, 65], [-4, 65]],
+      cutouts: [],
+      openings: [],
+    };
+    const saveRes = await post('/api/collider/save-boundary/', { areaId: 'market', config: cfg });
+    expect(saveRes.status).toBe(200);
+    expect(JSON.parse(readFileSync(join(root, 'data/stage_configs/city-boundaries/market.json'), 'utf8'))).toEqual(cfg);
+
+    const getRes = await fetch(`${origin}/api/collider/boundary?area=market`);
+    expect(getRes.status).toBe(200);
+    expect(await getRes.json()).toEqual(cfg);
+
+    const badRes = await post('/api/collider/save-boundary/', { areaId: '../escape', config: cfg });
+    expect(badRes.status).toBe(400);
+  });
   it('keeps all four plugin families reachable and rejects non-POST requests', async () => {
-    for (const path of ['/api/collider/reset/', '/api/city-lab/export-glb/', '/api/stage-config/reset-stage/', '/api/floor-mesh/patch-vertex/']) {
+    for (const path of ['/api/collider/reset/', '/api/collider/save-boundary/', '/api/city-lab/export-glb/', '/api/stage-config/reset-stage/', '/api/floor-mesh/patch-vertex/']) {
       expect((await fetch(origin + path)).status).toBe(405);
     }
   });

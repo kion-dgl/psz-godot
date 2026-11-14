@@ -91,6 +91,8 @@ func _ready() -> void:
 		"res://assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2-floor.glb",
 		Vector3.ZERO
 	)
+	# Extruded perimeter walls, guild-desk barrier, and corridor backstops (#371).
+	_apply_city_boundary("counter")
 	# The floor-lit rig (the lab kion confirmed live — point lights only,
 	# per-light shadows, the floor its own bake: never a veil, never black).
 	_apply_ds_floor_lit("Counter", FLOOR_LIT_SURFACES)
@@ -152,14 +154,14 @@ func _add_interactables() -> void:
 		# resuming the bow only when the menu closed. Plain idle throughout.
 		"pso_ro_stand", "", "", Vector3(2.8, 3, 2.8)
 	)
-	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. The old
-	# counter→warp trigger is gone; the teleporter lives in this scene now.
+	# Exit triggers — floor at y≈-10.67, box centered ~1.5 above it. Sized across
+	# the full 5m corridor widths so wall-hugging players cannot slip past (#371).
 	_add_area_trigger(
-		Vector3(-0.06, -9.17, 140.65), Vector3(4, 3, 1),
+		Vector3(-0.06, -9.17, 140.65), Vector3(5.4, 3, 1.5),
 		"res://scenes/3d/city/city_market.tscn", "counter-exit"
 	)
 	_add_area_trigger(
-		Vector3(14.30, -9.17, 107.47), Vector3(2, 3, 2),
+		Vector3(14.30, -9.17, 107.47), Vector3(4.6, 3, 4.6),
 		"res://scenes/3d/city/city_office.tscn", "counter-office"
 	)
 	# Warp teleporter — empty area_id = central pad that opens the teleporter menu.

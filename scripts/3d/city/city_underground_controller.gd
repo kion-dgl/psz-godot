@@ -19,23 +19,24 @@ func _ready() -> void:
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision — centered on underground walkable area
-	_add_floor_collision(Vector3(0, 0, -5), Vector3(30, 0.2, 30))
+	# Walkable octagons + bridge floor and canal/alcove collision walls (#371)
+	_apply_city_boundary("underground")
 
-	# NPCs
+	# NPCs — Synthesis and Photon Collector stand behind alcoves/counters off the
+	# walkable polygon, so widen their interaction boxes to reach across the wall.
 	_add_npc(
 		"SynthesisNPC", Vector3(8.38, 0, -4.81), 0,
 		"res://assets/npcs/np_017_00_0/np_017_00_0.glb",
 		"Synthesis Shop",
 		"res://scenes/2d/shops/crafting_shop.tscn",
-		"pso_ro_stand"
+		"pso_ro_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
 	_add_npc(
 		"PhotonCollectorNPC", Vector3(-6.32, 0, -5.35), 0,
 		"res://assets/npcs/np_018_00_0/np_018_00_0.glb",
 		"Photon Collector",
 		"res://scenes/2d/shops/photon_shop.tscn",
-		"pso_f_ro_stand"
+		"pso_f_ro_stand", "", "", Vector3(3.6, 3, 3.6)
 	)
 	_add_npc(
 		"BlackjackDealerNPC", Vector3(-10.0, 0, 0.0), PI / 2.0,

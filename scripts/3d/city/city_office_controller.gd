@@ -110,8 +110,8 @@ func _ready() -> void:
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision — covers the R=9 round hall plus the +Z door threshold.
-	_add_floor_collision(Vector3(0, 0, 0), Vector3(24, 0.2, 24))
+	# Curved apse walkable polygon + extruded perimeter & desk walls (#371).
+	_apply_city_boundary("office")
 
 	# Principal NPC at fixed position
 	_principal_npc = _add_npc(

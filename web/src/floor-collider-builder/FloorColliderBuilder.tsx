@@ -1,21 +1,10 @@
 import { devApiUrl } from '../utils/devApi';
-// FloorColliderBuilder — build a stage's -floor.glb collision mesh by selecting
-// triangles from the visual model, by material and/or one triangle at a time.
+// FloorColliderBuilder — author stage floor collision (.glb triangle selection)
+// AND city walkable boundary polygons + extruded blocking walls (.json sidecars).
 //
-// Why: the runtime floor collider is a trimesh (MapCollisionBuilder in Godot
-// runs create_trimesh_shape on the -floor.glb and keeps top faces). For a flat
-// room a box collider works, but a room with a slope (e.g. the merged
-// teleporter + guild counter, s00e_sa1) needs a collider that follows the art.
-// The stage-editor's auto floor pick is Y-proximity based and can't separate a
-// ramp from walls/props — so this tool gives manual control: toggle whole
-// materials (floor03, floor4, …) and paint individual triangles, then export
-// just those as the -floor.glb.
-//
-// URL: /psz-godot/#/floor-collider-builder?glb=<url>&stage=<id>&out=<repo-path>
-//   - glb:   optional. Explicit source model URL. Otherwise derived from stage.
-//   - stage: optional. e.g. s00e_sa1 → loads its visual _m.glb, exports -floor.glb.
-//   - out:   optional. Override the export path (repo-relative -floor.glb).
-// A local file picker also loads any .glb directly (for models not yet in assets).
+// URLs:
+//   /#/floor-collider-builder?area=market        (opens Boundary + Walls mode)
+//   /#/floor-collider-builder?stage=s00e_sa2     (opens Floor Mesh .glb mode)
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -24,6 +13,19 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetUrl } from '../utils/assets';
 import AssetDriftWarning from '../components/AssetDriftWarning';
+import {
+  type CityAreaId,
+  type CityBoundaryConfig,
+  CITY_AREA_IDS,
+  CITY_BOUNDARY_PRESETS,
+  isCityAreaId,
+  normalizeBoundaryConfig,
+  serializeBoundaryConfig,
+  isPointWalkable2D,
+  splitPolygonEdge,
+  buildProceduralOfficeGroup,
+} from './boundaryModel';
+import { rebuildBoundaryOverlay, type SelectedVertex } from './BoundaryOverlay3D';
 
 const AREA_FOLDER: Record<string, string> = {
   '00': 'city', '01': 'valley', '02': 'wetlands', '03': 'snowfield',
@@ -46,30 +48,24 @@ function defaultOutPath(stageId: string): string | null {
   if (!folder) return null;
   return `assets/stages/${folder}/${stageId}/lndmd/${stageId}-floor.glb`;
 }
-// Derive a sibling -floor.glb repo path from a loaded model's URL/path, e.g.
-// .../assets/stages/city_e/market/dairon2.glb → assets/stages/city_e/market/dairon2-floor.glb
 function outPathFromGlb(glb: string): string {
   const idx = glb.indexOf('assets/stages/');
   const rel = idx >= 0 ? glb.slice(idx) : glb;
   return rel.replace(/\.glb$/i, '').replace(/_m$/, '') + '-floor.glb';
 }
 
-// --- In-browser GLB parser (positions + indices + material name per primitive).
-// Adapted from FloorMeshEditor; extended to carry material info so the UI can
-// group triangles by material.
 interface Prim {
   meshName: string;
   materialIdx: number;
   materialName: string;
-  positions: Float32Array; // [x0,y0,z0, ...]
+  positions: Float32Array;
   indices: Uint32Array | null;
   triCount: number;
 }
-// Local TRS/matrix of a glTF node as a THREE.Matrix4.
 function nodeLocalMatrix(n: any): THREE.Matrix4 {
   const m = new THREE.Matrix4();
   if (n.matrix) {
-    m.fromArray(n.matrix); // glTF matrices are column-major — matches fromArray
+    m.fromArray(n.matrix);
     return m;
   }
   const t = n.translation ?? [0, 0, 0];
@@ -96,10 +92,6 @@ async function parseGlb(buf: ArrayBuffer): Promise<Prim[]> {
   const materials = json.materials ?? [];
   const nodes = json.nodes ?? [];
 
-  // Compose each node's WORLD matrix by walking the scene graph from its roots,
-  // so vertices come out in the same frame Godot places the instanced model
-  // (Godot applies the GLB root node's transform — e.g. this model's root
-  // offset — to the visual mesh).
   const worldMat: (THREE.Matrix4 | null)[] = nodes.map(() => null);
   const visit = (idx: number, parent: THREE.Matrix4) => {
     const w = new THREE.Matrix4().multiplyMatrices(parent, nodeLocalMatrix(nodes[idx]));
@@ -111,7 +103,6 @@ async function parseGlb(buf: ArrayBuffer): Promise<Prim[]> {
 
   const v = new THREE.Vector3();
   const prims: Prim[] = [];
-  // Iterate NODES (not meshes) so each instance gets its own world transform.
   for (let ni = 0; ni < nodes.length; ni++) {
     const node = nodes[ni];
     if (node.mesh == null) continue;
@@ -130,7 +121,7 @@ async function parseGlb(buf: ArrayBuffer): Promise<Prim[]> {
           binView.getFloat32(posOffset + i * stride + 0, true),
           binView.getFloat32(posOffset + i * stride + 4, true),
           binView.getFloat32(posOffset + i * stride + 8, true),
-        ).applyMatrix4(wm); // bake node world transform
+        ).applyMatrix4(wm);
         positions[i * 3 + 0] = v.x;
         positions[i * 3 + 1] = v.y;
         positions[i * 3 + 2] = v.z;
@@ -160,7 +151,6 @@ async function parseGlb(buf: ArrayBuffer): Promise<Prim[]> {
   return prims;
 }
 
-// Flatten a primitive into per-triangle world positions: triCount * 9 floats.
 function flatTriangles(prim: Prim): Float32Array {
   const flat = new Float32Array(prim.triCount * 9);
   for (let t = 0; t < prim.triCount; t++) {
@@ -179,23 +169,17 @@ function flatTriangles(prim: Prim): Float32Array {
 const KEY = (pi: number, ti: number) => `${pi}:${ti}`;
 const COLOR_UNSEL = new THREE.Color(0x55606e);
 const COLOR_SEL = new THREE.Color(0x22e06a);
-type Mode = 'orbit' | 'paint' | 'erase' | 'probe';
-
-// --- Floor classification ----------------------------------------------------
-// Each primitive (one material) is classified from its name + geometry so the
-// tool can pre-select the likely walkable surface and colour the rest for
-// context. The user confirms/edits; this is only a starting suggestion.
+type Mode = 'orbit' | 'paint' | 'erase' | 'edit-poly' | 'probe';
+type Workflow = 'boundary' | 'mesh';
 type Cls = 'floor' | 'slope' | 'wall' | 'water' | 'prop';
 
 interface PrimStats {
   cls: Cls;
-  horizFrac: number; // fraction of triangles that are near-horizontal (|ny|>0.5)
+  horizFrac: number;
   yMin: number;
   yMax: number;
 }
 
-// Per-class colours: base (unselected) tints so the 3D reads structurally.
-// Selected floor triangles always override to bright green.
 const CLS_BASE: Record<Cls, THREE.Color> = {
   floor: new THREE.Color(0x4a5a44),
   slope: new THREE.Color(0x5a5236),
@@ -214,8 +198,6 @@ const WATER_RE = /mizu|wave|water|umi/i;
 function classify(name: string, st: { horizFrac: number; yMin: number; yMax: number }): Cls {
   const span = st.yMax - st.yMin;
   if (WATER_RE.test(name)) return 'water';
-  // kaidan = stairs/ramp; a named slope or a mostly-horizontal surface that
-  // also climbs a meaningful vertical span.
   if (/kaidan|slope|ramp|stair/i.test(name)) return 'slope';
   if (FLOOR_RE.test(name) && st.horizFrac >= 0.4 && span > 2.0) return 'slope';
   if (st.horizFrac >= 0.8 && (FLOOR_RE.test(name) || span < 0.8)) return 'floor';
@@ -223,9 +205,6 @@ function classify(name: string, st: { horizFrac: number; yMin: number; yMax: num
   return 'prop';
 }
 
-// Compute geometry stats + classification for one primitive from its flat
-// triangle soup (9 floats/tri). Normals are translation-invariant, so the
-// model's root offset doesn't affect horizontal detection.
 function computeStats(materialName: string, flat: Float32Array): PrimStats {
   const n = flat.length / 9;
   let horiz = 0, yMin = Infinity, yMax = -Infinity;
@@ -235,18 +214,16 @@ function computeStats(materialName: string, flat: Float32Array): PrimStats {
     const cx = flat[t * 9 + 6], cy = flat[t * 9 + 7], cz = flat[t * 9 + 8];
     const ux = bx - ax, uy = by - ay, uz = bz - az;
     const vx = cx - ax, vy = cy - ay, vz = cz - az;
-    const ny = uz * vx - ux * vz; // y-component of (u × v)
+    const ny = uz * vx - ux * vz;
     const len = Math.hypot(uy * vz - uz * vy, ny, ux * vy - uy * vx) || 1;
     if (Math.abs(ny / len) > 0.5) horiz++;
     yMin = Math.min(yMin, ay, by, cy);
     yMax = Math.max(yMax, ay, by, cy);
   }
   const horizFrac = n ? horiz / n : 0;
-  const cls = classify(materialName, { horizFrac, yMin, yMax });
-  return { cls, horizFrac, yMin, yMax };
+  return { cls: classify(materialName, { horizFrac, yMin, yMax }), horizFrac, yMin, yMax };
 }
 
-// floor + slope are the walkable surface → pre-selected.
 const WALKABLE: Cls[] = ['floor', 'slope'];
 
 interface MatGroup {
@@ -257,18 +234,21 @@ interface MatGroup {
   horizPct: number;
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 export default function FloorColliderBuilder() {
   const [searchParams] = useSearchParams();
+  const areaParam = (searchParams.get('area') ?? '').toLowerCase();
   const stageId = searchParams.get('stage') ?? '';
   const glbParam = searchParams.get('glb') ?? '';
   const outParam = searchParams.get('out') ?? '';
+  const initialArea: CityAreaId = isCityAreaId(areaParam) ? areaParam : 'market';
+  const initialWorkflow: Workflow = isCityAreaId(areaParam) || (!stageId && !glbParam) ? 'boundary' : 'mesh';
+
   const outPath = outParam
     || (glbParam ? outPathFromGlb(glbParam) : '')
     || (stageId ? defaultOutPath(stageId) : '')
     || '';
-  // What the auto-load effect fetches — drift-checked against the local copy,
-  // since assetUrl() reads R2 while the game (and city-walk-mock) read local.
-  const loadedUrl = glbParam || (stageId ? visualGlbUrl(stageId) : '');
 
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -276,30 +256,47 @@ export default function FloorColliderBuilder() {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
+  const overlayRef = useRef<THREE.Group | null>(null);
+  const handleMeshesRef = useRef<THREE.Object3D[]>([]);
   const primsRef = useRef<Prim[]>([]);
-  const flatRef = useRef<Float32Array[]>([]);       // per-prim flat triangles
-  const meshesRef = useRef<THREE.Mesh[]>([]);        // per-prim render mesh
-  const colorAttrRef = useRef<THREE.BufferAttribute[]>([]); // per-prim color attr
-  const statsRef = useRef<PrimStats[]>([]);          // per-prim classification + geometry stats
-  const selRef = useRef<Set<string>>(new Set());     // live selection (ref, for handlers)
-  const modeRef = useRef<Mode>('orbit');
+  const flatRef = useRef<Float32Array[]>([]);
+  const meshesRef = useRef<THREE.Mesh[]>([]);
+  const colorAttrRef = useRef<THREE.BufferAttribute[]>([]);
+  const statsRef = useRef<PrimStats[]>([]);
+  const selRef = useRef<Set<string>>(new Set());
 
-  const [status, setStatus] = useState('Load a model to begin.');
+  const [workflow, setWorkflow] = useState<Workflow>(initialWorkflow);
+  const [cityArea, setCityArea] = useState<CityAreaId>(initialArea);
+  const [boundaryCfg, setBoundaryCfg] = useState<CityBoundaryConfig | null>(null);
+  const [activeLoop, setActiveLoop] = useState<'perimeter' | string>('perimeter');
+  const [selectedVertex, setSelectedVertex] = useState<SelectedVertex | null>(null);
+  const [loadedUrl, setLoadedUrl] = useState<string>(glbParam || (stageId ? visualGlbUrl(stageId) ?? '' : ''));
+
+  const [status, setStatus] = useState('Load a model or choose a city boundary preset.');
   const [groups, setGroups] = useState<MatGroup[]>([]);
   const [selCount, setSelCount] = useState(0);
-  const [mode, setMode] = useState<Mode>('orbit');
+  const [mode, setMode] = useState<Mode>(initialWorkflow === 'boundary' ? 'edit-poly' : 'orbit');
   const [busy, setBusy] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const [probe, setProbe] = useState<[number, number, number] | null>(null);
   const [cutY, setCutY] = useState('-11');
 
+  const modeRef = useRef<Mode>(mode);
+  const workflowRef = useRef<Workflow>(workflow);
+  const boundaryCfgRef = useRef<CityBoundaryConfig | null>(boundaryCfg);
+  const activeLoopRef = useRef<string>(activeLoop);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { workflowRef.current = workflow; }, [workflow]);
+  useEffect(() => { boundaryCfgRef.current = boundaryCfg; }, [boundaryCfg]);
+  useEffect(() => { activeLoopRef.current = activeLoop; }, [activeLoop]);
+
   const pushLog = (s: string) =>
     setLog((l) => [`${new Date().toLocaleTimeString()} ${s}`, ...l].slice(0, 8));
 
-  useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => {
-    // Orbit and probe both allow camera drag; paint/erase lock it for dragging.
-    if (controlsRef.current) controlsRef.current.enabled = mode === 'orbit' || mode === 'probe';
+    if (controlsRef.current) {
+      controlsRef.current.enabled = mode === 'orbit' || mode === 'probe' || mode === 'edit-poly';
+    }
   }, [mode]);
 
   // ---- Three scene init ----
@@ -325,11 +322,13 @@ export default function FloorColliderBuilder() {
     const dir = new THREE.DirectionalLight(0xffffff, 0.5);
     dir.position.set(20, 60, 20);
     scene.add(dir);
-    const grid = new THREE.GridHelper(120, 24, 0x2a3346, 0x18202e);
-    scene.add(grid);
+    scene.add(new THREE.GridHelper(120, 24, 0x2a3346, 0x18202e));
     const g = new THREE.Group();
     scene.add(g);
     groupRef.current = g;
+    const ov = new THREE.Group();
+    scene.add(ov);
+    overlayRef.current = ov;
 
     let cancelled = false;
     const animate = () => {
@@ -356,14 +355,25 @@ export default function FloorColliderBuilder() {
     };
   }, []);
 
-  // ---- Build render meshes from parsed prims ----
-  const buildMeshes = useCallback((prims: Prim[]) => {
+  // Sync 3D boundary overlay whenever boundaryCfg / selection / workflow changes
+  useEffect(() => {
+    const ov = overlayRef.current;
+    if (!ov) return;
+    ov.visible = workflow === 'boundary';
+    if (workflow === 'boundary' && boundaryCfg) {
+      const pins = CITY_BOUNDARY_PRESETS[boundaryCfg.areaId]?.pins ?? [];
+      rebuildBoundaryOverlay(ov, handleMeshesRef.current, boundaryCfg, pins, selectedVertex, activeLoop);
+    }
+  }, [workflow, boundaryCfg, selectedVertex, activeLoop]);
+
+  const clearStageMeshes = useCallback(() => {
     const g = groupRef.current;
-    const camera = cameraRef.current;
-    if (!g || !camera) return;
+    if (!g) return;
     while (g.children.length) {
       const c = g.children.pop()!;
-      if (c instanceof THREE.Mesh) c.geometry.dispose();
+      c.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) obj.geometry.dispose();
+      });
     }
     meshesRef.current = [];
     colorAttrRef.current = [];
@@ -371,7 +381,44 @@ export default function FloorColliderBuilder() {
     statsRef.current = [];
     selRef.current = new Set();
     setSelCount(0);
+    setGroups([]);
+  }, []);
 
+  const frameBox = useCallback((box: THREE.Box3) => {
+    const camera = cameraRef.current;
+    if (!camera || box.isEmpty()) return;
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const span = Math.max(size.x, size.z) || 20;
+    camera.position.set(center.x, center.y + span * 1.05, center.z + span * 0.75);
+    camera.lookAt(center);
+    if (controlsRef.current) {
+      controlsRef.current.target.copy(center);
+      controlsRef.current.update();
+    }
+  }, []);
+
+  function refreshColors(pi: number) {
+    const attr = colorAttrRef.current[pi];
+    const prim = primsRef.current[pi];
+    if (!attr || !prim) return;
+    const base = CLS_BASE[statsRef.current[pi]?.cls ?? 'prop'] ?? COLOR_UNSEL;
+    const tint = workflowRef.current === 'boundary' ? base : null;
+    for (let t = 0; t < prim.triCount; t++) {
+      const c = tint ?? (selRef.current.has(KEY(pi, t)) ? COLOR_SEL : base);
+      for (let v = 0; v < 3; v++) attr.setXYZ(t * 3 + v, c.r, c.g, c.b);
+    }
+    attr.needsUpdate = true;
+  }
+
+  useEffect(() => {
+    for (let pi = 0; pi < primsRef.current.length; pi++) refreshColors(pi);
+  }, [workflow]);
+
+  const buildMeshes = useCallback((prims: Prim[]) => {
+    const g = groupRef.current;
+    if (!g) return;
+    clearStageMeshes();
     const box = new THREE.Box3();
     const tmp = new THREE.Vector3();
     for (let pi = 0; pi < prims.length; pi++) {
@@ -397,7 +444,6 @@ export default function FloorColliderBuilder() {
         box.expandByPoint(tmp);
       }
     }
-    // Pre-select the suggested walkable surface (floor + slope), then colour all.
     for (let pi = 0; pi < prims.length; pi++) {
       if (WALKABLE.includes(statsRef.current[pi].cls)) {
         for (let t = 0; t < prims[pi].triCount; t++) selRef.current.add(KEY(pi, t));
@@ -405,35 +451,9 @@ export default function FloorColliderBuilder() {
       refreshColors(pi);
     }
     setSelCount(selRef.current.size);
-    // Frame the camera on the model.
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const span = Math.max(size.x, size.z) || 20;
-    camera.position.set(center.x, center.y + span * 1.1, center.z + span * 0.8);
-    camera.lookAt(center);
-    if (controlsRef.current) {
-      controlsRef.current.target.copy(center);
-      controlsRef.current.update();
-    }
-  }, []);
+    frameBox(box);
+  }, [clearStageMeshes, frameBox]);
 
-  // Rewrite the color attribute of one prim from the current selection.
-  // Unselected triangles take their class tint so the model reads structurally.
-  function refreshColors(pi: number) {
-    const attr = colorAttrRef.current[pi];
-    const prim = primsRef.current[pi];
-    if (!attr || !prim) return;
-    const base = CLS_BASE[statsRef.current[pi]?.cls ?? 'prop'] ?? COLOR_UNSEL;
-    for (let t = 0; t < prim.triCount; t++) {
-      const c = selRef.current.has(KEY(pi, t)) ? COLOR_SEL : base;
-      for (let v = 0; v < 3; v++) {
-        attr.setXYZ(t * 3 + v, c.r, c.g, c.b);
-      }
-    }
-    attr.needsUpdate = true;
-  }
-
-  // ---- Selection mutators ----
   const setSelected = useCallback((pi: number, ti: number, on: boolean) => {
     const k = KEY(pi, ti);
     const has = selRef.current.has(k);
@@ -461,13 +481,8 @@ export default function FloorColliderBuilder() {
     setSelCount(0);
   }, []);
 
-  // Keep only the top-most selected triangle layer at each XZ location. The
-  // model stacks floor/terrain/water surfaces; a floor collider wants just the
-  // walkable top, so this drops lower selected triangles that sit under a higher
-  // one (which is what makes the player sink onto below-floor terrain).
   const keepTopSurface = useCallback(() => {
-    const CELL = 1.5;     // XZ bin size
-    const TOL = 1.2;      // keep triangles within this of the cell's top Y
+    const CELL = 1.5, TOL = 1.2;
     const topY = new Map<string, number>();
     const triInfo: { pi: number; ti: number; cell: string; y: number }[] = [];
     for (const k of selRef.current) {
@@ -491,10 +506,6 @@ export default function FloorColliderBuilder() {
     setSelCount(selRef.current.size);
   }, []);
 
-  // Deselect every selected triangle whose centroid Y is below a cutoff. The
-  // walkable floor is the top layer, so one cut strips the terrain/water/
-  // undersides beneath it (which trap the player's capsule). Use probe mode to
-  // read the floor Y, then cut a bit below it.
   const deselectBelowY = useCallback((cut: number) => {
     const touched = new Set<number>();
     for (const k of [...selRef.current]) {
@@ -510,8 +521,6 @@ export default function FloorColliderBuilder() {
     setSelCount(selRef.current.size);
   }, []);
 
-  // Re-apply the auto-suggestion: select every triangle of floor/slope-classed
-  // materials, clearing any manual edits.
   const applySuggestion = useCallback(() => {
     selRef.current = new Set();
     for (let pi = 0; pi < primsRef.current.length; pi++) {
@@ -523,7 +532,94 @@ export default function FloorColliderBuilder() {
     setSelCount(selRef.current.size);
   }, []);
 
-  // ---- Pointer interaction (raycast pick / paint) ----
+  // ---- Boundary Vertex Mutators ----
+  const updateLoopVertex = useCallback((target: string, index: number, nx: number, nz: number) => {
+    setBoundaryCfg((prev) => {
+      if (!prev) return prev;
+      const pt: [number, number] = [round2(nx), round2(nz)];
+      if (target === 'perimeter') {
+        const next = [...prev.perimeter];
+        if (index >= 0 && index < next.length) next[index] = pt;
+        return { ...prev, perimeter: next };
+      }
+      return {
+        ...prev,
+        cutouts: prev.cutouts.map((c) => {
+          if (c.id !== target) return c;
+          const next = [...c.points];
+          if (index >= 0 && index < next.length) next[index] = pt;
+          return { ...c, points: next };
+        }),
+      };
+    });
+  }, []);
+
+  const insertMidpointVertex = useCallback((target: string, edgeIndex: number) => {
+    setBoundaryCfg((prev) => {
+      if (!prev) return prev;
+      if (target === 'perimeter') {
+        const shiftedOpenings = prev.openings.map((op) =>
+          op.edge > edgeIndex ? { ...op, edge: op.edge + 1 } : op,
+        );
+        return {
+          ...prev,
+          perimeter: splitPolygonEdge(prev.perimeter, edgeIndex),
+          openings: shiftedOpenings,
+        };
+      }
+      return {
+        ...prev,
+        cutouts: prev.cutouts.map((c) =>
+          c.id === target ? { ...c, points: splitPolygonEdge(c.points, edgeIndex) } : c,
+        ),
+      };
+    });
+    setSelectedVertex({ target, index: edgeIndex + 1 });
+    setActiveLoop(target);
+  }, []);
+
+  const appendLoopVertex = useCallback((target: string, nx: number, nz: number) => {
+    const pt: [number, number] = [round2(nx), round2(nz)];
+    setBoundaryCfg((prev) => {
+      if (!prev) return prev;
+      if (target === 'perimeter') {
+        const next = [...prev.perimeter, pt];
+        setSelectedVertex({ target: 'perimeter', index: next.length - 1 });
+        return { ...prev, perimeter: next };
+      }
+      return {
+        ...prev,
+        cutouts: prev.cutouts.map((c) => {
+          if (c.id !== target) return c;
+          const next = [...c.points, pt];
+          setSelectedVertex({ target, index: next.length - 1 });
+          return { ...c, points: next };
+        }),
+      };
+    });
+  }, []);
+
+  const deleteSelectedVertex = useCallback(() => {
+    if (!selectedVertex) return;
+    const { target, index } = selectedVertex;
+    setBoundaryCfg((prev) => {
+      if (!prev) return prev;
+      if (target === 'perimeter') {
+        if (prev.perimeter.length <= 3) return prev;
+        return { ...prev, perimeter: prev.perimeter.filter((_, i) => i !== index) };
+      }
+      return {
+        ...prev,
+        cutouts: prev.cutouts.map((c) => {
+          if (c.id !== target || c.points.length <= 3) return c;
+          return { ...c, points: c.points.filter((_, i) => i !== index) };
+        }),
+      };
+    });
+    setSelectedVertex(null);
+  }, [selectedVertex]);
+
+  // ---- Pointer interaction (raycast pick / paint / polygon vertex drag) ----
   useEffect(() => {
     const renderer = rendererRef.current;
     const camera = cameraRef.current;
@@ -533,57 +629,114 @@ export default function FloorColliderBuilder() {
     let down = false;
     let moved = false;
     let downX = 0, downY = 0;
+    let draggingHandle: { target: string; index: number; yPlane: number } | null = null;
 
-    const pick = (ev: PointerEvent): { pi: number; ti: number; point: THREE.Vector3 } | null => {
+    const getNdc = (ev: PointerEvent) => {
       const rect = dom.getBoundingClientRect();
-      const m = new THREE.Vector2(
+      return new THREE.Vector2(
         ((ev.clientX - rect.left) / rect.width) * 2 - 1,
         -((ev.clientY - rect.top) / rect.height) * 2 + 1,
       );
-      ray.setFromCamera(m, camera);
-      const hits = ray.intersectObjects(meshesRef.current, false);
+    };
+
+    const pickStage = (ev: PointerEvent) => {
+      ray.setFromCamera(getNdc(ev), camera);
+      const targets = meshesRef.current.length
+        ? meshesRef.current
+        : (groupRef.current?.children ?? []);
+      const hits = ray.intersectObjects(targets, true);
       if (!hits.length) return null;
       const h = hits[0];
-      const pi = (h.object as THREE.Mesh).userData.primIdx as number;
-      const ti = h.faceIndex ?? 0;
-      return { pi, ti, point: h.point };
+      const pi = (h.object as THREE.Mesh).userData?.primIdx as number | undefined;
+      return { pi: pi ?? -1, ti: h.faceIndex ?? 0, point: h.point };
+    };
+
+    const pickFloorPlane = (ev: PointerEvent, yVal: number): THREE.Vector3 | null => {
+      ray.setFromCamera(getNdc(ev), camera);
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -yVal);
+      const out = new THREE.Vector3();
+      return ray.ray.intersectPlane(plane, out);
     };
 
     const onDown = (ev: PointerEvent) => {
       down = true; moved = false; downX = ev.clientX; downY = ev.clientY;
-      if (modeRef.current === 'paint' || modeRef.current === 'erase') {
-        const hit = pick(ev);
-        if (hit) setSelected(hit.pi, hit.ti, modeRef.current === 'paint');
+      if (workflowRef.current === 'boundary' && (modeRef.current === 'edit-poly' || modeRef.current === 'orbit')) {
+        ray.setFromCamera(getNdc(ev), camera);
+        const hHits = ray.intersectObjects(handleMeshesRef.current, false);
+        if (hHits.length) {
+          const ud = hHits[0].object.userData;
+          if (ud.handleKind === 'midpoint') {
+            insertMidpointVertex(ud.target, ud.edgeIndex);
+            down = false;
+            return;
+          }
+          if (ud.handleKind === 'vertex') {
+            setSelectedVertex({ target: ud.target, index: ud.index });
+            setActiveLoop(ud.target);
+            if (modeRef.current === 'edit-poly') {
+              draggingHandle = { target: ud.target, index: ud.index, yPlane: ud.yPlane ?? 0 };
+              if (controlsRef.current) controlsRef.current.enabled = false;
+            }
+            return;
+          }
+        }
+        if (modeRef.current === 'edit-poly' && ev.shiftKey && boundaryCfgRef.current) {
+          const p = pickFloorPlane(ev, boundaryCfgRef.current.floorY);
+          if (p) {
+            appendLoopVertex(activeLoopRef.current, p.x, p.z);
+            down = false;
+            return;
+          }
+        }
+      }
+      if (workflowRef.current === 'mesh' && (modeRef.current === 'paint' || modeRef.current === 'erase')) {
+        const hit = pickStage(ev);
+        if (hit && hit.pi >= 0) setSelected(hit.pi, hit.ti, modeRef.current === 'paint');
       }
     };
+
     const onMove = (ev: PointerEvent) => {
       if (!down) return;
       if (Math.abs(ev.clientX - downX) > 3 || Math.abs(ev.clientY - downY) > 3) moved = true;
-      if (modeRef.current === 'paint' || modeRef.current === 'erase') {
-        const hit = pick(ev);
-        if (hit) setSelected(hit.pi, hit.ti, modeRef.current === 'paint');
+      if (draggingHandle) {
+        const p = pickFloorPlane(ev, draggingHandle.yPlane);
+        if (p) updateLoopVertex(draggingHandle.target, draggingHandle.index, p.x, p.z);
+        return;
+      }
+      if (workflowRef.current === 'mesh' && (modeRef.current === 'paint' || modeRef.current === 'erase')) {
+        const hit = pickStage(ev);
+        if (hit && hit.pi >= 0) setSelected(hit.pi, hit.ti, modeRef.current === 'paint');
       }
     };
+
     const onUp = (ev: PointerEvent) => {
-      if (down && !moved && modeRef.current === 'orbit') {
-        // A click in orbit mode toggles a single triangle (shift = whole material).
-        const hit = pick(ev);
-        if (hit) {
+      if (draggingHandle) {
+        draggingHandle = null;
+        if (controlsRef.current) controlsRef.current.enabled = true;
+        down = false;
+        return;
+      }
+      if (down && !moved && workflowRef.current === 'mesh' && modeRef.current === 'orbit') {
+        const hit = pickStage(ev);
+        if (hit && hit.pi >= 0) {
           if (ev.shiftKey) {
-            const allSel = isMaterialFullySelected(hit.pi);
-            toggleMaterial(hit.pi, !allSel);
+            toggleMaterial(hit.pi, !isMaterialFullySelected(hit.pi));
           } else {
             setSelected(hit.pi, hit.ti, !selRef.current.has(KEY(hit.pi, hit.ti)));
           }
         }
       } else if (down && !moved && modeRef.current === 'probe') {
-        // Probe: read the world coordinate under the cursor (Godot-frame, since
-        // node transforms are baked) so it can be pasted as an NPC/warp/spawn pos.
-        const hit = pick(ev);
-        if (hit) setProbe([hit.point.x, hit.point.y, hit.point.z]);
+        const hit = pickStage(ev);
+        if (hit) {
+          setProbe([hit.point.x, hit.point.y, hit.point.z]);
+        } else if (boundaryCfgRef.current) {
+          const p = pickFloorPlane(ev, boundaryCfgRef.current.floorY);
+          if (p) setProbe([p.x, p.y, p.z]);
+        }
       }
       down = false;
     };
+
     dom.addEventListener('pointerdown', onDown);
     dom.addEventListener('pointermove', onMove);
     dom.addEventListener('pointerup', onUp);
@@ -592,7 +745,7 @@ export default function FloorColliderBuilder() {
       dom.removeEventListener('pointermove', onMove);
       dom.removeEventListener('pointerup', onUp);
     };
-  }, [setSelected, toggleMaterial]);
+  }, [setSelected, toggleMaterial, updateLoopVertex, insertMidpointVertex, appendLoopVertex]);
 
   function isMaterialFullySelected(pi: number): boolean {
     const prim = primsRef.current[pi];
@@ -616,9 +769,8 @@ export default function FloorColliderBuilder() {
         cls: st[i]?.cls ?? 'prop', horizPct: Math.round((st[i]?.horizFrac ?? 0) * 100),
       })));
       const tris = prims.reduce((s, p) => s + p.triCount, 0);
-      const suggested = prims.filter((_, i) => WALKABLE.includes(st[i]?.cls)).length;
-      setStatus(`${label} · ${prims.length} primitives · ${tris} tris · suggested ${suggested} walkable materials`);
-      pushLog(`loaded ${label} — pre-selected floor+slope`);
+      setStatus(`${label} · ${prims.length} primitives · ${tris} tris`);
+      pushLog(`loaded ${label}`);
     } catch (err) {
       setStatus(`load failed: ${(err as Error).message}`);
     }
@@ -627,7 +779,6 @@ export default function FloorColliderBuilder() {
   const loadFromUrl = useCallback(async (url: string) => {
     setStatus(`fetching ${url}…`);
     try {
-      // Cache-bust so re-loading after the asset changes on disk gets fresh bytes.
       const bust = url + (url.includes('?') ? '&' : '?') + 'cb=' + Date.now();
       const res = await fetch(bust);
       if (!res.ok) throw new Error(`${res.status}`);
@@ -637,12 +788,60 @@ export default function FloorColliderBuilder() {
     }
   }, [loadFromBuffer]);
 
-  // Auto-load from URL params.
+  const loadCityPreset = useCallback(async (area: CityAreaId) => {
+    setCityArea(area);
+    setSelectedVertex(null);
+    setActiveLoop('perimeter');
+    const preset = CITY_BOUNDARY_PRESETS[area];
+
+    // 1. Load stage reference visual (procedural OfficeLibraryRoom or stage GLB)
+    if (preset.glbPath === null) {
+      clearStageMeshes();
+      setLoadedUrl('');
+      if (groupRef.current) {
+        const proc = buildProceduralOfficeGroup();
+        groupRef.current.add(proc);
+        frameBox(new THREE.Box3().setFromObject(proc));
+      }
+    } else {
+      const url = assetUrl(preset.glbPath);
+      setLoadedUrl(url);
+      loadFromUrl(url);
+    }
+
+    // 2. Load boundary JSON sidecar (dev API first, static data/ fallback)
+    try {
+      let raw: unknown = null;
+      try {
+        const devRes = await fetch(devApiUrl(`/api/collider/boundary?area=${area}`));
+        if (devRes.ok) raw = await devRes.json();
+      } catch {
+        // Static build without dev middleware — fall through
+      }
+      if (!raw) {
+        const staticUrl = assetUrl(`data/stage_configs/city-boundaries/${area}.json`);
+        const res = await fetch(`${staticUrl}?cb=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        raw = await res.json();
+      }
+      const cfg = normalizeBoundaryConfig(raw);
+      setBoundaryCfg(cfg);
+      setStatus(`${preset.title} · ${cfg.perimeter.length} perimeter pts · ${cfg.cutouts.length} cutouts`);
+      pushLog(`loaded data/stage_configs/city-boundaries/${area}.json`);
+    } catch (err) {
+      pushLog(`boundary load ERR: ${(err as Error).message}`);
+    }
+  }, [clearStageMeshes, frameBox, loadFromUrl]);
+
   useEffect(() => {
-    const url = glbParam || (stageId ? visualGlbUrl(stageId) : '');
-    if (url) loadFromUrl(url);
+    if (initialWorkflow === 'boundary') {
+      loadCityPreset(initialArea);
+    } else {
+      const url = glbParam || (stageId ? visualGlbUrl(stageId) : '');
+      if (url) loadFromUrl(url);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [glbParam, stageId]);
+  }, []);
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -650,7 +849,73 @@ export default function FloorColliderBuilder() {
     f.arrayBuffer().then((b) => loadFromBuffer(b, f.name));
   };
 
-  // ---- Export ----
+  // ---- Boundary Save / Export ----
+  const saveBoundaryToRepo = async () => {
+    if (!boundaryCfg) return;
+    setBusy(true);
+    try {
+      const normalized = normalizeBoundaryConfig(boundaryCfg);
+      const res = await fetch(devApiUrl('/api/collider/save-boundary'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ areaId: normalized.areaId, config: normalized }),
+      });
+      const text = await res.text();
+      pushLog(`save-boundary ${res.status} ${text}`);
+      setStatus(
+        res.ok
+          ? `saved → data/stage_configs/city-boundaries/${normalized.areaId}.json`
+          : `save failed: ${text}`,
+      );
+    } catch (err) {
+      pushLog(`save ERR ${(err as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copyBoundaryJson = () => {
+    if (!boundaryCfg) return;
+    const text = serializeBoundaryConfig(boundaryCfg);
+    navigator.clipboard?.writeText(text);
+    pushLog(`copied ${boundaryCfg.areaId}.json (${text.length} chars)`);
+  };
+
+  const downloadBoundaryJson = () => {
+    if (!boundaryCfg) return;
+    const text = serializeBoundaryConfig(boundaryCfg);
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${boundaryCfg.areaId}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    pushLog(`downloaded ${a.download}`);
+  };
+
+  const addCutoutBox = () => {
+    if (!boundaryCfg) return;
+    const cx = probe ? round2(probe[0]) : 0;
+    const cz = probe ? round2(probe[2]) : 0;
+    const id = `cutout_${boundaryCfg.cutouts.length + 1}`;
+    const half = 0.7;
+    const nextCutout = {
+      id,
+      subtractFloor: true,
+      wallHeight: 3.0,
+      points: [
+        [round2(cx - half), round2(cz - half)] as [number, number],
+        [round2(cx + half), round2(cz - half)] as [number, number],
+        [round2(cx + half), round2(cz + half)] as [number, number],
+        [round2(cx - half), round2(cz + half)] as [number, number],
+      ],
+    };
+    setBoundaryCfg({ ...boundaryCfg, cutouts: [...boundaryCfg.cutouts, nextCutout] });
+    setActiveLoop(id);
+    pushLog(`added ${id} at (${cx}, ${cz})`);
+  };
+
+  // ---- GLB Export ----
   const buildColliderMesh = (): THREE.Mesh | null => {
     const out: number[] = [];
     for (let pi = 0; pi < flatRef.current.length; pi++) {
@@ -733,23 +998,47 @@ export default function FloorColliderBuilder() {
   };
 
   const btn = (bg: string): React.CSSProperties => ({
-    width: '100%', padding: '8px 10px', marginBottom: 8, background: bg,
-    color: '#fff', border: 'none', borderRadius: 4, fontSize: 13,
+    width: '100%', padding: '7px 10px', marginBottom: 6, background: bg,
+    color: '#fff', border: 'none', borderRadius: 4, fontSize: 12,
     cursor: busy ? 'wait' : 'pointer',
   });
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '4px 6px', background: '#0d1117', color: '#e6edf3',
+    border: '1px solid #30363d', borderRadius: 4, fontFamily: 'monospace', fontSize: 11,
+  };
+
+  const availableModes: Mode[] = workflow === 'boundary'
+    ? ['orbit', 'edit-poly', 'probe']
+    : ['orbit', 'paint', 'erase', 'probe'];
+
+  const probeWalkable = probe && boundaryCfg
+    ? isPointWalkable2D(boundaryCfg, probe[0], probe[2], probe[1])
+    : null;
+
+  const selCoords: [number, number] | null = (() => {
+    if (!selectedVertex || !boundaryCfg) return null;
+    if (selectedVertex.target === 'perimeter') {
+      return boundaryCfg.perimeter[selectedVertex.index] ?? null;
+    }
+    const c = boundaryCfg.cutouts.find((x) => x.id === selectedVertex.target);
+    return c?.points[selectedVertex.index] ?? null;
+  })();
 
   return (
     <div style={{ display: 'flex', height: '100%', background: '#0a0e1a', color: '#e6edf3' }}>
       <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
-        <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>
+        <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.68)', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>
           {status}
         </div>
-        <div style={{ position: 'absolute', top: 40, left: 8 }}>
-          <AssetDriftWarning paths={[loadedUrl]} shows="cdn" />
-        </div>
+        {loadedUrl && (
+          <div style={{ position: 'absolute', top: 40, left: 8 }}>
+            <AssetDriftWarning paths={[loadedUrl]} shows="cdn" />
+          </div>
+        )}
         <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
-          {(['orbit', 'paint', 'erase', 'probe'] as Mode[]).map((m) => (
+          {availableModes.map((m) => (
             <button key={m} onClick={() => setMode(m)}
               style={{
                 padding: '5px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
@@ -760,18 +1049,28 @@ export default function FloorColliderBuilder() {
               {m}
             </button>
           ))}
+          {mode === 'edit-poly' && workflow === 'boundary' && (
+            <span style={{ marginLeft: 8, fontSize: 11, color: '#8b949e' }}>
+              drag sphere = move vertex · click grey dot = split edge · Shift+click = append vertex
+            </span>
+          )}
           {mode === 'probe' && (
-            <span style={{ marginLeft: 8, fontSize: 12, color: '#8b949e' }}>
-              click a spot → world coord (Godot frame)
+            <span style={{ marginLeft: 8, fontSize: 11, color: '#8b949e' }}>
+              click a spot → Godot world coord + boundary walkability check
             </span>
           )}
         </div>
         {probe && (
-          <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.75)', padding: '8px 10px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>
+          <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.78)', padding: '8px 10px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>
             <div style={{ color: '#8b949e', marginBottom: 4 }}>probed position (Godot world):</div>
             <div style={{ color: '#22e06a' }}>
               Vector3({probe[0].toFixed(2)}, {probe[1].toFixed(2)}, {probe[2].toFixed(2)})
             </div>
+            {workflow === 'boundary' && probeWalkable !== null && (
+              <div style={{ marginTop: 4, color: probeWalkable ? '#4ade80' : '#f87171' }}>
+                walkable: {probeWalkable ? 'YES (inside boundary)' : 'NO (blocked / outside)'}
+              </div>
+            )}
             <button
               onClick={() => navigator.clipboard?.writeText(`Vector3(${probe[0].toFixed(2)}, ${probe[1].toFixed(2)}, ${probe[2].toFixed(2)})`)}
               style={{ marginTop: 6, padding: '3px 8px', fontSize: 11, background: '#21262d', color: '#e6edf3', border: '1px solid #30363d', borderRadius: 4, cursor: 'pointer' }}
@@ -780,72 +1079,277 @@ export default function FloorColliderBuilder() {
         )}
       </div>
 
-      <aside style={{ width: 320, flexShrink: 0, padding: 16, background: '#161b22', borderLeft: '1px solid #30363d', overflowY: 'auto' }}>
-        <h2 style={{ margin: '0 0 4px', fontSize: 16 }}>Floor collider builder</h2>
-        <p style={{ margin: '0 0 10px', fontSize: 12, color: '#8b949e' }}>
-          Orbit mode: click a triangle to toggle, shift-click toggles its whole
-          material. Paint/Erase: drag to add/remove triangles. Selected = green.
-        </p>
+      <aside style={{ width: 340, flexShrink: 0, padding: 14, background: '#161b22', borderLeft: '1px solid #30363d', overflowY: 'auto' }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 16 }}>Floor &amp; Boundary Builder</h2>
 
-        <label style={{ display: 'block', fontSize: 12, marginBottom: 4, color: '#8b949e' }}>
-          Load .glb (local file)
-        </label>
-        <input type="file" accept=".glb" onChange={onFile}
-          style={{ width: '100%', marginBottom: 10, fontSize: 12 }} />
-
-        <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>
-          export → <code style={{ color: '#79c0ff' }}>{outPath || '(set ?stage= or ?out=)'}</code>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+          <button
+            onClick={() => { setWorkflow('boundary'); setMode('edit-poly'); if (!boundaryCfg) loadCityPreset(cityArea); }}
+            style={{
+              flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, borderRadius: 4, cursor: 'pointer',
+              border: '1px solid #30363d',
+              background: workflow === 'boundary' ? '#1f6feb' : '#21262d', color: '#fff',
+            }}
+          >Boundary + Walls</button>
+          <button
+            onClick={() => { setWorkflow('mesh'); setMode('orbit'); }}
+            style={{
+              flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, borderRadius: 4, cursor: 'pointer',
+              border: '1px solid #30363d',
+              background: workflow === 'mesh' ? '#1f6feb' : '#21262d', color: '#fff',
+            }}
+          >Floor Mesh (.glb)</button>
         </div>
-        <div style={{ fontSize: 12, marginBottom: 10 }}>
-          selected: <b style={{ color: '#22e06a' }}>{selCount}</b> tris
-        </div>
 
-        <button onClick={saveToRepo} disabled={busy || !outPath} style={btn(busy ? '#30363d' : '#238636')}>
-          {busy ? 'working…' : '💾 save to repo'}
-        </button>
-        <button onClick={downloadGlb} disabled={busy} style={btn('#21262d')}>⬇ download .glb</button>
-        <button onClick={applySuggestion} style={btn('#1f3a5a')}>✨ auto-suggest floor+slope</button>
-        <button onClick={keepTopSurface} style={btn('#1f3a5a')}>⬆ keep top surface only</button>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8 }}>
-          <button onClick={() => deselectBelowY(parseFloat(cutY))} style={{ ...btn('#1f3a5a'), width: 'auto', flex: 1, marginBottom: 0 }}>
-            ✂ deselect below Y
-          </button>
-          <input type="number" step="0.5" value={cutY} onChange={(e) => setCutY(e.target.value)}
-            style={{ width: 70, padding: '6px 8px', background: '#0d1117', color: '#e6edf3', border: '1px solid #30363d', borderRadius: 4, fontFamily: 'monospace', fontSize: 12 }} />
-        </div>
-        <button onClick={clearAll} style={btn('#21262d')}>clear selection</button>
-        <button onClick={resetRepo} style={{ ...btn('#3b1717'), color: '#fca5a5', border: '1px solid #7f1d1d' }}>
-          ↺ reset file to git HEAD
-        </button>
-
-        <h3 style={{ fontSize: 13, margin: '14px 0 6px', color: '#8b949e' }}>
-          Materials <span style={{ fontWeight: 400, fontSize: 11 }}>· green = suggested walkable</span>
-        </h3>
-        {groups.length === 0 && <p style={{ fontSize: 12, color: '#8b949e' }}>(load a model)</p>}
-        {groups.map((g) => {
-          const badge: Record<Cls, string> = {
-            floor: '#4a8a44', slope: '#a08020', wall: '#5a5f6a', water: '#2d6aaa', prop: '#7a5f8a',
-          };
-          return (
-            <div key={g.primIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span title={CLS_LABEL[g.cls]} style={{
-                fontSize: 9, fontWeight: 700, color: '#fff', background: badge[g.cls],
-                borderRadius: 3, padding: '2px 4px', minWidth: 40, textAlign: 'center',
-              }}>{CLS_LABEL[g.cls]}</span>
-              <button onClick={() => toggleMaterial(g.primIdx, !isMaterialFullySelected(g.primIdx))}
-                style={{
-                  flex: 1, textAlign: 'left', padding: '6px 8px', background: '#21262d',
-                  color: '#e6edf3', border: '1px solid #30363d', borderRadius: 4,
-                  fontFamily: 'monospace', fontSize: 11, cursor: 'pointer',
-                }}>
-                {g.materialName}
-              </button>
-              <span style={{ fontSize: 10, color: '#8b949e', minWidth: 58, textAlign: 'right' }}>
-                {g.triCount}t · {g.horizPct}%⊥
-              </span>
+        {workflow === 'boundary' ? (
+          <>
+            <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 6 }}>
+              City Area Preset (green = spawns · gold = NPCs · purple = triggers)
             </div>
-          );
-        })}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+              {CITY_AREA_IDS.map((id) => (
+                <button
+                  key={id}
+                  onClick={() => loadCityPreset(id)}
+                  style={{
+                    padding: '6px 8px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                    border: cityArea === id ? '1px solid #58a6ff' : '1px solid #30363d',
+                    background: cityArea === id ? '#1f3a5a' : '#21262d', color: '#e6edf3',
+                    textTransform: 'capitalize',
+                  }}
+                >{id}</button>
+              ))}
+            </div>
+
+            {boundaryCfg && (
+              <>
+                <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 8 }}>
+                  sidecar → <code style={{ color: '#79c0ff' }}>data/stage_configs/city-boundaries/{boundaryCfg.areaId}.json</code>
+                </div>
+
+                <button onClick={saveBoundaryToRepo} disabled={busy} style={btn('#238636')}>
+                  {busy ? 'saving…' : '💾 save boundary JSON to repo'}
+                </button>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  <button onClick={copyBoundaryJson} style={{ ...btn('#21262d'), marginBottom: 0 }}>📋 copy JSON</button>
+                  <button onClick={downloadBoundaryJson} style={{ ...btn('#21262d'), marginBottom: 0 }}>⬇ download</button>
+                </div>
+
+                <div style={{ background: '#0d1117', padding: 8, borderRadius: 4, border: '1px solid #30363d', marginBottom: 10 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginBottom: 6 }}>
+                    <input
+                      type="checkbox"
+                      checked={boundaryCfg.buildFloor}
+                      onChange={(e) => setBoundaryCfg({ ...boundaryCfg, buildFloor: e.target.checked })}
+                    />
+                    Build triangulated floor mesh (<code>buildFloor</code>)
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11 }}>
+                    <label>
+                      floorY
+                      <input type="number" step="0.1" value={boundaryCfg.floorY}
+                        onChange={(e) => setBoundaryCfg({ ...boundaryCfg, floorY: Number(e.target.value) })}
+                        style={inputStyle} />
+                    </label>
+                    <label>
+                      wallHeight
+                      <input type="number" step="0.5" value={boundaryCfg.wallHeight}
+                        onChange={(e) => setBoundaryCfg({ ...boundaryCfg, wallHeight: Math.max(0.5, Number(e.target.value)) })}
+                        style={inputStyle} />
+                    </label>
+                    <label>
+                      wallBottomY (opt)
+                      <input type="number" step="0.5"
+                        value={boundaryCfg.wallBottomY ?? ''}
+                        placeholder={String(boundaryCfg.floorY)}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const next = { ...boundaryCfg };
+                          if (v === '') delete next.wallBottomY;
+                          else next.wallBottomY = Number(v);
+                          setBoundaryCfg(next);
+                        }}
+                        style={inputStyle} />
+                    </label>
+                    <label>
+                      fallRespawnY
+                      <input type="number" step="1" value={boundaryCfg.fallRespawnY}
+                        onChange={(e) => setBoundaryCfg({ ...boundaryCfg, fallRespawnY: Number(e.target.value) })}
+                        style={inputStyle} />
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1117', padding: 8, borderRadius: 4, border: '1px solid #30363d', marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                    Active Loop ({boundaryCfg.perimeter.length} perimeter pts)
+                  </div>
+                  <select
+                    value={activeLoop}
+                    onChange={(e) => setActiveLoop(e.target.value)}
+                    style={{ ...inputStyle, marginBottom: 6 }}
+                  >
+                    <option value="perimeter">Outer Perimeter ({boundaryCfg.perimeter.length} pts)</option>
+                    {boundaryCfg.cutouts.map((c) => (
+                      <option key={c.id} value={c.id}>Cutout: {c.id} ({c.points.length} pts)</option>
+                    ))}
+                  </select>
+                  <button onClick={addCutoutBox} style={btn('#1f3a5a')}>
+                    + add obstacle cutout {probe ? `at (${probe[0].toFixed(1)}, ${probe[2].toFixed(1)})` : 'at (0, 0)'}
+                  </button>
+
+                  {selectedVertex && selCoords && (
+                    <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid #21262d', fontSize: 11 }}>
+                      <div style={{ color: '#facc15', marginBottom: 4 }}>
+                        Selected: {selectedVertex.target}[{selectedVertex.index}]
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                        <input
+                          type="number" step="0.1" value={selCoords[0]}
+                          onChange={(e) => updateLoopVertex(selectedVertex.target, selectedVertex.index, Number(e.target.value), selCoords[1])}
+                          style={inputStyle}
+                        />
+                        <input
+                          type="number" step="0.1" value={selCoords[1]}
+                          onChange={(e) => updateLoopVertex(selectedVertex.target, selectedVertex.index, selCoords[0], Number(e.target.value))}
+                          style={inputStyle}
+                        />
+                      </div>
+                      <button onClick={deleteSelectedVertex} style={{ ...btn('#3b1717'), color: '#fca5a5', marginBottom: 0 }}>
+                        🗑 delete selected vertex
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {boundaryCfg.cutouts.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <h3 style={{ fontSize: 12, margin: '0 0 6px', color: '#8b949e' }}>Obstacle Cutouts</h3>
+                    {boundaryCfg.cutouts.map((c, idx) => (
+                      <div key={c.id} style={{ background: '#0d1117', padding: 6, borderRadius: 4, border: '1px solid #30363d', marginBottom: 6, fontSize: 11 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <strong style={{ color: '#fca5a5' }}>{c.id}</strong>
+                          <button
+                            onClick={() => {
+                              setBoundaryCfg({ ...boundaryCfg, cutouts: boundaryCfg.cutouts.filter((_, i) => i !== idx) });
+                              if (activeLoop === c.id) setActiveLoop('perimeter');
+                            }}
+                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 11 }}
+                          >remove</button>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <input
+                            type="checkbox"
+                            checked={c.subtractFloor ?? true}
+                            onChange={(e) => {
+                              const next = [...boundaryCfg.cutouts];
+                              next[idx] = { ...c, subtractFloor: e.target.checked };
+                              setBoundaryCfg({ ...boundaryCfg, cutouts: next });
+                            }}
+                          />
+                          subtractFloor
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div>
+                  <h3 style={{ fontSize: 12, margin: '0 0 6px', color: '#8b949e' }}>
+                    Gate / Door Openings ({boundaryCfg.openings.length})
+                  </h3>
+                  {boundaryCfg.openings.map((op, idx) => (
+                    <div key={op.id} style={{ background: '#0d1117', padding: 6, borderRadius: 4, border: '1px solid #30363d', marginBottom: 6, fontSize: 11 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#fbbf24' }}>{op.label || op.id}</span>
+                        <span style={{ color: '#8b949e' }}>edge #{op.edge}</span>
+                      </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(op.portalOnly)}
+                          onChange={(e) => {
+                            const next = [...boundaryCfg.openings];
+                            next[idx] = { ...op, portalOnly: e.target.checked };
+                            setBoundaryCfg({ ...boundaryCfg, openings: next });
+                          }}
+                        />
+                        backstopped trigger pocket (<code>portalOnly</code>)
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <p style={{ margin: '0 0 10px', fontSize: 12, color: '#8b949e' }}>
+              Orbit mode: click a triangle to toggle, shift-click toggles its whole
+              material. Paint/Erase: drag to add/remove triangles. Selected = green.
+            </p>
+
+            <label style={{ display: 'block', fontSize: 12, marginBottom: 4, color: '#8b949e' }}>
+              Load .glb (local file)
+            </label>
+            <input type="file" accept=".glb" onChange={onFile}
+              style={{ width: '100%', marginBottom: 10, fontSize: 12 }} />
+
+            <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>
+              export → <code style={{ color: '#79c0ff' }}>{outPath || '(set ?stage= or ?out=)'}</code>
+            </div>
+            <div style={{ fontSize: 12, marginBottom: 10 }}>
+              selected: <b style={{ color: '#22e06a' }}>{selCount}</b> tris
+            </div>
+
+            <button onClick={saveToRepo} disabled={busy || !outPath} style={btn(busy ? '#30363d' : '#238636')}>
+              {busy ? 'working…' : '💾 save to repo'}
+            </button>
+            <button onClick={downloadGlb} disabled={busy} style={btn('#21262d')}>⬇ download .glb</button>
+            <button onClick={applySuggestion} style={btn('#1f3a5a')}>✨ auto-suggest floor+slope</button>
+            <button onClick={keepTopSurface} style={btn('#1f3a5a')}>⬆ keep top surface only</button>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8 }}>
+              <button onClick={() => deselectBelowY(parseFloat(cutY))} style={{ ...btn('#1f3a5a'), width: 'auto', flex: 1, marginBottom: 0 }}>
+                ✂ deselect below Y
+              </button>
+              <input type="number" step="0.5" value={cutY} onChange={(e) => setCutY(e.target.value)}
+                style={{ width: 70, padding: '6px 8px', background: '#0d1117', color: '#e6edf3', border: '1px solid #30363d', borderRadius: 4, fontFamily: 'monospace', fontSize: 12 }} />
+            </div>
+            <button onClick={clearAll} style={btn('#21262d')}>clear selection</button>
+            <button onClick={resetRepo} style={{ ...btn('#3b1717'), color: '#fca5a5', border: '1px solid #7f1d1d' }}>
+              ↺ reset file to git HEAD
+            </button>
+
+            <h3 style={{ fontSize: 13, margin: '14px 0 6px', color: '#8b949e' }}>
+              Materials <span style={{ fontWeight: 400, fontSize: 11 }}>· green = suggested walkable</span>
+            </h3>
+            {groups.length === 0 && <p style={{ fontSize: 12, color: '#8b949e' }}>(load a model)</p>}
+            {groups.map((g) => {
+              const badge: Record<Cls, string> = {
+                floor: '#4a8a44', slope: '#a08020', wall: '#5a5f6a', water: '#2d6aaa', prop: '#7a5f8a',
+              };
+              return (
+                <div key={g.primIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <span title={CLS_LABEL[g.cls]} style={{
+                    fontSize: 9, fontWeight: 700, color: '#fff', background: badge[g.cls],
+                    borderRadius: 3, padding: '2px 4px', minWidth: 40, textAlign: 'center',
+                  }}>{CLS_LABEL[g.cls]}</span>
+                  <button onClick={() => toggleMaterial(g.primIdx, !isMaterialFullySelected(g.primIdx))}
+                    style={{
+                      flex: 1, textAlign: 'left', padding: '6px 8px', background: '#21262d',
+                      color: '#e6edf3', border: '1px solid #30363d', borderRadius: 4,
+                      fontFamily: 'monospace', fontSize: 11, cursor: 'pointer',
+                    }}>
+                    {g.materialName}
+                  </button>
+                  <span style={{ fontSize: 10, color: '#8b949e', minWidth: 58, textAlign: 'right' }}>
+                    {g.triCount}t · {g.horizPct}%⊥
+                  </span>
+                </div>
+              );
+            })}
+          </>
+        )}
 
         {log.length > 0 && (
           <pre style={{ marginTop: 14, background: '#0d1117', padding: 8, borderRadius: 4, fontSize: 10, maxHeight: 140, overflow: 'auto' }}>
