@@ -40,7 +40,7 @@
       "area": "City",
       "grade": "B",
       "assessment": "Presentation exceeds the original in places, but some angles break down. Principal’s office needs a final pass.",
-      "next": "Kion approved the counter water and office-exterior lantern fixes in local Mac playtesting on 2026-11-12. Playtest the traced #371 walkable boundary polygons and blocking walls across Market, Underground, Principal’s Office, and Guild Counter to confirm zero void walk-offs and clean NPC/exit reach. Recheck the completed props from multiple camera angles and finish the principal’s office interior. Verify the Coliseum Master’s shared left-menu/right-NPC framing and playtest the drifting market cloud shadows and animated background crowd; grade unchanged.",
+      "next": "Kion approved the counter water and office-exterior lantern fixes in local Mac playtesting on 2026-11-12, and verified the traced #371 Market walkable boundary polygon and blocking walls in local Mac playtesting on 2026-11-14. Recheck the completed props from multiple camera angles, investigate Guild Counter framerate under per-pixel lighting, and finish the principal’s office interior. Verify the Coliseum Master’s shared left-menu/right-NPC framing and playtest the drifting market cloud shadows and animated background crowd; grade unchanged.",
       "label": "score:city"
     },
     {

@@ -23,7 +23,6 @@ import {
   serializeBoundaryConfig,
   isPointWalkable2D,
   splitPolygonEdge,
-  buildProceduralOfficeGroup,
 } from './boundaryModel';
 import { rebuildBoundaryOverlay, type SelectedVertex } from './BoundaryOverlay3D';
 
@@ -794,20 +793,10 @@ export default function FloorColliderBuilder() {
     setActiveLoop('perimeter');
     const preset = CITY_BOUNDARY_PRESETS[area];
 
-    // 1. Load stage reference visual (procedural OfficeLibraryRoom or stage GLB)
-    if (preset.glbPath === null) {
-      clearStageMeshes();
-      setLoadedUrl('');
-      if (groupRef.current) {
-        const proc = buildProceduralOfficeGroup();
-        groupRef.current.add(proc);
-        frameBox(new THREE.Box3().setFromObject(proc));
-      }
-    } else {
-      const url = assetUrl(preset.glbPath);
-      setLoadedUrl(url);
-      loadFromUrl(url);
-    }
+    // 1. Load stage reference visual GLB
+    const url = assetUrl(preset.glbPath);
+    setLoadedUrl(url);
+    loadFromUrl(url);
 
     // 2. Load boundary JSON sidecar (dev API first, static data/ fallback)
     try {
@@ -831,7 +820,7 @@ export default function FloorColliderBuilder() {
     } catch (err) {
       pushLog(`boundary load ERR: ${(err as Error).message}`);
     }
-  }, [clearStageMeshes, frameBox, loadFromUrl]);
+  }, [loadFromUrl]);
 
   useEffect(() => {
     if (initialWorkflow === 'boundary') {

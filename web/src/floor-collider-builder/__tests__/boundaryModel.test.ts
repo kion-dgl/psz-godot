@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import marketRaw from '../../../../data/stage_configs/city-boundaries/market.json';
-import undergroundRaw from '../../../../data/stage_configs/city-boundaries/underground.json';
-import officeRaw from '../../../../data/stage_configs/city-boundaries/office.json';
-import counterRaw from '../../../../data/stage_configs/city-boundaries/counter.json';
 import {
-  type CityAreaId,
   CITY_BOUNDARY_PRESETS,
   computeSolidEdgeSpans,
   isPointWalkable2D,
@@ -13,30 +9,21 @@ import {
   splitPolygonEdge,
 } from '../boundaryModel';
 
-const RAW_BY_AREA: Record<CityAreaId, unknown> = {
-  market: marketRaw,
-  underground: undergroundRaw,
-  office: officeRaw,
-  counter: counterRaw,
-};
+describe('city boundary model & committed Market sidecar (#371)', () => {
+  it('loads and validates the committed Market boundary JSON', () => {
+    const cfg = normalizeBoundaryConfig(marketRaw);
+    expect(cfg.areaId).toBe('market');
+    expect(cfg.stageId).toBe(CITY_BOUNDARY_PRESETS.market.stageId);
+    expect(cfg.perimeter.length).toBeGreaterThanOrEqual(4);
+    expect(cfg.wallHeight).toBeGreaterThanOrEqual(2.5);
+    expect(serializeBoundaryConfig(cfg)).toContain('"areaId": "market"');
 
-describe('city boundary model & committed sidecars (#371)', () => {
-  it('loads and validates all four committed city boundary JSONs', () => {
-    for (const [areaId, raw] of Object.entries(RAW_BY_AREA) as [CityAreaId, unknown][]) {
-      const cfg = normalizeBoundaryConfig(raw);
-      expect(cfg.areaId).toBe(areaId);
-      expect(cfg.stageId).toBe(CITY_BOUNDARY_PRESETS[areaId].stageId);
-      expect(cfg.perimeter.length).toBeGreaterThanOrEqual(4);
-      expect(cfg.wallHeight).toBeGreaterThanOrEqual(2.5);
-      expect(serializeBoundaryConfig(cfg)).toContain(`"areaId": "${areaId}"`);
-
-      for (const pin of CITY_BOUNDARY_PRESETS[areaId].pins) {
-        if (pin.kind === 'spawn' || pin.kind === 'trigger') {
-          expect(
-            isPointWalkable2D(cfg, pin.pos[0], pin.pos[2], pin.pos[1] + 0.5),
-            `${areaId} pin "${pin.label}" at (${pin.pos.join(', ')}) should be walkable`,
-          ).toBe(true);
-        }
+    for (const pin of CITY_BOUNDARY_PRESETS.market.pins) {
+      if (pin.kind === 'spawn' || pin.kind === 'trigger') {
+        expect(
+          isPointWalkable2D(cfg, pin.pos[0], pin.pos[2], pin.pos[1] + 0.5),
+          `market pin "${pin.label}" at (${pin.pos.join(', ')}) should be walkable`,
+        ).toBe(true);
       }
     }
   });

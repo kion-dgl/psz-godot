@@ -15,7 +15,7 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync, unlinkSync } from '
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
-const ALLOWED_CITY_AREAS = new Set(['market', 'underground', 'office', 'counter']);
+const ALLOWED_CITY_AREAS = new Set(['market']);
 
 function resolveSafe(repoRoot: string, rel: string): string | null {
   const cleaned = rel.replace(/^\/+/, '');

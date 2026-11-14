@@ -314,6 +314,23 @@ func _update_position_overlay() -> void:
 	_pos_overlay.text = "pos: (%.2f, %.2f, %.2f)  rot: %.2f rad (%.0f°)" % [p.x, p.y, p.z, rot, deg]
 
 
+func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2, 70)) -> void:
+	var body := StaticBody3D.new()
+	body.name = "FloorCollision"
+	body.collision_layer = 1  # Environment
+	body.collision_mask = 0
+	body.position = Vector3(center.x, 0, center.z)
+
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = floor_size
+	shape.shape = box
+	shape.position.y = -floor_size.y / 2.0
+
+	body.add_child(shape)
+	add_child(body)
+
+
 func _apply_city_boundary(area_id: String) -> StaticBody3D:
 	var config: Dictionary = CityBoundaryBuilderScript.load_config(area_id)
 	if config.is_empty():
