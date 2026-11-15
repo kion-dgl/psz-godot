@@ -122,6 +122,16 @@ static func for_weapon_type(weapon_type: int) -> Texture2D:
 	return _load(str(WEAPON_TYPE_ICON_PATHS[weapon_type]))
 
 
+## Rarity star icon for a 1..N rarity tier (PSO2 colour bands).
+static func for_rarity(rarity: int) -> Texture2D:
+	if rarity <= 0:
+		return null
+	for band in RARITY_BANDS:
+		if rarity <= int(band["max"]):
+			return _load(str(band["path"]))
+	return _load(str(RARITY_BANDS[-1]["path"]))
+
+
 static func _is_weapon(item_id: String) -> bool:
 	if WeaponRegistry.get_weapon(item_id) != null:
 		return true

@@ -581,12 +581,12 @@ static func style_menu(p_title: Label, p_hint: Label, panels: Array = []) -> voi
 			panel.add_theme_stylebox_override("panel", inner_panel_style())
 
 
-# ── Detail panel (the white scan-lined card, matching the shop mock) ──────────
-# The mock's DetailPanel is a translucent-white card with a subtle scanline
-# texture, a thin border with a darker top edge, and rounded corners. See
-# spec/src/components/screens/pszui.tsx (DetailPanel + SCANLINES).
-const DETAIL_BG := Color(1.0, 1.0, 1.0, 0.85)
-const DETAIL_BORDER := Color(0.165, 0.204, 0.282)  # dark-blue edge (#2a3448)
+# ── Detail panel (Style A: PSZ Blue Glass card matching ShopBodyCard, #772) ────
+# Matches ShopBodyCard's pale-blue glass shell (BG @ 0.86 alpha, 3px BG_BORDER,
+# 6px corners, 3px flush inner margin) so header banners and pinned footers sit
+# flush inside the frame. See spec /states/shops#the-detail-panel.
+const DETAIL_BG := Color(BG.r, BG.g, BG.b, 0.86)
+const DETAIL_BORDER := BG_BORDER
 const SCANLINE_COLOR := Color(0.47, 0.627, 0.784, 0.08)
 
 static var _scanline_tex: Texture2D = null
@@ -596,18 +596,12 @@ static func detail_panel_style() -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = DETAIL_BG
 	s.border_color = DETAIL_BORDER
-	s.border_width_left = 1
-	s.border_width_right = 1
-	s.border_width_bottom = 1
-	s.border_width_top = 3  # heavier top edge, like the mock
-	s.corner_radius_top_left = 6
-	s.corner_radius_top_right = 6
-	s.corner_radius_bottom_right = 6
-	s.corner_radius_bottom_left = 6
-	s.content_margin_left = 12.0
-	s.content_margin_right = 12.0
-	s.content_margin_top = 10.0
-	s.content_margin_bottom = 10.0
+	s.set_border_width_all(3)
+	s.set_corner_radius_all(6)
+	s.content_margin_left = 3.0
+	s.content_margin_right = 3.0
+	s.content_margin_top = 3.0
+	s.content_margin_bottom = 3.0
 	return s
 
 

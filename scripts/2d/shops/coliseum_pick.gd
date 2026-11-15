@@ -8,6 +8,7 @@ extends Control
 ## the synthesized 1:1 field sections (one enemy + a room-clear telepipe home).
 
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 const FIELD_SCENE := "res://scenes/3d/field/valley_field.tscn"
 const SHELL_QUEST_ID := "debug_coliseum"
 const TrapTests := preload("res://scripts/2d/shops/coliseum_traps.gd")
@@ -216,8 +217,8 @@ func _row_pill(row: Dictionary, selected: bool) -> PanelContainer:
 func _refresh_detail() -> void:
 	if not is_instance_valid(_detail_panel):
 		return
-	PszStyle.clear_detail_panel(_detail_panel)
 	if _selected_index < 0 or _selected_index >= _rows.size():
+		PszStyle.clear_detail_panel(_detail_panel)
 		return
 	var row: Dictionary = _rows[_selected_index]
 	if row.has("trap_kind"):
@@ -226,29 +227,24 @@ func _refresh_detail() -> void:
 	var kinds: Array = row["kinds"]
 	kinds.sort()
 	var areas: Array = row["areas"]
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(PszStyle.detail_label("%s%s  ·  Lv.%d  ·  HP: %d" % [str(row["name"]),
-		" (Rare)" if bool(row["is_rare"]) else "", ColiseumRoster.row_level(row), ColiseumRoster.row_hp(row)], PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label(("Enemies: %s" if _tab == 2 else "Found in: %s") % ", ".join(PackedStringArray(areas))))
-	vbox.add_child(PszStyle.detail_label("Attacks: %s" % ", ".join(PackedStringArray(kinds)), PszStyle.TEXT_HIGHLIGHT))
-	vbox.add_child(PszStyle.detail_label("%s · %s" % [str(row.get("element", "")).capitalize(), str(row["archetype"])]))
-	if row.has("model"): vbox.add_child(PszStyle.detail_label("Model: %s" % row.model))
-	_detail_panel.add_child(vbox)
+	var title_txt := "%s%s" % [str(row["name"]), " (Rare)" if bool(row["is_rare"]) else ""]
+	var ctx := ShopDetail.open_card(_detail_panel, title_txt, {
+		"badge_text": "Lv.%d" % ColiseumRoster.row_level(row),
+	})
+	ShopDetail.add_sub_meta(ctx, str(row.get("element", "")).capitalize(), str(row["archetype"]))
+	ShopDetail.add_kv_row(ctx, "HP", str(ColiseumRoster.row_hp(row)))
+	ShopDetail.add_kv_row(ctx, "Attacks", ", ".join(PackedStringArray(kinds)))
+	ShopDetail.add_kv_row(ctx, "Enemies" if _tab == 2 else "Found In", ", ".join(PackedStringArray(areas)))
+	if row.has("model"):
+		ShopDetail.add_kv_row(ctx, "Model", str(row.model), ShopDetail.C_SLATE_TEXT)
 	_refresh_level_controls()
 
 
 func _refresh_trap_detail(row: Dictionary) -> void:
-	var details := VBoxContainer.new()
-	details.add_theme_constant_override("separation", 8)
-	details.add_child(PszStyle.detail_label(str(row.name), PszStyle.TITLE_BG))
-	var description := PszStyle.detail_label(str(row.hint))
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	details.add_child(description)
-	var exit_hint := PszStyle.detail_label("No enemies. Use the telepipe beside the entrance whenever you want to leave.", PszStyle.TEXT_HIGHLIGHT)
-	exit_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	details.add_child(exit_hint)
-	_detail_panel.add_child(details)
+	var ctx := ShopDetail.open_card(_detail_panel, str(row.name), {"badge_text": "Trap"})
+	ShopDetail.add_sub_meta(ctx, "Coliseum Trap Lab", "")
+	ShopDetail.add_prose(ctx, str(row.hint))
+	ShopDetail.set_footer(ctx, [], "Return telepipe always available", "ok")
 	_refresh_level_controls()
 
 

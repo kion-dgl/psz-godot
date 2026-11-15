@@ -3,6 +3,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/photon-collector.png"
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 
 const EXCHANGE_ITEMS := [
 	{"name": "Monogrinder", "id": "monogrinder", "cost": 1, "category": "Grinders"},
@@ -224,25 +225,30 @@ func _refresh_display() -> void:
 func _refresh_detail() -> void:
 	if not is_instance_valid(_detail_panel):
 		return
-	PszStyle.clear_detail_panel(_detail_panel)
 	if _selected_index < 0 or _selected_index >= EXCHANGE_ITEMS.size():
+		PszStyle.clear_detail_panel(_detail_panel)
 		return
-
 	var item: Dictionary = EXCHANGE_ITEMS[_selected_index]
+	var item_id: String = str(item["id"])
 	var cost: int = int(item["cost"])
 	var pd_count: int = Inventory.get_item_count("photon_drop")
-	var held: int = Inventory.get_item_count(item["id"])
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(PszStyle.detail_label(str(item["name"]), PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label("Category: %s" % str(item["category"])))
-	var cost_text: String = "Free" if cost == 0 else "%d Photon Drop%s" % [cost, "" if cost == 1 else "s"]
-	vbox.add_child(PszStyle.detail_label("Cost: %s" % cost_text, PszStyle.TEXT_HIGHLIGHT))
-	vbox.add_child(PszStyle.detail_label("You have: %d" % held))
+	var held: int = Inventory.get_item_count(item_id)
+	var ctx := ShopDetail.render_item_card(_detail_panel, item_id, str(item["name"]), {
+		"held": held,
+		"category_label": str(item["category"]),
+		"show_held": item_id != "debug_mag",
+		"fallback_desc": "Feed to an equipped Mag to raise its stats." if item_id.begins_with("debug_mag_") else "",
+	})
+	var cost_text := "Free" if cost == 0 else "%d PD" % cost
+	var status := "✓ Exchangeable"
+	var tone := "ok"
 	if cost > 0 and pd_count < cost:
-		vbox.add_child(PszStyle.detail_label("Not enough Photon Drops", PszStyle.TEXT_WARNING))
-	_detail_panel.add_child(vbox)
+		status = "Need %d more PD" % (cost - pd_count)
+		tone = "warn"
+	ShopDetail.set_footer(ctx, [
+		{"label": "Exchange", "value": cost_text, "tone": "pd"},
+		{"label": "Held", "value": "×%d" % held},
+	], status, tone)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

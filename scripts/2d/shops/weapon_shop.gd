@@ -2,6 +2,7 @@ extends Control
 ## Weapon shop — browse and buy weapons, armor, and units via tabs.
 
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 
 enum Tab { WEAPONS, ARMOR, UNITS, SELL }
 
@@ -495,7 +496,6 @@ func _refresh_display() -> void:
 
 func _refresh_detail() -> void:
 	PszStyle.clear_detail_panel(detail_panel)
-
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():
 		return
@@ -503,76 +503,37 @@ func _refresh_detail() -> void:
 	var item: Dictionary = list[_selected_index]
 	var item_id: String = str(item.get("id", ""))
 	var cat: String = str(item.get("category", ""))
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	var is_eq: bool = bool(item.get("equipped", false))
+	var ctx: Dictionary = ShopDetail.render_item_card(detail_panel, item_id, str(item.get("name", "???")), {
+		"rolled_slots": int(item.get("rolled_slots", -1)),
+		"owned_instance": _tab == Tab.SELL,
+		"is_equipped": is_eq,
+	})
 
-	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
-	_append_gear_stats(vbox, cat, item_id, int(item.get("rolled_slots", -1)))
-
-	# Price info
-	vbox.add_child(PszStyle.detail_label(""))
 	if _tab == Tab.SELL:
-		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
-	else:
-		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
-		vbox.add_child(PszStyle.detail_label("You have: %d" % int(Inventory._items.get(item_id, 0))))
+		var s_status := "[E] Equipped — cannot sell" if is_eq else ("✕ Cannot equip: class" if bool(item.get("cannot_use", false)) else "")
+		var s_tone := "equipped" if is_eq else ("blocked" if bool(item.get("cannot_use", false)) else "neutral")
+		ShopDetail.set_footer(ctx, [
+			{"label": "Sell", "value": "%d M" % int(item.get("sell_price", 0)), "tone": "gold"},
+			{"label": "Owned", "value": str(int(item.get("quantity", 0)))},
+		], s_status, s_tone)
+		return
 
-		# Equippability status
-		if cat in ["weapon", "armor"]:
-			var equip_check: Dictionary = _check_equippability(item_id, cat)
-			if equip_check.get("can_equip", true):
-				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
-			else:
-				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
-
-		# Unified: surface the can't-buy reason (the row no longer tags it).
-		var buy_verdict: Dictionary = _can_buy(item)
-		if not buy_verdict.get("ok", true):
-			vbox.add_child(PszStyle.detail_label(str(buy_verdict.get("reason", "")), PszStyle.TEXT_WARNING))
-
-	detail_panel.add_child(vbox)
-
-
-## Append the gear stat lines (weapon / armor / unit) to the detail panel.
-## Extracted from _refresh_detail to keep it under the complexity bound.
-func _append_gear_stats(vbox: VBoxContainer, cat: String, item_id: String, rolled_slots: int = -1) -> void:
-	if cat == "weapon":
-		var w = WeaponRegistry.get_weapon(item_id)
-		if w:
-			vbox.add_child(PszStyle.detail_label("Type: %s" % w.get_weapon_type_name()))
-			vbox.add_child(PszStyle.detail_label("Rarity: %s" % w.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
-			vbox.add_child(PszStyle.detail_label("ATK: %d-%d" % [w.attack_base, w.attack_max]))
-			vbox.add_child(PszStyle.detail_label("ACC: %d" % w.accuracy_base))
-			if not w.element.is_empty():
-				vbox.add_child(PszStyle.detail_label("Element: %s Lv.%d" % [w.element, w.element_level]))
-			vbox.add_child(PszStyle.detail_label("Max Grind: +%d" % w.max_grind))
-	elif cat == "armor":
-		var a = ArmorRegistry.get_armor(item_id)
-		if a:
-			vbox.add_child(PszStyle.detail_label("Rarity: %s" % a.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
-			vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [a.defense_base, a.defense_max]))
-			vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [a.evasion_base, a.evasion_max]))
-			# Per-instance rolled count for this offer (not the resource max_slots,
-			# which is only the roll generator/cap). See EquipmentUtils.get_unit_slot_count.
-			var shown_slots: int = rolled_slots if rolled_slots >= 0 else a.max_slots
-			vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % shown_slots))
-			# Level requirement removed — will switch to stat requirements later
-			var resists: Array = []
-			if a.resist_fire > 0: resists.append("Fire %d" % a.resist_fire)
-			if a.resist_ice > 0: resists.append("Ice %d" % a.resist_ice)
-			if a.resist_lightning > 0: resists.append("Ltn %d" % a.resist_lightning)
-			if a.resist_light > 0: resists.append("Lgt %d" % a.resist_light)
-			if a.resist_dark > 0: resists.append("Drk %d" % a.resist_dark)
-			if not resists.is_empty():
-				vbox.add_child(PszStyle.detail_label("Resist: %s" % ", ".join(PackedStringArray(resists))))
-	elif cat == "unit":
-		var u = UnitRegistry.get_unit(item_id)
-		if u:
-			vbox.add_child(PszStyle.detail_label("Rarity: %s" % ("*".repeat(int(u.rarity))), PszStyle.TEXT_HIGHLIGHT))
-			vbox.add_child(PszStyle.detail_label("Category: %s" % u.category))
-			vbox.add_child(PszStyle.detail_label("Effect: %s" % u.effect, PszStyle.TEXT_SUCCESS))
+	var status_txt := "✓ Fits slotted Armor"
+	var status_tone := "ok"
+	if cat in ["weapon", "armor"]:
+		var can_eq: bool = bool(_check_equippability(item_id, cat).get("can_equip", true))
+		status_txt = "✓ Can equip" if can_eq else "✕ Cannot equip: class"
+		status_tone = "ok" if can_eq else "blocked"
+	var buy_verdict: Dictionary = _can_buy(item)
+	if not buy_verdict.get("ok", true) and status_tone != "blocked":
+		status_txt = str(buy_verdict.get("reason", ""))
+		status_tone = "warn"
+	ShopDetail.set_footer(ctx, [
+		{"label": "Buy", "value": "%d M" % int(item.get("cost", 0)), "tone": "gold"},
+		{"label": "Sell", "value": "%d M" % int(item.get("sell_price", 0)), "tone": "muted"},
+		{"label": "Held", "value": str(int(Inventory._items.get(item_id, 0)))},
+	], status_txt, status_tone)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

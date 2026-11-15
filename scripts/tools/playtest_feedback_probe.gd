@@ -105,10 +105,13 @@ func _shops() -> void:
 		var balance := shop.find_child("ShopBalance", true, false) as Label
 		var card := shop.find_child("ShopBodyCard", true, false) as Control
 		var title := shop.find_child("TitleLabel", true, false) as Control
+		var detail := _find_detail_panel(id, shop)
 		check(balance != null and balance.visible, id + " balance visible")
 		check(balance.global_position.y > card.global_position.y + card.size.y * 0.8, id + " balance at bottom")
 		check(absf(title.size.x - (card.size.x - 6.0)) < 1, id + " title fills card width")
 		check(not shop.find_child("HintLabel", true, false).visible, id + " directions footer hidden")
+		check(detail != null and detail.has_node("ScanlineOverlay") and detail.get_child_count() >= 2, id + " Style A detail card populated")
+		check(detail != null and detail.get_minimum_size().x <= PszStyle.SHOP_DETAIL_W + 1.0, id + " detail card fits pinned 320px width")
 		if id == "photon_shop":
 			check(balance.text == "Photon Drops: %d" % Inventory.get_item_count("photon_drop"), "collector uses photon balance")
 		PszStyle.update_shop_balance(shop, 1234)
@@ -116,8 +119,30 @@ func _shops() -> void:
 		if id == "item_shop" and DisplayServer.get_name() != "headless":
 			await RenderingServer.frame_post_draw
 			get_viewport().get_texture().get_image().save_png("/tmp/psz-playtest-shop.png")
+		await _maybe_capture_shop(id, shop)
 		shop.queue_free()
 		await get_tree().process_frame
+
+func _find_detail_panel(id: String, shop: Control) -> PanelContainer:
+	if id == "storage":
+		return shop.get("storage_panel") as PanelContainer
+	var dp = shop.get("_detail_panel")
+	return (dp if dp != null else shop.get("detail_panel")) as PanelContainer
+
+func _maybe_capture_shop(id: String, shop: Control) -> void:
+	var dir := OS.get_environment("PSZ_PROBE_SCREENSHOT_DIR")
+	if dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("%s.png" % id))
+	var extra_tabs := [1, 2] if id == "weapon_shop" else ([2] if id == "item_shop" else [])
+	for tab_idx in extra_tabs:
+		shop._tab = tab_idx
+		shop._selected_index = 0
+		shop._refresh_display()
+		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join("%s_tab%d.png" % [id, tab_idx]))
 
 func _underground() -> void:
 	var helper := preload("res://scripts/utils/underground_mirror_variants.gd")
