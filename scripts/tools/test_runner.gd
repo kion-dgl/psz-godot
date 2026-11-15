@@ -28,6 +28,9 @@ func _ready() -> void:
 	preload("res://scripts/tools/enemy_status_tests.gd").run(self)
 	preload("res://scripts/tools/ambience_feedback_tests.gd").run(self)
 	preload("res://scripts/tools/boss_warp_tests.gd").run(self)
+	var city_boundary_tests := preload("res://scripts/tools/city_boundary_tests.gd")
+	city_boundary_tests.run(self)
+	await city_boundary_tests.run_physics_probe(self)
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])

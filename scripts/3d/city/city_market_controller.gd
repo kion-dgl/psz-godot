@@ -38,8 +38,8 @@ func _ready() -> void:
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision — centered on walkable area (Z range ~14 to ~67)
-	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
+	# Walkable polygon floor + extruded perimeter/cutout collision walls (#371)
+	_apply_city_boundary("market")
 	_apply_market_rig()
 
 	# The market IS s00e_sa1 — its two authored butterflies (#644), from the

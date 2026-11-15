@@ -1,0 +1,63 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `flowchart LR
+  JSON["data/stage_configs/city-boundaries/market.json"] --> Builder["CityBoundaryBuilder"]
+  Builder -->|"buildFloor: true"| Floor["Walkable Floor ConcavePolygonShape3D (layer 1)"]
+  Builder --> Walls["Extruded Perimeter &amp; Cutout Walls (layer 1)"]
+  Builder --> Respawn["player.fall_respawn_y"]
+  Tool["#/floor-collider-builder"] <-->|"GET / POST dev API"| JSON
+`;
+---
+
+<Concept title="City Walkable Boundaries">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHALL</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as described in RFC 2119.</p>
+
+  <p>The <a href={siteUrl('/journey/city/market')}>City Market</a> scene <strong>MUST</strong> confine the player avatar to its intended walkable plaza and avenue via a traced polygon floor and extruded perimeter/cutout walls, and <strong>MUST NOT</strong> rely on an oversized rectangular <code>BoxShape3D</code> slab or downward floor-probe raycasts alone. (<a href={siteUrl('/journey/city/counter')}>Guild Counter</a>, <a href={siteUrl('/journey/city/office')}>Principal's Office</a>, and <a href={siteUrl('/journey/city/underground')}>Underground</a> retain their existing floor/room collision rigs.)</p>
+
+  <h2>Why floor raycasts alone are insufficient in the Market</h2>
+  <ul>
+    <li><code>Player._can_move_to</code> casts three downward rays ahead of normal walking and dodging, <strong>NOT</strong> during combo lunges, diagonal capsule slides along angled walls, or step-ups (<code>STEP_UP_MAX_HEIGHT = 0.5</code>).</li>
+    <li>The Market visual floor mesh (<code>dairon3.glb</code>) has no baked physics colliders and extends beneath shop facades, raised central planters, stairs, and dead-end gates.</li>
+    <li>Therefore, the Market <strong>MUST</strong> combine a clipped walkable floor polygon with vertical blocking collision walls extruded on physics layer <code>1</code> (Environment).</li>
+  </ul>
+
+  <h2>Boundary sidecar schema</h2>
+  <p>Walkable boundaries are authored as in-repo JSON sidecars at <code>data/stage_configs/city-boundaries/&lt;areaId&gt;.json</code> (currently <code>market.json</code>) so boundary adjustments ship directly with the repository without rebuilding or republishing the external asset pack.</p>
+  <ul>
+    <li><code>version</code> (integer, <strong>REQUIRED</strong>): schema version (<code>1</code>).</li>
+    <li><code>areaId</code> (string, <strong>REQUIRED</strong>): canonical city key (<code>"market"</code>).</li>
+    <li><code>stageId</code> (string, <strong>REQUIRED</strong>): stage asset identifier (<code>"s00e_sa1"</code>).</li>
+    <li><code>buildFloor</code> (boolean, <strong>REQUIRED</strong>): when <code>true</code>, <code>CityBoundaryBuilder</code> triangulates <code>perimeter</code> minus floor-level <code>cutouts</code> into a walkable <code>ConcavePolygonShape3D</code> at <code>floorY</code>.</li>
+    <li><code>floorY</code> (number, <strong>REQUIRED</strong>): world-space Y elevation of the flat walkable floor and default base elevation of perimeter walls.</li>
+    <li><code>wallBottomY</code> (number, <strong>OPTIONAL</strong>): overrides the base Y of extruded perimeter walls when needed.</li>
+    <li><code>wallHeight</code> (number, <strong>REQUIRED</strong>): vertical height (meters, <strong>MUST</strong> be &ge; <code>2.5</code>) extruded upward from the wall base so neither normal walking nor step-up / lunge motion can crest the barrier.</li>
+    <li><code>fallRespawnY</code> (number, <strong>REQUIRED</strong>): safety-net Y threshold applied to <code>player.fall_respawn_y</code>; if any physics defect drops the player below this height, the player <strong>MUST</strong> respawn at the area's spawn transform.</li>
+    <li><code>perimeter</code> (array of <code>[x, z]</code> pairs, <strong>REQUIRED</strong>): closed, simple (non-self-intersecting) 2D polygon of at least 3 vertices in Godot world XZ coordinates defining the outer walkable boundary.</li>
+    <li><code>cutouts</code> (array of objects, <strong>OPTIONAL</strong>): inner obstacle loops (stairs, crates, stalls). Each cutout defines <code>id</code>, <code>points</code> (3+ <code>[x, z]</code> pairs), optional <code>subtractFloor</code> (default <code>true</code>), optional <code>wallBottomY</code>, and optional <code>wallHeight</code>.</li>
+    <li><code>openings</code> (array of objects, <strong>OPTIONAL</strong>): metadata and optional wall-gap intervals (<code>edge</code> index, <code>tStart</code>, <code>tEnd</code> in <code>[0, 1]</code>, <code>portalOnly</code>) marking gates, stairs, and doorways.</li>
+  </ul>
+
+  <h2>Runtime collision rules</h2>
+  <ul>
+    <li><code>CityBoundaryBuilder</code> <strong>MUST</strong> attach a <code>StaticBody3D</code> named <code>CityBoundary</code> with <code>collision_layer = 1</code> and <code>collision_mask = 0</code>.</li>
+    <li>Extruded wall segments <strong>MUST</strong> emit double-sided vertical triangle faces so capsule collision queries resolve cleanly regardless of polygon winding order.</li>
+    <li>Market's default spawn, named spawn variants, shop NPC interaction stand-points, and exit triggers (north Counter gate and west Underground stairwell) <strong>MUST</strong> lie inside the walkable region with a blocking backstop wall behind each trigger so wall-hugging players cannot bypass the transition into empty void.</li>
+    <li>The visual shadow-catcher plane in <code>CityAreaBase._apply_ds_bake_look</code> <strong>MUST</strong> remain uncollided on its render layer.</li>
+  </ul>
+
+  <h2>Web authoring workflow</h2>
+  <p>The <code>#/floor-collider-builder</code> web tool <strong>MUST</strong> provide a <strong>Boundary + Walls</strong> mode that loads the Market preset, renders spawn/NPC/trigger reference pins and translucent extruded 3D walls, supports interactive vertex dragging, edge splitting, and obstacle cutouts, and writes updated JSON directly to <code>data/stage_configs/city-boundaries/market.json</code> via the local Vite dev server (with Copy/Download JSON fallbacks).</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/city/city_boundary_builder.gd</code> (<code>CityBoundaryBuilder</code>) — JSON loader, polygon clipping/triangulation, floor mesh builder, and double-sided vertical wall extruder.</li>
+    <li><code>scripts/3d/city/city_area_base.gd</code> (<code>CityAreaBase._apply_city_boundary</code>) — shared scene hook wiring collision construction and <code>player.fall_respawn_y</code>.</li>
+    <li><code>scripts/3d/city/city_market_controller.gd</code> — Market boundary activation alongside the pure-bake shadow-catcher rig.</li>
+    <li><code>web/src/floor-collider-builder/FloorColliderBuilder.tsx</code> &amp; <code>web/vite-plugin-collider-export.ts</code> — visual polygon/cutout/wall authoring and dev-mode repository save endpoint.</li>
+  </ul>
+</Concept>

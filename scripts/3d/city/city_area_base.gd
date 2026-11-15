@@ -9,6 +9,7 @@ const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const COUNTER_WATER_SHADER := preload("res://scripts/3d/city/counter_water.gdshader")
+const CityBoundaryBuilderScript := preload("res://scripts/3d/city/city_boundary_builder.gd")
 
 ## Textures that are baked shadow/lightmap overlays — hide meshes using them.
 const SHADOW_TEXTURES := ["s00_1_gr1.png", "s00_0_gr1.png"]
@@ -328,6 +329,15 @@ func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2
 
 	body.add_child(shape)
 	add_child(body)
+
+
+func _apply_city_boundary(area_id: String) -> StaticBody3D:
+	var config: Dictionary = CityBoundaryBuilderScript.load_config(area_id)
+	if config.is_empty():
+		return null
+	if player and config.has("fallRespawnY"):
+		player.fall_respawn_y = float(config["fallRespawnY"])
+	return CityBoundaryBuilderScript.build_into(self, config)
 
 
 ## Build a trimesh floor collider from a hand-authored -floor.glb (the walkable
