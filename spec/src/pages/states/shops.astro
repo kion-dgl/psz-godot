@@ -193,14 +193,23 @@ import Concept from '../../layouts/Concept.astro';
   <h4>Open question — consumable usage restrictions</h4>
   <p>Weapons and armor carry a <code>usable_by</code> class/race restriction (<code>WeaponData</code> / <code>ArmorData</code> <code>can_be_used_by</code>); the same field now exists on <code>ConsumableData</code> but <strong>no consumable populates it yet</strong>, so every consumable is currently usable by all and the item-shop capability grey is a no-op for the Items/Materials tabs. Resolving which consumables a class/race cannot use — and specifically why PSOBB greys antidote/antipara on a CAST <em>without</em> the ✕ marker while greying techniques <em>with</em> it — is the follow-up that makes the Items tab match PSOBB. Until then the item shop drops only the (incorrect) affordability/full-inventory greying.</p>
 
-  <h3>The detail panel</h3>
-  <p>The detail panel is the right-hand column that describes the selected row. Where a shop presents items with stats or effects, it <strong>MUST</strong> render them here rather than in the list. It <strong>MUST</strong> distinguish item kinds:</p>
+  <h3 id="the-detail-panel">The detail panel</h3>
+  <p>The detail panel is the right-hand card that describes the selected row (<a href={siteUrl('/shop/detail-preview')}>interactive per-type preview →</a>). It <strong>MUST</strong> use the shared PSZ Blue Glass card chrome (Style A — pale-blue scanlined glass with a 3px navy border, flush dark-navy header banner with a gold accent rule, frosted inner inset, and a pinned dark-navy footer strip) so the left list card and right detail card belong to one visual family. Where a shop presents items with stats or effects, it <strong>MUST</strong> render them here rather than in the list, using <strong>one attribute per row</strong> so numbers never truncate across <code>16:9</code> or <code>4:3</code> layouts:</p>
   <ul>
-    <li><strong>Gear</strong> (weapon / armor / unit) — rarity stars, then the stat block (type, ATK/ACC, DEF/EVA, element, grind, slots, effect).</li>
-    <li><strong>Consumables / materials</strong> — the effect text and the count the player holds.</li>
-    <li>A <strong>status</strong> line where relevant (e.g. <em>Can equip</em> / <em>Cannot equip: class</em>, or <em>Storable</em> / <em>Equipped — cannot deposit</em>).</li>
+    <li><strong>Header banner</strong> — leading item/weapon-type icon, item name (trimmed with ellipsis so long names never widen the pinned <code>320 px</code> split), and a trailing rarity-star, Mag-level, or disk-element badge.</li>
+    <li><strong>Equipment</strong> (weapon / armor / unit / mag, plus synthesis weapon recipes) — <strong>MUST</strong> show both the item's own stat and an <strong>if-equipped stat-change preview</strong> (<code>cur → next (±diff)</code>, coloured green for upgrades and red for trade-offs, <code>[E]</code> when currently equipped, or <code>✕ Class</code> when permanently class-blocked), one attribute per row:
+      <ul>
+        <li><strong>Weapon</strong> — subtype + grind cap/level, <code>ATK</code> and <code>ACC</code> with equipped delta, <code>Element</code>, and <code>Photon Art</code>.</li>
+        <li><strong>Armor / Frame / Robe</strong> — subtype + unit-slot count, <code>DEF</code>, <code>EVA</code>, and elemental resistances (one row per resistance) with equipped delta.</li>
+        <li><strong>Unit</strong> — category + armor-slot note, the affected stat row with equipped delta (or special effect row), and wrapped description.</li>
+        <li><strong>Mag</strong> — stage/form + level, <code>POW</code>, <code>GRD</code>, <code>HIT</code>, and <code>MND</code> rows with equipped delta, <code>Sync / IQ</code>, and <code>Photon Blast</code>.</li>
+      </ul>
+    </li>
+    <li><strong>Technique disks</strong> — target, then one row each for <code>Power</code>, <code>PP Cost</code>, <code>Req. Level</code>, and <code>Known</code> level progression.</li>
+    <li><strong>Consumables / materials / modifiers</strong> — subkind and held/max count, wrapped effect prose, and stack/affinity summary.</li>
+    <li><strong>Synthesis &amp; Tekker</strong> — synthesis recipes show output weapon <code>ATK</code>/<code>ACC</code> equipped deltas above 1-per-row <code>have of need</code> material rows; Tekker grind shows 1-per-row <code>BEFORE → AFTER</code> deltas for <code>Grind</code>, <code>Weapon ATK</code>, <code>Total ATK</code>, and <code>Weapon ACC</code> plus required and held grinders.</li>
+    <li><strong>Pinned footer</strong> — buy/sell/exchange price, held count, and a colour-coded capability/transaction status badge (e.g. <em>Can equip</em>, <em>✕ Cannot equip: class</em>, <em>[E] Equipped — cannot deposit</em>, or the block reason).</li>
   </ul>
-  <p>A shop whose entries have no per-item stats (a flat exchange list) <strong>MAY</strong> omit the detail panel and present a single full-width list. Such list-only shops <strong>SHOULD</strong> adopt the detail panel as their content grows. <em>(photon / crafting / tekker are list-only today; migrating them to the standard list + detail layout is tracked on issue #368.)</em></p>
 
   <h3 id="feedback">Feedback: sounds, messages, and failures</h3>
   <p>Every economy screen — the shops, storage, the guild counter, and Blackjack — <strong>MUST</strong> give the same audible and textual feedback for the same event. Today each screen hand-rolls this and they diverge (issue #368, Rozalin playtest): three different "can't buy" modals, two different full-inventory strings, and per-screen sound choices. The rules below are the single contract; a screen <strong>MUST</strong> route through the shared helpers (<a href="#implemented-by">below</a>) rather than re-deciding any of it.</p>
@@ -266,21 +275,21 @@ import Concept from '../../layouts/Concept.astro';
         <td>— (single list)</td>
         <td>Photon Drops</td>
         <td>Exchange Photon Drops for a reward item</td>
-        <td>List-only</td>
+        <td>Per-item stats/effect + PD cost + held count</td>
       </tr>
       <tr>
         <td><strong>Synthesis (Crafting)</strong></td>
         <td>Craft · Boards</td>
         <td>Meseta + materials</td>
         <td>Craft a weapon from a recipe; a photon crystal sets the element / special tier</td>
-        <td>List-only <em>(materials "have of need" planned)</em></td>
+        <td>Output weapon <code>ATK</code>/<code>ACC</code> equipped delta + <em>have of need</em> checklist + cost</td>
       </tr>
       <tr>
         <td><strong>Tekker</strong></td>
         <td>— (Grind only)</td>
         <td>Meseta + grinders</td>
         <td>Grind a weapon up (raise its attack power)</td>
-        <td>List-only</td>
+        <td>1-per-row <code>BEFORE → AFTER</code> grind/ATK/ACC deltas + required &amp; held grinders + cost</td>
       </tr>
       <tr>
         <td><strong>Storage</strong></td>
@@ -322,7 +331,8 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/ui/psz_style.gd</code> (PszStyle) — shared styling: <code>shop_row()</code> (the row contract), <code>create_tab_bar()</code>, <code>create_meseta_label()</code>, <code>create_pill_with_icons()</code>, <code>detail_label()</code>, and the list-scroll primitives <code>make_list_scroll()</code> + <code>scroll_into_view()</code>.</li>
+    <li><code>scripts/ui/psz_style.gd</code> (PszStyle) — shared styling: <code>shop_row()</code> (the row contract), <code>create_tab_bar()</code>, <code>create_meseta_label()</code>, <code>create_pill_with_icons()</code>, <code>detail_panel_style()</code>, <code>detail_label()</code>, and the list-scroll primitives <code>make_list_scroll()</code> + <code>scroll_into_view()</code>.</li>
+    <li><code>scripts/2d/shops/shop_detail.gd</code> (ShopDetail) — Style A detail card chrome (header banner, frosted 1-attribute-per-row body inset, pinned footer) and shared per-item-type view + equipped stat-delta builders.</li>
     <li><code>scripts/2d/shops/shop_nav.gd</code> (ShopNav) — the input grammar: <code>handle()</code> dispatch, <code>selected_item()</code>, <code>confirm()</code> / <code>info()</code> modals, <code>switch_shop_tab()</code>.</li>
     <li><code>scripts/2d/shops/shop_ui.gd</code> (ShopUI) — <code>setup_portrait()</code>, the two-column content + portrait-overlay layout.</li>
     <li><code>scripts/2d/shops/item_shop.gd</code>, <code>weapon_shop.gd</code>, <code>photon_shop.gd</code>, <code>crafting_shop.gd</code>, <code>tekker.gd</code> — the five shops, each <code>extends Control</code>.</li>

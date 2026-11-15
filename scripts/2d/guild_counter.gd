@@ -1,6 +1,8 @@
 extends Control
 ## Guild counter — accept and report quests.
 
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
+
 ## Each entry: { "type": "quest"|"report"|"cancel", "id": String, "name": String,
 ##   "area": String, "available": bool, "quest_id": String }
 var _entries: Array = []
@@ -454,36 +456,35 @@ func _refresh_display() -> void:
 
 
 func _refresh_detail() -> void:
-	for child in detail_panel.get_children():
-		child.queue_free()
-
 	if _entries.is_empty() or _selected_index >= _entries.size():
+		PszStyle.clear_detail_panel(detail_panel)
 		return
 
 	var entry: Dictionary = _entries[_selected_index]
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
-	vbox.add_child(PszStyle.detail_label(entry["name"], PszStyle.TITLE_BG))
-
-	if not str(entry["area"]).is_empty():
-		vbox.add_child(PszStyle.detail_label("Area: %s" % entry["area"]))
-
-	vbox.add_child(PszStyle.detail_label("Difficulty: %s" % DIFFICULTY_LABELS[_difficulty_index]))
-	vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
+	var diff_label: String = DIFFICULTY_LABELS[_difficulty_index]
+	var ctx := ShopDetail.open_card(detail_panel, str(entry.get("name", "Quest")), {
+		"badge_text": diff_label,
+	})
+	var entry_type: String = str(entry.get("type", "quest"))
+	var type_label := "Report Quest" if entry_type == "report" else ("Cancel Quest" if entry_type == "cancel" else "Guild Quest")
+	var area_name: String = str(entry.get("area", ""))
+	ShopDetail.add_sub_meta(ctx, type_label, "Area: %s" % area_name if not area_name.is_empty() else "")
 	var desc: String = str(entry.get("description", ""))
-	if not entry.get("available", true):
-		var parent_name: String = str(entry.get("parent_name", ""))
-		if not parent_name.is_empty():
-			if not desc.is_empty():
-				desc += "\n\n"
-			desc += "[LOCKED] Complete \"%s\" to unlock." % parent_name
+	var avail: bool = bool(entry.get("available", true))
+	var parent_name: String = str(entry.get("parent_name", ""))
 	if not desc.is_empty():
-		var desc_label := PszStyle.detail_label(desc)
-		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(desc_label)
-
-	detail_panel.add_child(vbox)
+		ShopDetail.add_prose(ctx, desc)
+	if not avail and not parent_name.is_empty():
+		ShopDetail.add_prose(ctx, "Complete \"%s\" to unlock." % parent_name, ShopDetail.C_DOWN_TEXT)
+	var status := "✓ Available" if avail else "Locked"
+	var tone := "ok" if avail else "blocked"
+	if entry_type == "report":
+		status = "✓ Ready to Report"
+		tone = "ok"
+	elif entry_type == "cancel":
+		status = "Abandon Active Quest"
+		tone = "warn"
+	ShopDetail.set_footer(ctx, [{"label": "Difficulty", "value": diff_label}], status, tone)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

@@ -2,6 +2,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/storage-counter.png"
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 
 ## Storage screen — 4 tabs grouped by content:
 ##     [Deposit Items] [Withdraw Items] [Deposit Meseta] [Withdraw Meseta]
@@ -458,76 +459,43 @@ func _refresh_panel() -> void:
 ## Detail panel for the selected row — stats for gear, effect + count for
 ## consumables, with rarity stars here rather than in the row label (#368).
 func _refresh_detail() -> void:
-	PszStyle.clear_detail_panel(storage_panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
 	if not _is_items_tab():
-		vbox.add_child(PszStyle.detail_label(
-			"Transfer meseta between your wallet and the bank.", PszStyle.TEXT_MUTED))
-		storage_panel.add_child(vbox)
+		var character = CharacterManager.get_active_character()
+		var wallet: int = int(character.get("meseta", 0)) if character else 0
+		var bank: int = int(GameState.stored_meseta)
+		var mctx := ShopDetail.open_card(storage_panel, "Meseta Bank")
+		ShopDetail.add_sub_meta(mctx, "Shared Trunk", "Deposit" if _tab == Tab.DEPOSIT_MESETA else "Withdraw")
+		ShopDetail.add_kv_row(mctx, "Wallet", "%d M" % wallet)
+		ShopDetail.add_kv_row(mctx, "Bank", "%d M" % bank)
+		ShopDetail.add_prose(mctx, "Transfer meseta between your wallet and shared storage.", ShopDetail.C_SLATE_TEXT)
 		return
 
 	var items: Array = _current_list()
 	if items.is_empty() or _selected_index < 0 or _selected_index >= items.size():
-		storage_panel.add_child(vbox)
+		var ectx := ShopDetail.open_card(storage_panel, "Shared Storage")
+		ShopDetail.add_sub_meta(ectx, TAB_NAMES[_tab], "Empty")
+		ShopDetail.add_prose(ectx, "No items in this tab.", ShopDetail.C_SLATE_TEXT)
 		return
 
 	var item: Dictionary = items[_selected_index]
 	var item_id: String = str(item.get("id", "???"))
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	var weapon = WeaponRegistry.get_weapon(item_id)
-	if weapon == null:
-		weapon = WeaponRegistry.get_weapon(norm_id)
-	var armor_data = ArmorRegistry.get_armor(item_id)
-	if armor_data == null:
-		armor_data = ArmorRegistry.get_armor(norm_id)
-	var unit_data = UnitRegistry.get_unit(item_id)
-	if unit_data == null:
-		unit_data = UnitRegistry.get_unit(norm_id)
-
-	var item_name: String = str(item.get("name", item_id))
-	if weapon:
-		item_name = weapon.name
-	elif armor_data:
-		item_name = armor_data.name
-	vbox.add_child(PszStyle.detail_label(item_name, PszStyle.TITLE_BG))
-
-	if weapon:
-		vbox.add_child(PszStyle.detail_label(weapon.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Type: %s" % weapon.get_weapon_type_name()))
-		vbox.add_child(PszStyle.detail_label("ATK: %d-%d" % [weapon.attack_base, weapon.attack_max]))
-		vbox.add_child(PszStyle.detail_label("ACC: %d" % weapon.accuracy_base))
-		if not weapon.element.is_empty():
-			vbox.add_child(PszStyle.detail_label("Element: %s Lv.%d" % [weapon.element, weapon.element_level]))
-		var character = CharacterManager.get_active_character()
-		var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0)) if character else 0
-		vbox.add_child(PszStyle.detail_label("Grind: +%d / +%d" % [grind, weapon.max_grind]))
-	elif armor_data:
-		vbox.add_child(PszStyle.detail_label(armor_data.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [armor_data.defense_base, armor_data.defense_max]))
-		vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [armor_data.evasion_base, armor_data.evasion_max]))
-		vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % EquipmentUtils.get_unit_slot_count(item_id, CharacterManager.get_active_character())))
-	elif unit_data:
-		vbox.add_child(PszStyle.detail_label("*".repeat(int(unit_data.rarity)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Effect: %s" % unit_data.effect, PszStyle.TEXT_SUCCESS))
-	else:
-		# Consumable / material — effect + count.
-		var consumable = ConsumableRegistry.get_consumable(norm_id)
-		if consumable:
-			var eff := PszStyle.detail_label(consumable.details)
-			eff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			vbox.add_child(eff)
-		vbox.add_child(PszStyle.detail_label("Count: x%d" % int(item.get("quantity", 1))))
-
-	vbox.add_child(PszStyle.detail_label(""))
-	if _is_equipped(item_id):
-		vbox.add_child(PszStyle.detail_label("Equipped — cannot deposit", PszStyle.TEXT_MUTED))
-	else:
-		vbox.add_child(PszStyle.detail_label("Storable", PszStyle.TEXT_SUCCESS))
-
-	storage_panel.add_child(vbox)
+	var qty: int = int(item.get("quantity", 1))
+	var is_eq: bool = _is_equipped(item_id)
+	var ctx := ShopDetail.render_item_card(storage_panel, item_id, str(item.get("name", item_id)), {
+		"held": qty,
+		"owned_instance": true,
+		"is_equipped": is_eq,
+		"properties": item.get("properties", {}),
+	})
+	var status := "✓ Storable"
+	var tone := "ok"
+	if is_eq:
+		status = "[E] Equipped — cannot deposit"
+		tone = "equipped"
+	elif ShopNav.sell_cannot_use(item_id):
+		status = "✕ Cannot equip · Storable"
+		tone = "warn"
+	ShopDetail.set_footer(ctx, [{"label": "Count", "value": "×%d" % qty}], status, tone)
 
 
 func _render_meseta_panel(vbox: VBoxContainer) -> void:

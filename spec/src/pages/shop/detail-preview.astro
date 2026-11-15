@@ -1,0 +1,86 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import { siteUrl } from '../../utils/site';
+import ShopDetailGallery from '../../components/screens/shops/ShopDetailGallery';
+---
+
+<Concept title="Shop Detail Cards — Per-Type Preview (#772)" section="States">
+  <p>
+    Interactive per-item-type contract preview for <a href="https://github.com/kion-dgl/psz-godot/issues/772">issue #772</a>
+    and <a href={siteUrl('/states/shops/#the-detail-panel')}>States → Shops → The detail panel</a>.
+    Replaces the legacy plain white <code>PszStyle.detail_panel_style()</code> text dump with a unified PSZ card chrome,
+    <strong>one attribute per row</strong> so values never truncate, and an <strong>if-equipped stat delta preview</strong>
+    (<code>cur → next (±diff)</code>) on equipment across <code>item_shop</code>, <code>weapon_shop</code>,
+    <code>crafting_shop</code>, <code>tekker</code>, <code>photon_shop</code>, and <code>storage</code>.
+  </p>
+
+  <ShopDetailGallery client:only="react" />
+
+  <h2>Per-Type Field Alignment Summary (1 Attribute Per Row)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Item Type</th>
+        <th>Header Banner</th>
+        <th>Body Inset (1 Attribute Per Row + Equip Delta)</th>
+        <th>Pinned Footer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Weapon</strong></td>
+        <td>Weapon-type icon · Name · Rarity stars</td>
+        <td>Subtype + Grind · <code>STAT | ITEM | EQUIPPED</code> rows for <code>ATK</code> and <code>ACC</code> (<code>cur→next (±diff)</code>) · <code>Element</code> row · <code>Photon Art</code> row</td>
+        <td>Buy / Sell / Held + <code>Can equip</code> / <code>✕ Cannot equip: class</code> / <code>[E]</code></td>
+      </tr>
+      <tr>
+        <td><strong>2. Armor / Frame / Robe</strong></td>
+        <td>Armor icon · Name · Rarity stars</td>
+        <td>Armor subtype + visual <code>Slots</code> pips · 1-per-row <code>STAT | ITEM | EQUIPPED</code> for <code>DEF</code>, <code>EVA</code>, and elemental resistances</td>
+        <td>Buy / Sell / Held + equip / storable status</td>
+      </tr>
+      <tr>
+        <td><strong>3. Unit</strong></td>
+        <td>Unit icon · Name · Rarity stars</td>
+        <td>Unit category + <code>Armor Slot ×1</code> · <code>STAT | ITEM | EQUIPPED</code> stat-change row · Wrapped description</td>
+        <td>Buy / Exchange / Sell / Held + open-slot note</td>
+      </tr>
+      <tr>
+        <td><strong>4. Technique Disk</strong></td>
+        <td>Disk icon · Name · Element chip</td>
+        <td><code>Technique Disk</code> + <code>Target</code> · 1-per-row <code>Power</code>, <code>PP Cost</code>, <code>Req. Level</code>, and <code>Known</code> (<code>Lv.X → Lv.Y</code>)</td>
+        <td>Price + learnability status (<code>✓ Learnable</code> / <code>Req. Lv</code> / <code>✕ CAST</code>)</td>
+      </tr>
+      <tr>
+        <td><strong>5. Consumable</strong></td>
+        <td>Per-item icon · Name · Rarity stars</td>
+        <td>Category + <code>Held N / Max</code> · Smart-wrapped prose description · Compact stack fill meter</td>
+        <td>Buy / Sell (50%) + stepper / stack state</td>
+      </tr>
+      <tr>
+        <td><strong>6. Material / Photon</strong></td>
+        <td>Material icon · Name · Rarity stars</td>
+        <td>Subkind + Held · <code>Effect</code> row + Element chip · Wrapped details</td>
+        <td>Exchange PD / Sell M + currency status</td>
+      </tr>
+      <tr>
+        <td><strong>7. Mag</strong></td>
+        <td>Mag icon · Name · <code>Lv.N</code> badge</td>
+        <td>Stage + Color + Personality · 1-per-row <code>STAT | MAG | EQUIPPED</code> for <code>POW</code>, <code>GRD</code>, <code>HIT</code>, <code>MND</code> · <code>Sync / IQ</code> · <code>Photon Blast</code></td>
+        <td>Sell / Storage count + <code>Storable</code> / <code>[E] Equipped</code></td>
+      </tr>
+      <tr>
+        <td><strong>8. Synthesis</strong></td>
+        <td>Output/Board icon · Name · Rarity stars</td>
+        <td>Output weapon <code>ATK</code> / <code>ACC</code> equipped delta rows · 1-per-row <code>have of need</code> ingredient checklist (<code>✓</code> / <code>✕</code>)</td>
+        <td>Craft cost + readiness / missing material reason</td>
+      </tr>
+      <tr>
+        <td><strong>9. Tekker Grind</strong></td>
+        <td>Weapon icon · Name · Rarity stars</td>
+        <td>Weapon type + <code>Max Grind +N</code> · 1-per-row <code>BEFORE → AFTER</code> for <code>Grind</code>, <code>Weapon ATK</code>, <code>Total ATK</code>, <code>Weapon ACC</code> · <code>Requires</code> + <code>Grinders</code> rows</td>
+        <td>Grind cost + readiness / missing grinder / max cap</td>
+      </tr>
+    </tbody>
+  </table>
+</Concept>

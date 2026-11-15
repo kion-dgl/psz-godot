@@ -2,6 +2,7 @@ extends Control
 ## Shop — buy consumables or technique disks, toggled with tabs.
 
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 
 enum Tab { ITEMS, MATERIALS, DISKS, SELL }
 
@@ -491,39 +492,28 @@ func _refresh_detail() -> void:
 
 
 func _refresh_item_detail(item: Dictionary) -> void:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
-	vbox.add_child(PszStyle.detail_label(str(item.get("item", "???")), PszStyle.TITLE_BG))
-
-	var cat_label := PszStyle.detail_label("Category: %s" % str(item.get("category", "unknown")))
-	vbox.add_child(cat_label)
-
-	var cost_label := PszStyle.detail_label(
-		"Cost: %d %s" % [int(item.get("cost", 0)), str(item.get("currency", "Meseta"))],
-		PszStyle.TEXT_HIGHLIGHT)
-	vbox.add_child(cost_label)
-
-	var item_id: String = str(item.get("item", "")).to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+	var raw_name: String = str(item.get("item", "???"))
+	var item_id: String = raw_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+	var held: int = Inventory.get_item_count(item_id)
+	var ctx: Dictionary = ShopDetail.render_item_card(detail_panel, item_id, raw_name, {
+		"held": held,
+		"show_held": _tab != Tab.MATERIALS,
+		"category_label": str(item.get("category", "")),
+	})
+	var fstats: Array = [{"label": "Cost", "value": "%d M" % int(item.get("cost", 0)), "tone": "gold"}]
 	if _tab != Tab.MATERIALS:
-		vbox.add_child(PszStyle.detail_label("You have: %d" % Inventory.get_item_count(item_id)))
-
-	var consumable = ConsumableRegistry.get_consumable(item_id)
-	if consumable:
-		var details_label := PszStyle.detail_label(consumable.details)
-		details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(details_label)
-
-	# Capability caveat (the row greys for this): the class/race can't use it.
+		fstats.append({"label": "Held", "value": str(held)})
+	var status_txt := ""
+	var status_tone := "ok"
 	if not _can_use_item(item_id):
-		vbox.add_child(PszStyle.detail_label("Cannot use: class", PszStyle.TEXT_DANGER))
-
-	# Surface the can't-buy reason here (the row no longer carries an inline tag).
-	var verdict: Dictionary = _can_buy(item)
-	if not verdict.get("ok", true):
-		vbox.add_child(PszStyle.detail_label(str(verdict.get("reason", "")), PszStyle.TEXT_WARNING))
-
-	detail_panel.add_child(vbox)
+		status_txt = "✕ Cannot use: class"
+		status_tone = "blocked"
+	else:
+		var verdict: Dictionary = _can_buy(item)
+		if not verdict.get("ok", true):
+			status_txt = str(verdict.get("reason", ""))
+			status_tone = "warn"
+	ShopDetail.set_footer(ctx, fstats, status_txt, status_tone)
 
 
 func _refresh_disk_detail(item: Dictionary) -> void:
@@ -532,58 +522,45 @@ func _refresh_disk_detail(item: Dictionary) -> void:
 	var tech: Dictionary = TechniqueManager.get_technique(technique_id)
 	if tech.is_empty():
 		return
+	var ctx: Dictionary = ShopDetail.render_item_card(
+		detail_panel, "disk_%s_%d" % [technique_id, level], str(item.get("name", "???")),
+		{"technique_id": technique_id, "level": level})
+	ShopDetail.add_prose(ctx, "Use from inventory to learn.", ShopDetail.C_SLATE_TEXT)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
-	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label("Element: %s" % str(tech.get("element", "none")).capitalize()))
-	vbox.add_child(PszStyle.detail_label("Target: %s" % str(tech.get("target", "single")).capitalize()))
-
-	var power: int = int(tech.get("power", 0))
-	if power > 0:
-		var scaled_power: int = int(float(power) * (1.0 + float(level) / 10.0))
-		vbox.add_child(PszStyle.detail_label("Power: %d (Lv.%d)" % [scaled_power, level]))
-
-	var pp_cost: int = maxi(1, int(tech.get("pp", 5)) - int(float(level) / 5.0))
-	vbox.add_child(PszStyle.detail_label("PP Cost: %d" % pp_cost))
-
-	var required_level: int = TechniqueManager.get_disk_required_level(level)
 	var character = CharacterManager.get_active_character()
-	var char_level: int = int(character.get("level", 1)) if character else 1
-
-	# Capability caveat (the ✕-marked grey): the class/race can never learn this.
+	var req_lv: int = TechniqueManager.get_disk_required_level(level)
+	var char_lv: int = int(character.get("level", 1)) if character else 1
+	var cur_lv: int = TechniqueManager.get_technique_level(character, technique_id) if character else 0
+	var status_txt := "✓ Learnable"
+	var status_tone := "ok"
 	if character and not TechniqueManager.class_can_learn(character, technique_id, level):
-		vbox.add_child(PszStyle.detail_label("Cannot learn: class", PszStyle.TEXT_DANGER))
-
-	var req_color := PszStyle.TEXT_WARNING if char_level < required_level else PszStyle.TEXT
-	vbox.add_child(PszStyle.detail_label("Req. Level: %d" % required_level, req_color))
-
-	if character:
-		var current_level: int = TechniqueManager.get_technique_level(character, technique_id)
-		if current_level > 0:
-			if current_level >= level:
-				vbox.add_child(PszStyle.detail_label("Known: Lv.%d (already higher)" % current_level, PszStyle.TEXT_MUTED))
-			else:
-				vbox.add_child(PszStyle.detail_label("Known: Lv.%d -> Lv.%d" % [current_level, level], PszStyle.TEXT_SUCCESS))
-
-	vbox.add_child(PszStyle.detail_label(""))
-	vbox.add_child(PszStyle.detail_label("Price: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
-	vbox.add_child(PszStyle.detail_label("Use from inventory to learn", PszStyle.TEXT_MUTED))
-
-	detail_panel.add_child(vbox)
+		status_txt = "✕ Cannot learn: class"
+		status_tone = "blocked"
+	elif char_lv < req_lv:
+		status_txt = "Requires Lv.%d" % req_lv
+		status_tone = "warn"
+	elif cur_lv >= level:
+		status_txt = "Already known (Lv.%d)" % cur_lv
+		status_tone = "neutral"
+	ShopDetail.set_footer(ctx, [
+		{"label": "Price", "value": "%d M" % int(item.get("cost", 0)), "tone": "gold"},
+	], status_txt, status_tone)
 
 
 func _refresh_sell_detail(item: Dictionary) -> void:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
-	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
-	vbox.add_child(PszStyle.detail_label(""))
-	vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
-
-	detail_panel.add_child(vbox)
+	var item_id: String = str(item.get("id", ""))
+	var is_eq: bool = bool(item.get("equipped", false))
+	var ctx: Dictionary = ShopDetail.render_item_card(detail_panel, item_id, str(item.get("name", "???")), {
+		"held": int(item.get("quantity", 0)),
+		"owned_instance": true,
+		"is_equipped": is_eq,
+	})
+	var s_txt := "[E] Equipped — cannot sell" if is_eq else ("✕ Cannot use: class" if bool(item.get("cannot_use", false)) else "")
+	var s_tone := "equipped" if is_eq else ("blocked" if bool(item.get("cannot_use", false)) else "neutral")
+	ShopDetail.set_footer(ctx, [
+		{"label": "Sell", "value": "%d M" % int(item.get("sell_price", 0)), "tone": "gold"},
+		{"label": "Owned", "value": str(int(item.get("quantity", 0)))},
+	], s_txt, s_tone)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

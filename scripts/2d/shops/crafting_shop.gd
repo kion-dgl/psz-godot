@@ -3,6 +3,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/synth-shop.png"
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 
 enum Mode { CRAFT, BOARDS }
 
@@ -664,67 +665,94 @@ func _refresh_display() -> void:
 func _refresh_detail() -> void:
 	if not is_instance_valid(_detail_panel):
 		return
-	PszStyle.clear_detail_panel(_detail_panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
 	if _selecting_photon:
-		_build_photon_detail(vbox)
+		_build_photon_detail()
 	elif _mode == Mode.BOARDS:
-		_build_board_detail(vbox)
+		_build_board_detail()
 	else:
-		_build_recipe_detail(vbox)
-
-	_detail_panel.add_child(vbox)
+		_build_recipe_detail()
 
 
-func _build_photon_detail(vbox: VBoxContainer) -> void:
+func _build_photon_detail() -> void:
 	if _photon_index < 0 or _photon_index >= PHOTON_OPTIONS.size():
 		return
 	var photon_id: String = PHOTON_IDS[_photon_index]
-	vbox.add_child(PszStyle.detail_label(PHOTON_OPTIONS[_photon_index], PszStyle.TITLE_BG))
+	var held: int = Inventory.get_item_count(photon_id)
+	var ctx := ShopDetail.render_item_card(_detail_panel, photon_id, PHOTON_OPTIONS[_photon_index], {
+		"held": held,
+		"category_label": "Photon Crystal",
+	})
 	var info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
-	if not info.is_empty():
-		vbox.add_child(PszStyle.detail_label("Element: %s" % str(info.get("element", "none")).capitalize()))
-		vbox.add_child(PszStyle.detail_label(str(info.get("desc", "")), PszStyle.TEXT_SUCCESS))
-	vbox.add_child(PszStyle.detail_label("You have: %d" % Inventory.get_item_count(photon_id)))
+	if not info.is_empty() and not str(info.get("desc", "")).is_empty():
+		ShopDetail.add_kv_row(ctx, "Special", str(info["desc"]), ShopDetail.C_UP_TEXT)
+	ShopDetail.set_footer(ctx, [{"label": "Held", "value": "×%d" % held}],
+		"✓ Ready to Infuse" if held > 0 else "None in inventory",
+		"ok" if held > 0 else "blocked")
 
 
-func _build_board_detail(vbox: VBoxContainer) -> void:
+func _build_board_detail() -> void:
 	if _board_items.is_empty() or _selected_index >= _board_items.size():
-		vbox.add_child(PszStyle.detail_label("No recipe boards", PszStyle.TEXT_MUTED))
+		var empty_ctx := ShopDetail.open_card(_detail_panel, "Recipe Boards")
+		ShopDetail.add_sub_meta(empty_ctx, "Synthesis", "0 Held")
+		ShopDetail.add_prose(empty_ctx, "No rare recipe boards in inventory.", ShopDetail.C_SLATE_TEXT)
 		return
 	var b: Dictionary = _board_items[_selected_index]
-	vbox.add_child(PszStyle.detail_label(str(b["name"]), PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label("★".repeat(int(b["rarity"])), PszStyle.TEXT_HIGHLIGHT))
-	vbox.add_child(PszStyle.detail_label("Learn this board to craft its weapon.", PszStyle.TEXT_MUTED))
+	var recipe = RecipeRegistry.get_recipe(str(b["id"]))
+	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id) if recipe else null
+	var ctx := ShopDetail.open_card(_detail_panel, str(b["name"]), {
+		"icon": InventoryIcons.for_item(str(b["id"])),
+		"rarity": int(b["rarity"]),
+	})
+	ShopDetail.add_sub_meta(ctx, "Recipe Board", ("Yields: %s" % weapon.name) if weapon else "Rare Synthesis")
+	if weapon != null:
+		ShopDetail.add_equip_rows(ctx,
+			ShopDetail.weapon_preview_rows(recipe.output_weapon_id, weapon.attack_base, weapon.accuracy_base),
+			"OUT", "EQUIPPED")
+	ShopDetail.add_prose(ctx, "Learn this board to unlock its weapon synthesis recipe.", ShopDetail.C_SLATE_TEXT)
+	var stats := [{"label": "Craft Cost", "value": "%d M" % recipe.craft_cost, "tone": "gold"}] if recipe else []
+	ShopDetail.set_footer(ctx, stats, "✓ Ready to Learn", "ok")
 
 
-func _build_recipe_detail(vbox: VBoxContainer) -> void:
+func _build_recipe_detail() -> void:
 	if _craft_recipes.is_empty() or _selected_index >= _craft_recipes.size():
-		vbox.add_child(PszStyle.detail_label("No recipes available", PszStyle.TEXT_MUTED))
+		var empty_ctx := ShopDetail.open_card(_detail_panel, "Synthesis")
+		ShopDetail.add_prose(empty_ctx, "No recipes available.", ShopDetail.C_SLATE_TEXT)
 		return
 	var entry: Dictionary = _craft_recipes[_selected_index]
 	var recipe: RecipeBoardData = entry["recipe"]
-	vbox.add_child(PszStyle.detail_label(recipe.name.replace(" Board", ""), PszStyle.TITLE_BG))
-	vbox.add_child(PszStyle.detail_label("%s · %s" % [str(entry["stars"]), str(entry["weapon_type_name"])]))
+	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
+	var ctx := ShopDetail.open_card(_detail_panel, recipe.name.replace(" Board", ""), {
+		"icon": InventoryIcons.for_weapon_type(int(entry["weapon_type"])),
+		"rarity": int(entry["rarity"]),
+	})
+	var uses_txt := "Infinite" if bool(entry["is_default"]) else "Uses ×%d" % int(entry.get("uses", 0))
+	ShopDetail.add_sub_meta(ctx, "Output: %s" % str(entry["weapon_type_name"]), uses_txt)
+	if weapon != null:
+		ShopDetail.add_equip_rows(ctx,
+			ShopDetail.weapon_preview_rows(recipe.output_weapon_id, weapon.attack_base, weapon.accuracy_base),
+			"OUT", "EQUIPPED")
+	_append_recipe_ingredients(ctx, recipe)
+	var status := "✓ Ready to Synthesize"
+	var tone := "ok"
+	if not _can_craft_recipe(recipe):
+		status = _craft_block_reason(recipe)
+		tone = "warn"
+	elif _output_unequippable(recipe):
+		status = "✕ Cannot equip: class · Craftable"
+		tone = "blocked"
+	ShopDetail.set_footer(ctx, [{"label": "Craft Cost", "value": "%d M" % recipe.craft_cost, "tone": "gold"}], status, tone)
 
-	# Equip caveat (the ✕-marked row): the class/race can't equip the output.
-	if _output_unequippable(recipe):
-		vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
 
+func _append_recipe_ingredients(ctx: Dictionary, recipe: RecipeBoardData) -> void:
 	for ingredient in recipe.ingredients:
 		var mat = MaterialRegistry.get_material(ingredient["item_id"])
 		var mat_name: String = mat.name if mat else str(ingredient["item_id"])
 		var owned: int = Inventory.get_item_count(ingredient["item_id"])
 		var needed: int = int(ingredient["quantity"])
-		var color: Color = PszStyle.TEXT if owned >= needed else PszStyle.TEXT_WARNING
-		vbox.add_child(PszStyle.detail_label("%s  %d/%d" % [mat_name, owned, needed], color))
-
-	vbox.add_child(PszStyle.detail_label("Cost: %d M" % recipe.craft_cost, PszStyle.TEXT_MESETA))
-	if not _can_craft_recipe(recipe):
-		vbox.add_child(PszStyle.detail_label(_craft_block_reason(recipe), PszStyle.TEXT_WARNING))
+		var met: bool = owned >= needed
+		ShopDetail.add_kv_row(ctx, mat_name, "%d of %d %s" % [owned, needed, "✓" if met else "✕"],
+			ShopDetail.C_UP_TEXT if met else ShopDetail.C_DOWN_TEXT,
+			ShopDetail.C_ROW_BG if met else ShopDetail.C_ROW_DOWN_BG)
 
 
 func _can_craft_recipe(recipe: RecipeBoardData) -> bool:

@@ -3,6 +3,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/custom-shop.png"
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+const ShopDetail := preload("res://scripts/2d/shops/shop_detail.gd")
 
 # Grind is the only mode — PSZ has no PSO-style weapon identification (no
 # special-attack mechanic to unlock), so the Identify tab was removed.
@@ -151,45 +152,70 @@ func _refresh_display() -> void:
 func _update_grinder_info() -> void:
 	if not is_instance_valid(_detail_panel):
 		return
-	PszStyle.clear_detail_panel(_detail_panel)
+	if _grindable_weapons.is_empty() or _selected_index >= _grindable_weapons.size():
+		_render_empty_grinder_card()
+		return
+	var w: Dictionary = _grindable_weapons[_selected_index]
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(str(w["id"])))
+	if weapon == null:
+		_render_empty_grinder_card()
+		return
+	var cur_grind: int = int(w["grind"])
+	var title_txt := "%s +%d" % [w["name"], cur_grind] if cur_grind > 0 else str(w["name"])
+	var ctx := ShopDetail.open_card(_detail_panel, title_txt, {
+		"icon": InventoryIcons.for_weapon_type(int(weapon.weapon_type)),
+		"rarity": int(w["rarity"]),
+	})
+	ShopDetail.add_sub_meta(ctx, weapon.get_weapon_type_name(), "Max Grind +%d" % int(w["max_grind"]))
+	ShopDetail.add_delta_rows(ctx, _grind_delta_rows(str(w["id"]), weapon, cur_grind))
+	var req_id: String = GRINDER_FOR_RARITY.get(int(w["rarity"]), "monogrinder")
+	var req_held: int = Inventory.get_item_count(req_id)
+	ShopDetail.add_kv_row(ctx, "Requires", "%s (%d held)" % [req_id.capitalize(), req_held],
+		ShopDetail.C_UP_TEXT if req_held > 0 else ShopDetail.C_DOWN_TEXT)
+	ShopDetail.add_kv_row(ctx, "Grinders", "Mono:%d · Di:%d · Tri:%d" % [
+		Inventory.get_item_count("monogrinder"),
+		Inventory.get_item_count("digrinder"),
+		Inventory.get_item_count("trigrinder"),
+	], ShopDetail.C_SLATE_TEXT)
+	var cost := int((200 + cur_grind * 100) * RARITY_COST_MULT.get(w["rarity"], 1.0))
+	var status := "✓ Ready (+%d → +%d)" % [cur_grind, cur_grind + 1]
+	var tone := "ok"
+	if req_held <= 0:
+		status = "Missing %s" % req_id.capitalize()
+		tone = "blocked"
+	elif _get_meseta() < cost:
+		status = "Not enough meseta"
+		tone = "warn"
+	ShopDetail.set_footer(ctx, [{"label": "Cost", "value": "%d M" % cost, "tone": "gold"}], status, tone)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
 
-	# Grinder counts on hand.
-	vbox.add_child(PszStyle.detail_label("Grinders", PszStyle.TITLE_BG))
-	var grinders := ["monogrinder", "digrinder", "trigrinder"]
-	var grinder_labels := ["Monogrinder", "Digrinder", "Trigrinder"]
-	for i in range(grinders.size()):
-		var count: int = Inventory.get_item_count(grinders[i])
-		var color: Color = PszStyle.TEXT if count > 0 else PszStyle.TEXT_MUTED
-		vbox.add_child(PszStyle.detail_label("%s: %d" % [grinder_labels[i], count], color))
+func _grind_delta_rows(inst_id: String, weapon, cur_grind: int) -> Array:
+	var cur_atk: int = weapon.get_attack_at_grind(cur_grind)
+	var next_atk: int = weapon.get_attack_at_grind(cur_grind + 1)
+	var cur_acc: int = weapon.get_accuracy_at_grind(cur_grind)
+	var next_acc: int = weapon.get_accuracy_at_grind(cur_grind + 1)
+	var atk_diff: int = next_atk - cur_atk
+	var acc_diff: int = next_acc - cur_acc
+	var rows := [
+		{"label": "Grind", "value": "+%d → +%d (+1)" % [cur_grind, cur_grind + 1], "positive": true},
+		{"label": "Weapon ATK", "value": "%d → %d (+%d)" % [cur_atk, next_atk, atk_diff], "positive": atk_diff > 0},
+	]
+	var character = CharacterManager.get_active_character()
+	if character != null and str(character.get("equipment", {}).get("weapon", "")) == inst_id:
+		var totals: Dictionary = ShopDetail.calc_effective_stats(character)
+		var tot_atk: int = int(totals["atk"])
+		rows.append({"label": "Total ATK", "value": "%d → %d (+%d)" % [tot_atk, tot_atk + atk_diff, atk_diff], "positive": atk_diff > 0})
+	var acc_sign := "+%d" % acc_diff if acc_diff > 0 else "±0"
+	rows.append({"label": "Weapon ACC", "value": "%d → %d (%s)" % [cur_acc, next_acc, acc_sign], "positive": acc_diff > 0})
+	return rows
 
-	# After-grind stat preview + cost for the selected weapon.
-	if not _grindable_weapons.is_empty() and _selected_index < _grindable_weapons.size():
-		var w: Dictionary = _grindable_weapons[_selected_index]
-		var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(w["id"]))
-		if weapon:
-			var cur_grind: int = w["grind"]
-			var cur_atk: int = weapon.get_attack_at_grind(cur_grind)
-			var cur_acc: int = weapon.get_accuracy_at_grind(cur_grind)
-			var next_atk: int = weapon.get_attack_at_grind(cur_grind + 1)
-			var next_acc: int = weapon.get_accuracy_at_grind(cur_grind + 1)
-			var atk_diff: int = next_atk - cur_atk
-			var acc_diff: int = next_acc - cur_acc
 
-			vbox.add_child(PszStyle.detail_label("After Grind", PszStyle.TITLE_BG))
-			vbox.add_child(PszStyle.detail_label(
-				"ATK: %d → %d (+%d)" % [cur_atk, next_atk, atk_diff],
-				PszStyle.TEXT_SUCCESS if atk_diff > 0 else PszStyle.TEXT))
-			vbox.add_child(PszStyle.detail_label(
-				"ACC: %d → %d (+%d)" % [cur_acc, next_acc, acc_diff],
-				PszStyle.TEXT_SUCCESS if acc_diff > 0 else PszStyle.TEXT))
-
-			var cost := int((200 + cur_grind * 100) * RARITY_COST_MULT.get(w["rarity"], 1.0))
-			vbox.add_child(PszStyle.detail_label("Cost: %d M" % cost, PszStyle.TEXT_MESETA))
-
-	_detail_panel.add_child(vbox)
+func _render_empty_grinder_card() -> void:
+	var ctx := ShopDetail.open_card(_detail_panel, "Weapon Grind")
+	ShopDetail.add_sub_meta(ctx, "Grinders Held", "")
+	for pair in [["Monogrinder", "monogrinder"], ["Digrinder", "digrinder"], ["Trigrinder", "trigrinder"]]:
+		var cnt: int = Inventory.get_item_count(pair[1])
+		ShopDetail.add_kv_row(ctx, pair[0], "×%d" % cnt, ShopDetail.C_VAL_TEXT if cnt > 0 else ShopDetail.C_SLATE_TEXT)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
