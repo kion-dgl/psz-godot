@@ -67,25 +67,18 @@ const CAPSULE_COLORS := {
 	"dr_carlo": Color(0.4, 0.6, 0.9),
 }
 
-## Speech bubble viewport size (matches companion_npc.gd)
-const BUBBLE_WIDTH := 400
-const BUBBLE_HEIGHT := 180
-
-## Bubble height for capsule NPCs (1.4 tall + label space)
-const CAPSULE_BUBBLE_HEIGHT := 2.2
-
 var _is_intro := false
 var _is_briefing := false
 var _principal_npc: CityNPC
 var _briefing_npcs: Array[Node3D] = []
 
-# Speech bubble state
-var _npc_bubbles: Dictionary = {}  # speaker name → {viewport, sprite, label}
+# Speech bubble state (shared SpeechBubble, #557)
+var _speaker_anchors: Dictionary = {}  # speaker name → Node3D
+var _briefing_bubble: SpeechBubble = null
+var _hidden_speaker_label: Label3D = null
 var _briefing_active := false
 var _briefing_pages: Array = []
 var _briefing_index: int = 0
-var _bubble_timer: float = 0.0
-var _active_bubble_sprite: Sprite3D = null
 
 
 func _ready() -> void:
@@ -139,17 +132,6 @@ func _ready() -> void:
 		_start_intro()
 	elif _is_briefing:
 		_setup_briefing()
-
-
-func _process(delta: float) -> void:
-	if not _briefing_active or _bubble_timer <= 0:
-		return
-	_bubble_timer -= delta
-	# Fade out during last 0.5s
-	if _active_bubble_sprite and _bubble_timer < 0.5:
-		_active_bubble_sprite.modulate.a = _bubble_timer / 0.5
-	if _bubble_timer <= 0:
-		_advance_briefing()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -212,21 +194,19 @@ func _setup_briefing() -> void:
 			var capsule_npc := _spawn_capsule_npc(npc_id, npc_name, spawn_pos, spawn_rot)
 			_briefing_npcs.append(capsule_npc)
 
-	# Build speech bubbles for Principal + office NPCs
-	# Principal bubble sits ~1.4m above the feet, regardless of how high
-	# the platform raises them — keep it relative so geometry tweaks don't
-	# desync the bubble.
-	var principal_pos := PRINCIPAL_POSITION["position"]
-	_build_npc_bubble(Vector3(principal_pos.x, principal_pos.y + 1.4, principal_pos.z), "Principal")
+	# Bind live Node3D anchors for Principal + quest-client NPCs (#557;
+	# spec /states/speech-bubbles + /journey/city/office).
+	_speaker_anchors.clear()
+	_speaker_anchors["Principal"] = _principal_npc
 	for i in office_npcs.size():
 		if i < _briefing_npcs.size():
 			var npc_name: String = str(office_npcs[i].get("npc_name", ""))
 			if not npc_name.is_empty():
-				var npc_node: Node3D = _briefing_npcs[i]
-				_build_npc_bubble(
-					Vector3(npc_node.position.x, CAPSULE_BUBBLE_HEIGHT, npc_node.position.z),
-					npc_name
-				)
+				_speaker_anchors[npc_name] = _briefing_npcs[i]
+
+	_briefing_bubble = SpeechBubble.new()
+	add_child(_briefing_bubble)
+	_briefing_bubble.finished.connect(_on_bubble_page_finished)
 
 	# Store briefing dialog pages and start immediately
 	_briefing_pages = quest.get("briefing_dialog", [])
@@ -234,100 +214,6 @@ func _setup_briefing() -> void:
 		# Small delay so the scene finishes setting up visually
 		await get_tree().create_timer(0.3).timeout
 		_play_briefing_dialog()
-
-
-# ── Speech Bubble Construction ──────────────────────────────────────────────
-
-func _build_npc_bubble(world_pos: Vector3, speaker_name: String) -> void:
-	# SubViewport renders 2D speech bubble → Sprite3D displays in 3D
-	# Parented to scene root (not NPC) to avoid scale issues with scaled models
-	var viewport := SubViewport.new()
-	viewport.name = "Bubble_%s" % speaker_name
-	viewport.size = Vector2i(BUBBLE_WIDTH, BUBBLE_HEIGHT)
-	viewport.transparent_bg = true
-	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(viewport)
-
-	# Root control
-	var root := Control.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	viewport.add_child(root)
-
-	var cx: float = BUBBLE_WIDTH * 0.5
-	var top_y: float = BUBBLE_HEIGHT * 0.78
-
-	# Tail border (behind everything)
-	var tail_border := Polygon2D.new()
-	tail_border.polygon = PackedVector2Array([
-		Vector2(cx - 13, top_y - 1),
-		Vector2(cx + 13, top_y - 1),
-		Vector2(cx, top_y + 30),
-	])
-	tail_border.color = Color(0.3, 0.3, 0.3, 0.6)
-	root.add_child(tail_border)
-
-	# White rounded rectangle (the bubble body)
-	var panel := PanelContainer.new()
-	panel.anchor_left = 0.05
-	panel.anchor_right = 0.95
-	panel.anchor_top = 0.0
-	panel.anchor_bottom = 0.78
-	panel.offset_left = 0
-	panel.offset_right = 0
-	panel.offset_top = 4
-	panel.offset_bottom = 0
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color.WHITE
-	style.set_corner_radius_all(14)
-	style.set_content_margin_all(14)
-	style.border_color = Color(0.3, 0.3, 0.3, 0.6)
-	style.set_border_width_all(1)
-	panel.add_theme_stylebox_override("panel", style)
-	root.add_child(panel)
-
-	# Text label inside panel
-	var label := Label.new()
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
-	label.add_theme_font_size_override("font_size", 18)
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_child(label)
-
-	# White tail triangle
-	var tail := Polygon2D.new()
-	tail.polygon = PackedVector2Array([
-		Vector2(cx - 12, top_y),
-		Vector2(cx + 12, top_y),
-		Vector2(cx, top_y + 28),
-	])
-	tail.color = Color.WHITE
-	root.add_child(tail)
-
-	# Sprite3D billboard at fixed world position (avoids NPC scale issues)
-	var sprite := Sprite3D.new()
-	sprite.name = "BubbleSprite_%s" % speaker_name
-	sprite.pixel_size = 0.006
-	sprite.position = world_pos
-	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	sprite.no_depth_test = true
-	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	sprite.render_priority = 10
-	sprite.visible = false
-	add_child(sprite)
-
-	# Assign viewport texture after one frame
-	_assign_bubble_texture.call_deferred(viewport, sprite)
-
-	_npc_bubbles[speaker_name] = {"viewport": viewport, "sprite": sprite, "label": label}
-
-
-func _assign_bubble_texture(viewport: SubViewport, sprite: Sprite3D) -> void:
-	if viewport and sprite:
-		sprite.texture = viewport.get_texture()
 
 
 # ── Briefing Playback ───────────────────────────────────────────────────────
@@ -346,45 +232,41 @@ func _play_bubble_page() -> void:
 		_on_briefing_complete()
 		return
 
-	# Hide previous bubble
-	if _active_bubble_sprite:
-		_active_bubble_sprite.visible = false
+	_restore_speaker_label()
 
 	var page: Dictionary = _briefing_pages[_briefing_index]
 	var speaker: String = str(page.get("speaker", ""))
 	var text: String = str(page.get("text", ""))
+	var duration := maxf(3.0, text.length() / 20.0)
+	var anchor_node: Node3D = _speaker_anchors.get(speaker, _principal_npc) as Node3D
 
-	# Show speech bubble for this speaker
-	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
-	if _npc_bubbles.has(speaker):
-		var bubble: Dictionary = _npc_bubbles[speaker]
-		var label: Label = bubble["label"]
-		var sprite: Sprite3D = bubble["sprite"]
-		label.text = text
-		sprite.visible = true
-		sprite.modulate.a = 1.0
-		_active_bubble_sprite = sprite
+	if anchor_node != null:
+		var name_lbl := anchor_node.get_node_or_null("NameLabel") as Label3D
+		if name_lbl != null and name_lbl.visible:
+			name_lbl.visible = false
+			_hidden_speaker_label = name_lbl
+		_briefing_bubble.present(anchor_node, text, duration, speaker)
 	else:
-		_active_bubble_sprite = null
+		SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
 
-	# Auto-advance duration based on text length
-	_bubble_timer = maxf(3.0, text.length() / 20.0)
+
+func _on_bubble_page_finished() -> void:
+	if _briefing_active:
+		_advance_briefing()
 
 
 func _advance_briefing() -> void:
 	if not _briefing_active:
 		return
 	_briefing_index += 1
-	_bubble_timer = 0.0
 	_play_bubble_page()
 
 
 func _on_briefing_complete() -> void:
 	_briefing_active = false
-	_bubble_timer = 0.0
-	if _active_bubble_sprite:
-		_active_bubble_sprite.visible = false
-		_active_bubble_sprite = null
+	_restore_speaker_label()
+	if _briefing_bubble:
+		_briefing_bubble.dismiss()
 
 	# Mark briefing as shown so it doesn't replay on re-entry
 	var aq := SessionManager.get_accepted_quest()
@@ -392,6 +274,12 @@ func _on_briefing_complete() -> void:
 		aq["briefing_shown"] = true
 
 	player.transition_to(player.PlayerState.IDLE)
+
+
+func _restore_speaker_label() -> void:
+	if _hidden_speaker_label != null and is_instance_valid(_hidden_speaker_label):
+		_hidden_speaker_label.visible = true
+	_hidden_speaker_label = null
 
 
 func _find_field_hud() -> Node:
@@ -425,6 +313,7 @@ func _spawn_capsule_npc(npc_id: String, npc_name: String, pos: Vector3, rot: flo
 
 	# Name label
 	var label := Label3D.new()
+	label.name = "NameLabel"
 	label.text = npc_name
 	label.position.y = 1.8
 	label.font_size = 32

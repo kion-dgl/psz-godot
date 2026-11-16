@@ -64,19 +64,12 @@ const WEAPON_BONE_NAME: String = "070_RArm02"
 const WEAPON_HOLD_POS: Vector3 = Vector3(0.31, 0, 0)
 const WEAPON_HOLD_ROT: Vector3 = Vector3(0, 90, 0)
 
-## Viewport size for speech bubble
-const BUBBLE_WIDTH := 400
-const BUBBLE_HEIGHT := 180
-
 @export var companion_id: String = ""
 
-var _bubble_viewport: SubViewport
-var _bubble_sprite: Sprite3D
-var _bubble_text: Label
+var _speech_bubble: SpeechBubble
 var _name_label: Label3D
 var _player_ref: Node3D = null
 var _speaking: bool = false
-var _speech_timer: float = 0.0
 var _anim_player: AnimationPlayer
 var _current_anim: String = ""
 var _is_female: bool = false
@@ -391,92 +384,9 @@ func _build_name_label() -> void:
 
 
 func _build_speech_bubble() -> void:
-	# SubViewport renders 2D speech bubble → Sprite3D displays in 3D
-	_bubble_viewport = SubViewport.new()
-	_bubble_viewport.name = "BubbleViewport"
-	_bubble_viewport.size = Vector2i(BUBBLE_WIDTH, BUBBLE_HEIGHT)
-	_bubble_viewport.transparent_bg = true
-	_bubble_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(_bubble_viewport)
-
-	# Root control
-	var root := Control.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_bubble_viewport.add_child(root)
-
-	var cx: float = BUBBLE_WIDTH * 0.5
-	var top_y: float = BUBBLE_HEIGHT * 0.78  # Panel bottom edge
-
-	# Tail border (behind everything — added first so it draws first)
-	var tail_border := Polygon2D.new()
-	tail_border.polygon = PackedVector2Array([
-		Vector2(cx - 13, top_y - 1),
-		Vector2(cx + 13, top_y - 1),
-		Vector2(cx, top_y + 30),
-	])
-	tail_border.color = Color(0.3, 0.3, 0.3, 0.6)
-	root.add_child(tail_border)
-
-	# White rounded rectangle (the bubble body)
-	var panel := PanelContainer.new()
-	panel.anchor_left = 0.05
-	panel.anchor_right = 0.95
-	panel.anchor_top = 0.0
-	panel.anchor_bottom = 0.78
-	panel.offset_left = 0
-	panel.offset_right = 0
-	panel.offset_top = 4
-	panel.offset_bottom = 0
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color.WHITE
-	style.set_corner_radius_all(14)
-	style.set_content_margin_all(14)
-	style.border_color = Color(0.3, 0.3, 0.3, 0.6)
-	style.set_border_width_all(1)
-	panel.add_theme_stylebox_override("panel", style)
-	root.add_child(panel)
-
-	# Text label inside panel
-	_bubble_text = Label.new()
-	_bubble_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_bubble_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_bubble_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_bubble_text.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
-	_bubble_text.add_theme_font_size_override("font_size", 18)
-	_bubble_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_bubble_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_child(_bubble_text)
-
-	# White tail triangle — pointing down from center-bottom of bubble
-	var tail := Polygon2D.new()
-	tail.polygon = PackedVector2Array([
-		Vector2(cx - 12, top_y),
-		Vector2(cx + 12, top_y),
-		Vector2(cx, top_y + 28),
-	])
-	tail.color = Color.WHITE
-	root.add_child(tail)
-
-	# Sprite3D billboard above the NPC
-	_bubble_sprite = Sprite3D.new()
-	_bubble_sprite.name = "BubbleSprite"
-	_bubble_sprite.pixel_size = 0.006
-	_bubble_sprite.position.y = 2.8
-	_bubble_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_bubble_sprite.no_depth_test = true
-	_bubble_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	_bubble_sprite.render_priority = 10
-	_bubble_sprite.visible = false
-	add_child(_bubble_sprite)
-
-	# Assign viewport texture after one frame
-	call_deferred("_assign_bubble_texture")
-
-
-func _assign_bubble_texture() -> void:
-	if _bubble_viewport and _bubble_sprite:
-		_bubble_sprite.texture = _bubble_viewport.get_texture()
+	_speech_bubble = SpeechBubble.new()
+	_speech_bubble.finished.connect(_dismiss_speech)
+	add_child(_speech_bubble)
 
 
 func _physics_process(delta: float) -> void:
@@ -484,7 +394,6 @@ func _physics_process(delta: float) -> void:
 		support_ailments[status] -= delta
 		if support_ailments[status] <= 0: support_ailments.erase(status)
 	if current_hp <= 0: return
-	_process_speech_timer(delta)
 	if not _ensure_player_ref():
 		return
 	_anim_hold_timer = maxf(_anim_hold_timer - delta, 0.0)
@@ -557,18 +466,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 		get_viewport().set_input_as_handled()
-		_dismiss_speech()
-
-
-func _process_speech_timer(delta: float) -> void:
-	if not _speaking or _speech_timer <= 0:
-		return
-	_speech_timer -= delta
-	# Fade out during last 0.5s
-	if _speech_timer < 0.5:
-		_bubble_sprite.modulate.a = _speech_timer / 0.5
-	if _speech_timer <= 0:
-		_dismiss_speech()
+		if _speech_bubble:
+			_speech_bubble.dismiss()
+		else:
+			_dismiss_speech()
 
 
 func dismiss() -> void:
@@ -918,23 +819,22 @@ func _combat_tripwire(delta: float) -> void:
 
 
 func _dismiss_speech() -> void:
-	_bubble_sprite.visible = false
-	_name_label.visible = true
+	if _name_label:
+		_name_label.visible = true
 	_speaking = false
 	speech_finished.emit()
 
 
 ## Show a PSO-style speech bubble above the companion's head.
 ## Auto-dismisses after duration seconds.
-func show_speech(text: String, _speaker: String = "", duration: float = 4.0) -> void:
+func show_speech(text: String, speaker: String = "", duration: float = 4.0) -> void:
 	print("[Companion] show_speech: text='%s' duration=%.1f" % [text.left(50), duration])
-	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
-	_bubble_text.text = text
-	_bubble_sprite.visible = true
-	_bubble_sprite.modulate.a = 1.0
+	var speaker_label := speaker if not speaker.is_empty() else companion_id.capitalize()
+	if _speech_bubble:
+		_speech_bubble.present(self, text, duration, speaker_label)
 	_speaking = true
-	_speech_timer = duration
-	_name_label.visible = false
+	if _name_label:
+		_name_label.visible = false
 	speech_started.emit()
 
 
