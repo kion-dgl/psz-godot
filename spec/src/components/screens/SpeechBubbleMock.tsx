@@ -145,7 +145,7 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
         speaker: 'Kai',
         text: 'Careful, needle traps cycle every few seconds in this hall.',
         nx: 0.88,
-        ny: 0.88,
+        ny: 0.81,
       },
     ],
   },
@@ -507,6 +507,28 @@ export default function SpeechBubbleMock() {
           onPointerUp={() => setDraggingId(null)}
           onPointerLeave={() => setDraggingId(null)}
         >
+          {/* Layer 0 — 3D Scene: NPC silhouettes (behind SpeechBubble layer 40 and HUD layer 200) */}
+          {speakers.map((sp) => {
+            if (sp.behindCamera) return null;
+            const ax = sp.nx * vp.w;
+            const ay = sp.ny * vp.h;
+            return (
+              <g key={`npc-${sp.id}`} opacity={0.9} style={{ pointerEvents: 'none' }}>
+                <rect
+                  x={ax - 22}
+                  y={ay + 12}
+                  width={44}
+                  height={108}
+                  rx={20}
+                  fill="#2b4c70"
+                  stroke="#dcebff"
+                  strokeWidth={2}
+                />
+                <circle cx={ax} cy={ay + 30} r={15} fill="#5082b4" />
+              </g>
+            );
+          })}
+
           {/* Safe-frame guide */}
           <rect
             x={SAFE_MARGIN_X}
@@ -517,70 +539,10 @@ export default function SpeechBubbleMock() {
             stroke="rgba(255,255,255,0.28)"
             strokeDasharray="6 6"
             strokeWidth={1.5}
+            style={{ pointerEvents: 'none' }}
           />
 
-          {/* HUD exclusion zones */}
-          {hudZones.map((z) => (
-            <g key={z.label}>
-              <rect
-                x={z.rect.x + 8}
-                y={z.rect.y + 8}
-                width={z.rect.w - 16}
-                height={z.rect.h - 16}
-                rx={8}
-                fill="rgba(16, 28, 48, 0.62)"
-                stroke="rgba(120, 175, 230, 0.65)"
-                strokeWidth={2}
-              />
-              <text
-                x={z.rect.x + z.rect.w / 2}
-                y={z.rect.y + z.rect.h / 2 + 4}
-                textAnchor="middle"
-                fill="#cde2f8"
-                fontSize={13}
-                fontFamily="'JetBrains Mono', monospace"
-              >
-                {z.label}
-              </text>
-            </g>
-          ))}
-
-          {/* NPC silhouettes + head-anchor drag handles */}
-          {speakers.map((sp) => {
-            const ax = sp.nx * vp.w;
-            const ay = sp.ny * vp.h;
-            return (
-              <g key={`npc-${sp.id}`}>
-                {!sp.behindCamera && (
-                  <g opacity={0.82}>
-                    <rect
-                      x={ax - 22}
-                      y={ay + 12}
-                      width={44}
-                      height={108}
-                      rx={20}
-                      fill="#2b4c70"
-                      stroke="#dcebff"
-                      strokeWidth={2}
-                    />
-                    <circle cx={ax} cy={ay + 30} r={15} fill="#5082b4" />
-                  </g>
-                )}
-                <g
-                  style={{ cursor: 'grab' }}
-                  onPointerDown={(e) => {
-                    e.currentTarget.setPointerCapture(e.pointerId);
-                    setDraggingId(sp.id);
-                  }}
-                >
-                  <circle cx={ax} cy={ay} r={11} fill="#f0a020" stroke="#101824" strokeWidth={2.5} />
-                  <circle cx={ax} cy={ay} r={3.5} fill="#101824" />
-                </g>
-              </g>
-            );
-          })}
-
-          {/* Speech bubbles */}
+          {/* Layer 40 — SpeechBubble CanvasLayer (above 3D scene, below HUD layer 200) */}
           {speakers.map((sp) => {
             const item = placements.get(sp.id);
             if (!item) return null;
@@ -625,6 +587,66 @@ export default function SpeechBubbleMock() {
                     {line}
                   </text>
                 ))}
+              </g>
+            );
+          })}
+
+          {/* Layer 200 — FieldHud / HudStats CanvasLayer (in front of 3D scene & speech bubbles) */}
+          {hudZones.map((z) => (
+            <g key={z.label} style={{ pointerEvents: 'none' }}>
+              <rect
+                x={z.rect.x + 8}
+                y={z.rect.y + 8}
+                width={z.rect.w - 16}
+                height={z.rect.h - 16}
+                rx={8}
+                fill="#0e182a"
+                stroke="rgba(120, 175, 230, 0.9)"
+                strokeWidth={2}
+              />
+              <text
+                x={z.rect.x + z.rect.w / 2}
+                y={z.rect.y + z.rect.h / 2 + 4}
+                textAnchor="middle"
+                fill="#cde2f8"
+                fontSize={13}
+                fontFamily="'JetBrains Mono', monospace"
+              >
+                {z.label}
+              </text>
+            </g>
+          ))}
+
+          {/* Interactive gizmo: draggable head-anchor handle (dashed ghost when behind HUD) */}
+          {speakers.map((sp) => {
+            const ax = sp.nx * vp.w;
+            const ay = sp.ny * vp.h;
+            const occludedByHud = hudZones.some(
+              (z) =>
+                ax >= z.rect.x + 8 &&
+                ax <= z.rect.x + z.rect.w - 8 &&
+                ay >= z.rect.y + 8 &&
+                ay <= z.rect.y + z.rect.h - 8,
+            );
+            return (
+              <g
+                key={`pin-${sp.id}`}
+                style={{ cursor: 'grab' }}
+                onPointerDown={(e) => {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  setDraggingId(sp.id);
+                }}
+              >
+                <circle
+                  cx={ax}
+                  cy={ay}
+                  r={11}
+                  fill={occludedByHud ? 'rgba(240, 160, 32, 0.18)' : '#f0a020'}
+                  stroke={occludedByHud ? 'rgba(240, 160, 32, 0.75)' : '#101824'}
+                  strokeDasharray={occludedByHud ? '3 3' : undefined}
+                  strokeWidth={2.5}
+                />
+                {!occludedByHud && <circle cx={ax} cy={ay} r={3.5} fill="#101824" />}
               </g>
             );
           })}
