@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 
 type AspectId = '16:9' | '4:3' | '21:9';
 type BackdropId = 'forest' | 'pioneer' | 'snowfield' | 'ruins' | 'office';
-type BubbleTone = 'normal' | 'shout' | 'thought';
+type ShapeStyleId = 'squared-slant' | 'chamfer-slant' | 'sharp-box' | 'classic-pso';
 type PresetId =
   | 'pso-field'
   | 'pso-angled'
@@ -10,8 +10,7 @@ type PresetId =
   | 'offscreen-dir'
   | 'behind-camera'
   | 'palette-corner'
-  | 'two-npcs'
-  | 'tones';
+  | 'two-npcs';
 
 interface Rect {
   x: number;
@@ -29,10 +28,18 @@ interface SpeakerInput {
   id: string;
   speaker: string;
   text: string;
-  tone: BubbleTone;
   nx: number;
   ny: number;
   behindCamera?: boolean;
+}
+
+interface ShapeTuning {
+  cornerRadius: number;
+  slantRatio: number;
+  maxWidth: number;
+  padX: number;
+  padY: number;
+  chamfer: boolean;
 }
 
 interface PlacementResult {
@@ -72,6 +79,29 @@ export function colorForSpeaker(speaker: string): string {
   return found ? found.fill : '#FFFFFF';
 }
 
+const SHAPE_PRESETS: Record<ShapeStyleId, { label: string; desc: string; tuning: ShapeTuning }> = {
+  'squared-slant': {
+    label: 'Squared PSO Slant (Default)',
+    desc: 'Tight 5px corners, subtle 0.16 forward slant, boxier 316px wrap',
+    tuning: { cornerRadius: 5, slantRatio: 0.16, maxWidth: 316, padX: 22, padY: 16, chamfer: false },
+  },
+  'chamfer-slant': {
+    label: 'Chamfered Hunter Tag',
+    desc: 'Crisp 8px angled corner cuts + 0.14 forward slant',
+    tuning: { cornerRadius: 8, slantRatio: 0.14, maxWidth: 316, padX: 22, padY: 16, chamfer: true },
+  },
+  'sharp-box': {
+    label: 'Crisp Square Block',
+    desc: 'Nearly upright (0.06 slant), 4px corners, compact comic block',
+    tuning: { cornerRadius: 4, slantRatio: 0.06, maxWidth: 304, padX: 20, padY: 16, chamfer: false },
+  },
+  'classic-pso': {
+    label: 'Classic Rounded PSO',
+    desc: 'Wider 18px rounded pill corners + 0.26 PSO slant',
+    tuning: { cornerRadius: 18, slantRatio: 0.26, maxWidth: 372, padX: 26, padY: 14, chamfer: false },
+  },
+};
+
 const ASPECT_SIZES: Record<AspectId, { w: number; h: number; label: string }> = {
   '16:9': { w: 1280, h: 720, label: '16:9 (1280×720)' },
   '4:3': { w: 1280, h: 960, label: '4:3 (1280×960)' },
@@ -81,13 +111,8 @@ const ASPECT_SIZES: Record<AspectId, { w: number; h: number; label: string }> = 
 const SAFE_MARGIN_X = 28;
 const SAFE_MARGIN_TOP = 22;
 const SAFE_MARGIN_BOTTOM = 30;
-const MIN_WIDTH = 176;
-const MAX_WIDTH = 392;
-const PAD_X = 26;
-const PAD_Y = 14;
-const CORNER_RADIUS = 18;
-const SLANT_RATIO = 0.26; // PSO forward slant `/`
-const FLOAT_GAP = 86; // PSO comfortable vertical gap so long tail connects to speaker
+const MIN_WIDTH = 164;
+const FLOAT_GAP = 86;
 const TAIL_BASE_HALF_W = 11;
 const MAX_OFFSCREEN_TAIL = 56;
 const BACKDROP_DX = 6;
@@ -131,7 +156,6 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
       {
         id: 'p1',
         speaker: 'Sarisa',
-        tone: 'normal',
         text: 'Are you mad because I let the Mags run away?',
         nx: 0.49,
         ny: 0.58,
@@ -145,7 +169,6 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
       {
         id: 'p1',
         speaker: 'Kai',
-        tone: 'normal',
         text: "A Mag left me when I wasn't paying attention.",
         nx: 0.61,
         ny: 0.56,
@@ -159,10 +182,9 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
       {
         id: 'p1',
         speaker: 'Ogi',
-        tone: 'normal',
         text: 'He asked me to collect some for him. I accepted it for the Meseta.',
         nx: 0.44,
-        ny: 0.44,
+        ny: 0.46,
       },
     ],
   },
@@ -173,8 +195,7 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
       {
         id: 'p1',
         speaker: 'Kai',
-        tone: 'shout',
-        text: 'Gate switch is over on the east ridge — this way!',
+        text: 'Gate switch is over on the east ridge — follow me!',
         nx: 1.07,
         ny: 0.52,
       },
@@ -187,7 +208,6 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
       {
         id: 'p1',
         speaker: 'Sarisa',
-        tone: 'normal',
         text: 'Wait up! I found the second keycard back by the fountain!',
         nx: 0.36,
         ny: 0.96,
@@ -202,7 +222,6 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
       {
         id: 'p1',
         speaker: 'Ogi',
-        tone: 'normal',
         text: 'Careful, needle traps cycle every few seconds in this hall.',
         nx: 0.78,
         ny: 0.82,
@@ -210,54 +229,22 @@ const PRESETS: Record<PresetId, { label: string; backdrop: BackdropId; speakers:
     ],
   },
   'two-npcs': {
-    label: 'Multi-character colors',
+    label: 'Multi-character exchange',
     backdrop: 'office',
     speakers: [
       {
         id: 'p1',
         speaker: 'Principal',
-        tone: 'normal',
         text: 'Find that android in Rioh Snowfield and bring him home safely.',
-        nx: 0.52,
-        ny: 0.44,
+        nx: 0.54,
+        ny: 0.45,
       },
       {
         id: 'p2',
         speaker: 'Kai',
-        tone: 'normal',
-        text: "Leave the heavy lifting to us. Ready when you are, partner.",
-        nx: 0.38,
-        ny: 0.56,
-      },
-    ],
-  },
-  tones: {
-    label: '3 Tone shapes (Normal / Shout / Thought)',
-    backdrop: 'pioneer',
-    speakers: [
-      {
-        id: 't1',
-        speaker: 'Kai',
-        tone: 'shout',
-        text: 'Ambush! Hostiles dropping from the ceiling!',
-        nx: 0.25,
-        ny: 0.56,
-      },
-      {
-        id: 't2',
-        speaker: 'Ogi',
-        tone: 'normal',
-        text: 'Shields holding. Prioritize the leader.',
-        nx: 0.53,
-        ny: 0.58,
-      },
-      {
-        id: 't3',
-        speaker: 'Sarisa',
-        tone: 'thought',
-        text: '...That photon signature felt familiar somehow.',
-        nx: 0.81,
-        ny: 0.56,
+        text: 'Leave the heavy lifting to us. Ready when you are, partner.',
+        nx: 0.36,
+        ny: 0.57,
       },
     ],
   },
@@ -281,10 +268,10 @@ function rectsIntersect(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-function measureBubble(text: string): { w: number; h: number; lines: string[] } {
-  const charW = 9.2; // 15px bold JetBrains Mono advance
-  const maxInnerW = MAX_WIDTH - PAD_X * 2;
-  const maxCharsPerLine = Math.max(12, Math.floor(maxInnerW / charW));
+function measureBubble(text: string, tuning: ShapeTuning): { w: number; h: number; lines: string[] } {
+  const charW = 9.2;
+  const maxInnerW = tuning.maxWidth - tuning.padX * 2;
+  const maxCharsPerLine = Math.max(10, Math.floor(maxInnerW / charW));
   const words = text.trim().split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = '';
@@ -301,8 +288,8 @@ function measureBubble(text: string): { w: number; h: number; lines: string[] } 
   if (lines.length === 0) lines.push('');
 
   const longestLinePx = Math.max(...lines.map((l) => l.length * charW));
-  const w = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.ceil(longestLinePx + PAD_X * 2)));
-  const h = PAD_Y * 2 + lines.length * 22;
+  const w = Math.max(MIN_WIDTH, Math.min(tuning.maxWidth, Math.ceil(longestLinePx + tuning.padX * 2)));
+  const h = tuning.padY * 2 + lines.length * 22;
   return { w, h, lines };
 }
 
@@ -318,13 +305,14 @@ function computePlacement(
   vw: number,
   vh: number,
   size: { w: number; h: number },
+  tuning: ShapeTuning,
   rawAnchor: Pt,
   behindCamera: boolean,
   hudRects: Rect[],
   occupiedRects: Rect[],
 ): PlacementResult {
   const { w, h } = size;
-  const halfSlant = (h * SLANT_RATIO) * 0.5;
+  const halfSlant = (h * tuning.slantRatio) * 0.5;
   const leftBound = SAFE_MARGIN_X + halfSlant;
   const rightBound = Math.max(leftBound, vw - SAFE_MARGIN_X - w - halfSlant - BACKDROP_DX);
   const topBound = SAFE_MARGIN_TOP;
@@ -344,11 +332,8 @@ function computePlacement(
       }
     : rawAnchor;
 
-  // PSO bias: sit comfortably above the speaker (sometimes slightly offset so angled tails read cleanly)
   const idealX = anchorPx.x - w * 0.54;
-  const idealY = behindCamera
-    ? vh - SAFE_MARGIN_BOTTOM - h - 44
-    : anchorPx.y - h - FLOAT_GAP;
+  const idealY = behindCamera ? vh - SAFE_MARGIN_BOTTOM - h - 44 : anchorPx.y - h - FLOAT_GAP;
 
   let bx = Math.max(leftBound, Math.min(rightBound, idealX));
   let by = Math.max(topBound, Math.min(bottomBound, idealY));
@@ -395,14 +380,12 @@ function computePlacement(
     nudgedOverlap = true;
   }
 
-  // Compute tail base on bottom (or side-bottom) of slanted card and tip pointing back to speaker
-  const bottomLeftX = bx - halfSlant + CORNER_RADIUS + TAIL_BASE_HALF_W + 4;
-  const bottomRightX = bx + w - halfSlant - CORNER_RADIUS - TAIL_BASE_HALF_W - 4;
+  const inset = Math.max(6, tuning.cornerRadius) + TAIL_BASE_HALF_W + 4;
+  const bottomLeftX = bx - halfSlant + inset;
+  const bottomRightX = Math.max(bottomLeftX, bx + w - halfSlant - inset);
   const baseX = Math.max(bottomLeftX, Math.min(bottomRightX, anchorPx.x * 0.35 + (bx + w * 0.5 - halfSlant) * 0.65));
   const tailBase: Pt = { x: baseX, y: by + h };
 
-  // Target tip: if speaker is on-screen below the box, stretch all the way to (anchorPx.x, anchorPx.y - 8) like PSO!
-  // If speaker is off-screen or behind camera, point a crisp directional arrow toward where they are coming from.
   let rawTip: Pt = { x: anchorPx.x, y: Math.max(by + h + 16, anchorPx.y - 8) };
   if (offscreen) {
     rawTip = clampPointToBoundary(tailBase, anchorPx, MAX_OFFSCREEN_TAIL);
@@ -428,20 +411,19 @@ function computePlacement(
   };
 }
 
-/** Build a rounded polygon SVG path from ordered corner vertices, inserting an optional bottom tail. */
-function buildSlantedNormalPath(box: Rect, tailBase: Pt, tailTip: Pt, includeTail: boolean): string {
+/** Build the PSO slanted speech bubble path (rounded or crisp-chamfered corners + stretching tail). */
+function buildBubblePath(box: Rect, tuning: ShapeTuning, tailBase: Pt, tailTip: Pt): string {
   const { x, y, w, h } = box;
-  const s = (h * SLANT_RATIO) * 0.5;
-  // 4 slanted parallelogram corners (clockwise: TL, TR, BR, BL)
+  const s = (h * tuning.slantRatio) * 0.5;
   const tl: Pt = { x: x + s, y };
   const tr: Pt = { x: x + w + s, y };
   const br: Pt = { x: x + w - s, y: y + h };
   const bl: Pt = { x: x - s, y: y + h };
-  const r = Math.min(CORNER_RADIUS, h * 0.42, w * 0.22);
+  const r = Math.min(tuning.cornerRadius, h * 0.42, w * 0.22);
 
   const stepAlong = (a: Pt, b: Pt, dist: number): Pt => {
-    const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-    return { x: a.x + ((b.x - a.x) / len) * dist, y: a.y + ((b.y - a.y) / len) * dist };
+    const segLen = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    return { x: a.x + ((b.x - a.x) / segLen) * dist, y: a.y + ((b.y - a.y) / segLen) * dist };
   };
 
   const tlIn = stepAlong(tl, bl, r);
@@ -453,147 +435,40 @@ function buildSlantedNormalPath(box: Rect, tailBase: Pt, tailTip: Pt, includeTai
   const blIn = stepAlong(bl, br, r);
   const blOut = stepAlong(bl, tl, r);
 
-  const minTx = bl.x + r + TAIL_BASE_HALF_W + 2;
-  const maxTx = br.x - r - TAIL_BASE_HALF_W - 2;
+  const minTx = bl.x + r + TAIL_BASE_HALF_W + 3;
+  const maxTx = Math.max(minTx, br.x - r - TAIL_BASE_HALF_W - 3);
   const tx = Math.max(minTx, Math.min(maxTx, tailBase.x));
 
-  const parts = [
+  const corner = (ctrl: Pt, outPt: Pt) =>
+    r <= 0.5
+      ? `L ${ctrl.x.toFixed(1)} ${ctrl.y.toFixed(1)}`
+      : tuning.chamfer
+        ? `L ${outPt.x.toFixed(1)} ${outPt.y.toFixed(1)}`
+        : `Q ${ctrl.x.toFixed(1)} ${ctrl.y.toFixed(1)} ${outPt.x.toFixed(1)} ${outPt.y.toFixed(1)}`;
+
+  return [
     `M ${tlOut.x.toFixed(1)} ${tlOut.y.toFixed(1)}`,
     `L ${trIn.x.toFixed(1)} ${trIn.y.toFixed(1)}`,
-    `Q ${tr.x.toFixed(1)} ${tr.y.toFixed(1)} ${trOut.x.toFixed(1)} ${trOut.y.toFixed(1)}`,
+    corner(tr, trOut),
     `L ${brIn.x.toFixed(1)} ${brIn.y.toFixed(1)}`,
-    `Q ${br.x.toFixed(1)} ${br.y.toFixed(1)} ${brOut.x.toFixed(1)} ${brOut.y.toFixed(1)}`,
-  ];
-
-  if (includeTail) {
-    parts.push(
-      `L ${(tx + TAIL_BASE_HALF_W).toFixed(1)} ${(y + h).toFixed(1)}`,
-      `L ${tailTip.x.toFixed(1)} ${tailTip.y.toFixed(1)}`,
-      `L ${(tx - TAIL_BASE_HALF_W).toFixed(1)} ${(y + h).toFixed(1)}`,
-    );
-  }
-
-  parts.push(
+    corner(br, brOut),
+    `L ${(tx + TAIL_BASE_HALF_W).toFixed(1)} ${(y + h).toFixed(1)}`,
+    `L ${tailTip.x.toFixed(1)} ${tailTip.y.toFixed(1)}`,
+    `L ${(tx - TAIL_BASE_HALF_W).toFixed(1)} ${(y + h).toFixed(1)}`,
     `L ${blIn.x.toFixed(1)} ${blIn.y.toFixed(1)}`,
-    `Q ${bl.x.toFixed(1)} ${bl.y.toFixed(1)} ${blOut.x.toFixed(1)} ${blOut.y.toFixed(1)}`,
+    corner(bl, blOut),
     `L ${tlIn.x.toFixed(1)} ${tlIn.y.toFixed(1)}`,
-    `Q ${tl.x.toFixed(1)} ${tl.y.toFixed(1)} ${tlOut.x.toFixed(1)} ${tlOut.y.toFixed(1)}`,
+    corner(tl, tlOut),
     'Z',
-  );
-  return parts.join(' ');
-}
-
-/** Sample perimeter points along a rounded rectangle for uniform normal-extruded burst/cloud shapes. */
-function sampleRoundedPerimeter(box: Rect, count: number): { pt: Pt; normal: Pt }[] {
-  const { x, y, w, h } = box;
-  const r = Math.min(22, h * 0.45, w * 0.25);
-  const straightW = Math.max(0, w - 2 * r);
-  const straightH = Math.max(0, h - 2 * r);
-  const arcLen = 0.5 * Math.PI * r;
-  const totalLen = 2 * straightW + 2 * straightH + 4 * arcLen;
-
-  const atDist = (s: number): { pt: Pt; normal: Pt } => {
-    let d = ((s % totalLen) + totalLen) % totalLen;
-    // Top edge: (x+r, y) -> (x+w-r, y), normal (0, -1)
-    if (d < straightW) return { pt: { x: x + r + d, y }, normal: { x: 0, y: -1 } };
-    d -= straightW;
-    // Top-right arc: center (x+w-r, y+r), angle -PI/2 -> 0
-    if (d < arcLen) {
-      const a = -Math.PI * 0.5 + (d / arcLen) * (Math.PI * 0.5);
-      return { pt: { x: x + w - r + Math.cos(a) * r, y: y + r + Math.sin(a) * r }, normal: { x: Math.cos(a), y: Math.sin(a) } };
-    }
-    d -= arcLen;
-    // Right edge: (x+w, y+r) -> (x+w, y+h-r), normal (1, 0)
-    if (d < straightH) return { pt: { x: x + w, y: y + r + d }, normal: { x: 1, y: 0 } };
-    d -= straightH;
-    // Bottom-right arc: center (x+w-r, y+h-r), angle 0 -> PI/2
-    if (d < arcLen) {
-      const a = (d / arcLen) * (Math.PI * 0.5);
-      return { pt: { x: x + w - r + Math.cos(a) * r, y: y + h - r + Math.sin(a) * r }, normal: { x: Math.cos(a), y: Math.sin(a) } };
-    }
-    d -= arcLen;
-    // Bottom edge: (x+w-r, y+h) -> (x+r, y+h), normal (0, 1)
-    if (d < straightW) return { pt: { x: x + w - r - d, y: y + h }, normal: { x: 0, y: 1 } };
-    d -= straightW;
-    // Bottom-left arc: center (x+r, y+h-r), angle PI/2 -> PI
-    if (d < arcLen) {
-      const a = Math.PI * 0.5 + (d / arcLen) * (Math.PI * 0.5);
-      return { pt: { x: x + r + Math.cos(a) * r, y: y + h - r + Math.sin(a) * r }, normal: { x: Math.cos(a), y: Math.sin(a) } };
-    }
-    d -= arcLen;
-    // Left edge: (x, y+h-r) -> (x, y+r), normal (-1, 0)
-    if (d < straightH) return { pt: { x, y: y + h - r - d }, normal: { x: -1, y: 0 } };
-    d -= straightH;
-    // Top-left arc: center (x+r, y+r), angle PI -> 1.5*PI
-    const a = Math.PI + (d / arcLen) * (Math.PI * 0.5);
-    return { pt: { x: x + r + Math.cos(a) * r, y: y + r + Math.sin(a) * r }, normal: { x: Math.cos(a), y: Math.sin(a) } };
-  };
-
-  const samples: { pt: Pt; normal: Pt }[] = [];
-  for (let i = 0; i < count; i++) {
-    const raw = atDist((i * totalLen) / count);
-    // Apply subtle PSO forward slant
-    const slantShift = ((box.y + box.h * 0.5 - raw.pt.y) / box.h) * (box.h * SLANT_RATIO);
-    samples.push({ pt: { x: raw.pt.x + slantShift, y: raw.pt.y }, normal: raw.normal });
-  }
-  return samples;
-}
-
-/** PSO spiky starburst polygon for `shout` tone, with uniform normal-extruded teeth + pointer tail. */
-function buildShoutBurstPath(box: Rect, _tailBase: Pt, tailTip: Pt): string {
-  const spikes = 22;
-  const samples = sampleRoundedPerimeter(box, spikes * 2);
-  let bestTailIdx = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < samples.length; i += 2) {
-    const d = Math.hypot(samples[i].pt.x - tailTip.x, samples[i].pt.y - tailTip.y);
-    if (d < bestDist) {
-      bestDist = d;
-      bestTailIdx = i;
-    }
-  }
-  const pts: Pt[] = samples.map((s, idx) => {
-    if (idx === bestTailIdx) return tailTip;
-    const extrude = idx % 2 === 0 ? 12 : -2;
-    return { x: s.pt.x + s.normal.x * extrude, y: s.pt.y + s.normal.y * extrude };
-  });
-  return (
-    pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ') +
-    ' Z'
-  );
-}
-
-/** PSO scalloped cloud perimeter + trailing thought dots toward speaker. */
-function buildThoughtCloud(box: Rect, tailBase: Pt, tailTip: Pt): { cloudPath: string; dots: { x: number; y: number; r: number }[] } {
-  const lobes = 16;
-  const samples = sampleRoundedPerimeter(box, lobes * 2);
-  const parts: string[] = [];
-
-  for (let i = 0; i < lobes; i++) {
-    const s0 = samples[i * 2];
-    const sm = samples[i * 2 + 1];
-    const s1 = samples[(i * 2 + 2) % samples.length];
-    const p0: Pt = { x: s0.pt.x - s0.normal.x * 1.5, y: s0.pt.y - s0.normal.y * 1.5 };
-    const p1: Pt = { x: s1.pt.x - s1.normal.x * 1.5, y: s1.pt.y - s1.normal.y * 1.5 };
-    const ctrl: Pt = { x: sm.pt.x + sm.normal.x * 14, y: sm.pt.y + sm.normal.y * 14 };
-    if (i === 0) parts.push(`M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)}`);
-    parts.push(`Q ${ctrl.x.toFixed(1)} ${ctrl.y.toFixed(1)} ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`);
-  }
-  parts.push('Z');
-
-  const dots = [0.28, 0.58, 0.85].map((t, idx) => ({
-    x: tailBase.x + (tailTip.x - tailBase.x) * t,
-    y: tailBase.y + 8 + (tailTip.y - tailBase.y) * t,
-    r: [8.5, 6.0, 3.8][idx],
-  }));
-
-  return { cloudPath: parts.join(' '), dots };
+  ].join(' ');
 }
 
 export default function SpeechBubbleMock() {
   const [aspect, setAspect] = useState<AspectId>('16:9');
   const [preset, setPreset] = useState<PresetId>('pso-field');
   const [backdrop, setBackdrop] = useState<BackdropId>('forest');
+  const [shapePreset, setShapePreset] = useState<ShapeStyleId>('squared-slant');
+  const [tuning, setTuning] = useState<ShapeTuning>(SHAPE_PRESETS['squared-slant'].tuning);
   const [speakers, setSpeakers] = useState<SpeakerInput[]>(PRESETS['pso-field'].speakers);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -608,23 +483,29 @@ export default function SpeechBubbleMock() {
     setSpeakers(PRESETS[id].speakers.map((s) => ({ ...s })));
   };
 
+  const applyShapePreset = (id: ShapeStyleId) => {
+    setShapePreset(id);
+    setTuning({ ...SHAPE_PRESETS[id].tuning });
+  };
+
   const placements = useMemo(() => {
     const ordered = [...speakers].sort((a, b) => b.ny - a.ny);
     const occupied: Rect[] = [];
     const out = new Map<string, { measured: ReturnType<typeof measureBubble>; placement: PlacementResult }>();
     for (const sp of ordered) {
-      const measured = measureBubble(sp.text);
+      const measured = measureBubble(sp.text, tuning);
       const rawAnchor = { x: sp.nx * vp.w, y: sp.ny * vp.h };
       const placement = computePlacement(
         vp.w,
         vp.h,
         measured,
+        tuning,
         rawAnchor,
         Boolean(sp.behindCamera),
         hudZones.map((z) => z.rect),
         occupied,
       );
-      const halfSlant = (measured.h * SLANT_RATIO) * 0.5;
+      const halfSlant = (measured.h * tuning.slantRatio) * 0.5;
       occupied.push({
         x: placement.box.x - halfSlant,
         y: placement.box.y,
@@ -634,7 +515,7 @@ export default function SpeechBubbleMock() {
       out.set(sp.id, { measured, placement });
     }
     return out;
-  }, [speakers, vp.w, vp.h, hudZones]);
+  }, [speakers, tuning, vp.w, vp.h, hudZones]);
 
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!draggingId || !svgRef.current) return;
@@ -649,6 +530,85 @@ export default function SpeechBubbleMock() {
 
   return (
     <div style={{ margin: '1.25rem 0', fontFamily: 'system-ui, sans-serif' }}>
+      {/* Shape identity presets + fine sliders */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center', marginBottom: '0.6rem' }}>
+        <strong style={{ fontSize: 13 }}>Shape identity:</strong>
+        {(Object.keys(SHAPE_PRESETS) as ShapeStyleId[]).map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => applyShapePreset(id)}
+            title={SHAPE_PRESETS[id].desc}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: shapePreset === id ? '2px solid #78afe6' : '1px solid #4a627a',
+              background: shapePreset === id ? '#274466' : '#15202e',
+              color: '#eef5ff',
+              fontSize: 12,
+              fontWeight: shapePreset === id ? 700 : 500,
+              cursor: 'pointer',
+            }}
+          >
+            {SHAPE_PRESETS[id].label}
+          </button>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '1.1rem',
+          alignItems: 'center',
+          marginBottom: '0.75rem',
+          fontSize: 12,
+          opacity: 0.92,
+        }}
+      >
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span>Corner: <strong>{tuning.cornerRadius}px</strong></span>
+          <input
+            type="range"
+            min={0}
+            max={20}
+            step={1}
+            value={tuning.cornerRadius}
+            onChange={(e) => setTuning((t) => ({ ...t, cornerRadius: Number(e.target.value) }))}
+          />
+        </label>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span>Slant: <strong>{tuning.slantRatio.toFixed(2)}</strong></span>
+          <input
+            type="range"
+            min={0}
+            max={0.3}
+            step={0.02}
+            value={tuning.slantRatio}
+            onChange={(e) => setTuning((t) => ({ ...t, slantRatio: Number(e.target.value) }))}
+          />
+        </label>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span>Max width: <strong>{tuning.maxWidth}px</strong></span>
+          <input
+            type="range"
+            min={260}
+            max={400}
+            step={8}
+            value={tuning.maxWidth}
+            onChange={(e) => setTuning((t) => ({ ...t, maxWidth: Number(e.target.value) }))}
+          />
+        </label>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <input
+            type="checkbox"
+            checked={tuning.chamfer}
+            onChange={(e) => setTuning((t) => ({ ...t, chamfer: e.target.checked }))}
+          />
+          Chamfer cut
+        </label>
+      </div>
+
       {/* Scenario preset pills */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center', marginBottom: '0.7rem' }}>
         <strong style={{ fontSize: 13 }}>Scenario:</strong>
@@ -673,7 +633,7 @@ export default function SpeechBubbleMock() {
         ))}
       </div>
 
-      {/* Primary speaker character tint & tone shape controls */}
+      {/* Aspect, backdrop & speaker controls */}
       {primary && (
         <div
           style={{
@@ -685,51 +645,6 @@ export default function SpeechBubbleMock() {
             fontSize: 13,
           }}
         >
-          <label>
-            <strong>Speaker color: </strong>
-            <select
-              value={primary.speaker}
-              onChange={(e) =>
-                setSpeakers((prev) =>
-                  prev.map((s, i) => (i === 0 ? { ...s, speaker: e.target.value } : s)),
-                )
-              }
-              style={{ padding: '3px 8px', borderRadius: 4 }}
-            >
-              {SPEAKER_PALETTE.map((p) => (
-                <option key={p.key} value={p.label}>
-                  {p.label} ({p.fill})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}>
-            <strong>Tone shape:</strong>
-            {(['normal', 'shout', 'thought'] as BubbleTone[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() =>
-                  setSpeakers((prev) => prev.map((s, i) => (i === 0 ? { ...s, tone: t } : s)))
-                }
-                style={{
-                  padding: '3px 9px',
-                  borderRadius: 5,
-                  border: primary.tone === t ? '2px solid #78afe6' : '1px solid #4a627a',
-                  background: primary.tone === t ? '#274466' : '#15202e',
-                  color: '#eef5ff',
-                  fontSize: 12,
-                  fontWeight: primary.tone === t ? 700 : 400,
-                  cursor: 'pointer',
-                  textTransform: 'capitalize',
-                }}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
           <label>
             <strong>Aspect: </strong>
             <select
@@ -786,7 +701,7 @@ export default function SpeechBubbleMock() {
           fontFamily: "'JetBrains Mono', monospace",
         }}
       >
-        {SPEAKER_PALETTE.slice(0, 10).map((p) => (
+        {SPEAKER_PALETTE.map((p) => (
           <button
             key={p.key}
             type="button"
@@ -797,8 +712,8 @@ export default function SpeechBubbleMock() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              padding: '3px 8px',
-              borderRadius: 999,
+              padding: '3px 9px',
+              borderRadius: 4,
               background: p.fill,
               color: '#0a0c10',
               border: '1.5px solid #000',
@@ -833,7 +748,7 @@ export default function SpeechBubbleMock() {
           onPointerUp={() => setDraggingId(null)}
           onPointerLeave={() => setDraggingId(null)}
         >
-          {/* Layer 0 — 3D Scene: NPC silhouettes (behind SpeechBubble layer 40 and HUD layer 200) */}
+          {/* Layer 0 — 3D Scene: NPC silhouettes */}
           {speakers.map((sp) => {
             if (sp.behindCamera) return null;
             const ax = sp.nx * vp.w;
@@ -869,75 +784,33 @@ export default function SpeechBubbleMock() {
             style={{ pointerEvents: 'none' }}
           />
 
-          {/* Layer 40 — PSO Speech Bubbles (solid #000 backdrop + tinted slanted/tone shape + stretching arrow) */}
+          {/* Layer 40 — Squared PSO Speech Bubbles (solid #000 backdrop + character pastel + stretching arrow) */}
           {speakers.map((sp) => {
             const item = placements.get(sp.id);
             if (!item) return null;
             const { measured, placement } = item;
             const fill = colorForSpeaker(sp.speaker);
-
-            if (sp.tone === 'thought') {
-              const { cloudPath, dots } = buildThoughtCloud(
-                placement.box,
-                placement.tailBase,
-                placement.tailTip,
-              );
-              return (
-                <g key={`bubble-${sp.id}`} style={{ pointerEvents: 'none' }}>
-                  {/* Solid black offset backdrop */}
-                  <g transform={`translate(${BACKDROP_DX - 1}, ${BACKDROP_DY - 1})`}>
-                    <path d={cloudPath} fill="#000000" />
-                    {dots.map((d, idx) => (
-                      <circle key={`bd-${idx}`} cx={d.x} cy={d.y} r={d.r} fill="#000000" />
-                    ))}
-                  </g>
-                  <path d={cloudPath} fill={fill} stroke="#0a0c10" strokeWidth={1.5} strokeLinejoin="round" />
-                  {dots.map((d, idx) => (
-                    <circle key={`fg-${idx}`} cx={d.x} cy={d.y} r={d.r} fill={fill} stroke="#0a0c10" strokeWidth={1.5} />
-                  ))}
-                  {measured.lines.map((line, idx) => (
-                    <text
-                      key={idx}
-                      x={placement.box.x + PAD_X}
-                      y={placement.box.y + PAD_Y + 16 + idx * 22}
-                      fill="#080a10"
-                      fontSize={15}
-                      fontWeight={700}
-                      fontFamily="'JetBrains Mono', monospace"
-                    >
-                      {line}
-                    </text>
-                  ))}
-                </g>
-              );
-            }
-
-            const shapePath =
-              sp.tone === 'shout'
-                ? buildShoutBurstPath(placement.box, placement.tailBase, placement.tailTip)
-                : buildSlantedNormalPath(placement.box, placement.tailBase, placement.tailTip, true);
+            const shapePath = buildBubblePath(placement.box, tuning, placement.tailBase, placement.tailTip);
 
             return (
               <g key={`bubble-${sp.id}`} style={{ pointerEvents: 'none' }}>
-                {/* PSO solid jet-black hard backdrop */}
                 <path
                   d={shapePath}
                   transform={`translate(${BACKDROP_DX}, ${BACKDROP_DY})`}
                   fill="#000000"
                 />
-                {/* Foreground tinted PSO bubble */}
                 <path
                   d={shapePath}
                   fill={fill}
-                  stroke="rgba(10, 14, 20, 0.72)"
-                  strokeWidth={1.4}
-                  strokeLinejoin="round"
+                  stroke="rgba(10, 14, 20, 0.82)"
+                  strokeWidth={1.6}
+                  strokeLinejoin="miter"
                 />
                 {measured.lines.map((line, idx) => (
                   <text
                     key={idx}
-                    x={placement.box.x + PAD_X}
-                    y={placement.box.y + PAD_Y + 16 + idx * 22}
+                    x={placement.box.x + tuning.padX}
+                    y={placement.box.y + tuning.padY + 16 + idx * 22}
                     fill="#080a10"
                     fontSize={15}
                     fontWeight={700}
@@ -976,7 +849,7 @@ export default function SpeechBubbleMock() {
             </g>
           ))}
 
-          {/* Interactive gizmo: draggable head-anchor handle (dashed ghost when behind HUD) */}
+          {/* Interactive gizmo: draggable head-anchor handle */}
           {speakers.map((sp) => {
             const ax = sp.nx * vp.w;
             const ay = sp.ny * vp.h;
@@ -1025,14 +898,14 @@ export default function SpeechBubbleMock() {
           }}
         >
           <span>speaker={primary.speaker} ({colorForSpeaker(primary.speaker)})</span>
-          <span>tone={primary.tone}</span>
+          <span>corner={tuning.cornerRadius}px</span>
+          <span>slant={tuning.slantRatio.toFixed(2)}</span>
           <span>
             box=({Math.round(primaryPlacement.box.x)}, {Math.round(primaryPlacement.box.y)},{' '}
             {Math.round(primaryPlacement.box.w)}×{Math.round(primaryPlacement.box.h)})
           </span>
           <span>tailAngle={primaryPlacement.tailAngleDeg}°</span>
           <span>offscreenArrow={String(primaryPlacement.offscreen)}</span>
-          <span>hudNudged={String(primaryPlacement.nudgedHud)}</span>
         </div>
       )}
     </div>

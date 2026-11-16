@@ -6,9 +6,9 @@ class_name SpeechBubble
 ## Visual & placement contract:
 ##   - Renders in 2D canvas space at layer 40 (above 3D world, below shops/menus/HUD/CRT,
 ##     crisp across all 3D render scales, zero SubViewport render targets).
-##   - Forward-slanted rounded parallelogram (`normal`), spiky starburst (`shout`),
-##     or scalloped cloud with trailing puffs (`thought`), backed by a solid #000000
-##     offset silhouette (+6, +5) and bold #080A10 JetBrainsMono-Bold lettering.
+##   - Squared-off forward-leaning PSO parallelogram (CORNER_RADIUS = 5px, SLANT_RATIO = 0.16,
+##     boxier 316px max wrap) backed by a solid #000000 offset silhouette (+6, +5) and
+##     bold #080A10 JetBrainsMono-Bold lettering.
 ##   - Consistent per-character pastel fills (Kai, Sarisa, Ogi, Principal, etc.).
 ##   - Floats comfortably above the actor while stretching a sharp pointer tail
 ##     back to the speaker's head (or a directional arrow when off-screen/behind camera).
@@ -23,13 +23,13 @@ const OPEN_SFX_PATH := "res://assets/sfx/ui/dialog_open.wav"
 const FONT_SIZE := 15
 const LINE_SPACING := 4
 
-const MIN_WIDTH := 176.0
-const MAX_WIDTH := 392.0
-const PAD_X := 26.0
-const PAD_Y := 14.0
-const CORNER_RADIUS := 18.0
-const SLANT_RATIO := 0.26
-const BORDER_WIDTH := 1.5
+const MIN_WIDTH := 164.0
+const MAX_WIDTH := 316.0
+const PAD_X := 22.0
+const PAD_Y := 16.0
+const CORNER_RADIUS := 5.0
+const SLANT_RATIO := 0.16
+const BORDER_WIDTH := 1.6
 const FLOAT_GAP := 86.0
 const TAIL_BASE_HALF_W := 11.0
 const MAX_OFFSCREEN_TAIL := 56.0
@@ -50,7 +50,7 @@ const FADE_DURATION := 0.50
 
 const DEFAULT_FILL := Color(1.0, 1.0, 1.0, 1.0)
 const BACKDROP_COLOR := Color(0.0, 0.0, 0.0, 1.0)
-const BORDER_COLOR := Color(0.04, 0.055, 0.08, 0.78)
+const BORDER_COLOR := Color(0.04, 0.055, 0.08, 0.85)
 const TEXT_COLOR := Color(0.031, 0.039, 0.063, 1.0)
 
 const SPEAKER_COLORS := {
@@ -99,13 +99,12 @@ static func spawn(
 	text_str: String,
 	dur_sec: float = 4.0,
 	speaker_name: String = "",
-	play_sfx: bool = true,
-	tone_id: String = "auto"
+	play_sfx: bool = true
 ) -> SpeechBubble:
 	var bubble := SpeechBubble.new()
 	host.add_child(bubble)
 	bubble.finished.connect(bubble.queue_free)
-	bubble.present(anchor_target, text_str, dur_sec, speaker_name, play_sfx, tone_id)
+	bubble.present(anchor_target, text_str, dur_sec, speaker_name, play_sfx)
 	return bubble
 
 
@@ -114,8 +113,7 @@ func present(
 	text_str: String,
 	dur_sec: float = 4.0,
 	speaker_name: String = "",
-	play_sfx: bool = true,
-	tone_id: String = "auto"
+	play_sfx: bool = true
 ) -> void:
 	_ensure_card()
 	if anchor_target is Node3D:
@@ -131,9 +129,7 @@ func present(
 		push_warning("[SpeechBubble] Unsupported anchor type; expected Node3D or Vector3")
 		return
 
-	var fill := color_for_speaker(speaker_name)
-	var resolved_tone := resolve_tone(text_str, tone_id)
-	_card.set_content(text_str, fill, resolved_tone)
+	_card.set_content(text_str, color_for_speaker(speaker_name))
 	_card.modulate.a = 1.0
 	_remaining = maxf(0.1, dur_sec)
 	_active = true
@@ -177,18 +173,6 @@ static func color_for_speaker(speaker_name: String) -> Color:
 	if SPEAKER_COLORS.has(key):
 		return SPEAKER_COLORS[key]
 	return DEFAULT_FILL
-
-
-static func resolve_tone(text_str: String, explicit_tone: String = "auto") -> String:
-	var clean_tone := explicit_tone.strip_edges().to_lower()
-	if clean_tone in ["normal", "shout", "thought"]:
-		return clean_tone
-	var trimmed := text_str.strip_edges()
-	if (trimmed.begins_with("(") and trimmed.ends_with(")")) or trimmed.begins_with("..."):
-		return "thought"
-	if "!!" in trimmed or "—" in trimmed and trimmed.ends_with("!"):
-		return "shout"
-	return "normal"
 
 
 func _process(delta: float) -> void:
@@ -385,7 +369,7 @@ static func hud_exclusion_rects(vp_rect: Rect2, in_city: bool) -> Array[Rect2]:
 	return zones
 
 
-## Pure PSO screen-space placement + stretching/directional arrow solver.
+## Pure squared-PSO screen-space placement + stretching/directional arrow solver.
 static func compute_placement(
 	vp_rect: Rect2,
 	card_box_size: Vector2,
@@ -468,8 +452,9 @@ static func _compute_tail_segment(
 	anchor_px: Vector2,
 	offscreen: bool
 ) -> Dictionary:
-	var min_bx := box.position.x - half_slant + CORNER_RADIUS + TAIL_BASE_HALF_W + 4.0
-	var max_bx := maxf(min_bx, box.end.x - half_slant - CORNER_RADIUS - TAIL_BASE_HALF_W - 4.0)
+	var inset := maxf(6.0, CORNER_RADIUS) + TAIL_BASE_HALF_W + 4.0
+	var min_bx := box.position.x - half_slant + inset
+	var max_bx := maxf(min_bx, box.end.x - half_slant - inset)
 	var blend_x := anchor_px.x * 0.35 + (box.position.x + box.size.x * 0.5 - half_slant) * 0.65
 	var base := Vector2(clampf(blend_x, min_bx, max_bx), box.end.y)
 	var tip := Vector2(anchor_px.x, maxf(box.end.y + 16.0, anchor_px.y - 8.0))
@@ -539,12 +524,11 @@ static func _intersects_any(rect: Rect2, zones: Array[Rect2]) -> bool:
 
 
 class _BubbleCard extends Control:
-	var card_box_size := Vector2(MIN_WIDTH, 50.0)
+	var card_box_size := Vector2(MIN_WIDTH, 54.0)
 	var fill_color := DEFAULT_FILL
-	var tone := "normal"
 	var _body_label: Label
-	var _tail_base_local := Vector2(MIN_WIDTH * 0.5, 50.0)
-	var _tail_tip_local := Vector2(MIN_WIDTH * 0.5, 86.0)
+	var _tail_base_local := Vector2(MIN_WIDTH * 0.5, 54.0)
+	var _tail_tip_local := Vector2(MIN_WIDTH * 0.5, 90.0)
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -558,9 +542,8 @@ class _BubbleCard extends Control:
 		_body_label.add_theme_constant_override("line_spacing", LINE_SPACING)
 		add_child(_body_label)
 
-	func set_content(text_str: String, tint: Color, tone_name: String) -> void:
+	func set_content(text_str: String, tint: Color) -> void:
 		fill_color = tint
-		tone = tone_name
 		var max_inner_w := MAX_WIDTH - PAD_X * 2.0
 		var single_w := FONT_BOLD.get_multiline_string_size(
 			text_str, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE
@@ -591,37 +574,15 @@ class _BubbleCard extends Control:
 		queue_redraw()
 
 	func _draw() -> void:
-		if tone == "thought":
-			_draw_thought_cloud()
-			return
-		var poly := _build_shout_burst(Vector2.ZERO) if tone == "shout" else _build_slanted_normal(Vector2.ZERO)
-		var back_poly := _build_shout_burst(BACKDROP_OFFSET) if tone == "shout" else _build_slanted_normal(BACKDROP_OFFSET)
+		var poly := _build_squared_slant(Vector2.ZERO)
+		var back_poly := _build_squared_slant(BACKDROP_OFFSET)
 		draw_colored_polygon(back_poly, BACKDROP_COLOR)
 		draw_colored_polygon(poly, fill_color)
 		var closed := PackedVector2Array(poly)
 		closed.append(poly[0])
 		draw_polyline(closed, BORDER_COLOR, BORDER_WIDTH, true)
 
-	func _draw_thought_cloud() -> void:
-		var cloud := _build_cloud_perimeter(Vector2.ZERO)
-		var cloud_back := _build_cloud_perimeter(BACKDROP_OFFSET)
-		var trail_ts := [0.28, 0.58, 0.85]
-		var trail_rs := [8.5, 6.0, 3.8]
-		draw_colored_polygon(cloud_back, BACKDROP_COLOR)
-		for i in range(trail_ts.size()):
-			var c := _tail_base_local.lerp(_tail_tip_local, float(trail_ts[i])) + Vector2(0.0, 4.0)
-			draw_circle(c + BACKDROP_OFFSET, float(trail_rs[i]), BACKDROP_COLOR)
-		draw_colored_polygon(cloud, fill_color)
-		var closed := PackedVector2Array(cloud)
-		closed.append(cloud[0])
-		draw_polyline(closed, BORDER_COLOR, BORDER_WIDTH, true)
-		for i in range(trail_ts.size()):
-			var c := _tail_base_local.lerp(_tail_tip_local, float(trail_ts[i])) + Vector2(0.0, 4.0)
-			var rad := float(trail_rs[i])
-			draw_circle(c, rad, fill_color)
-			draw_arc(c, rad, 0.0, TAU, 20, BORDER_COLOR, BORDER_WIDTH, true)
-
-	func _build_slanted_normal(shift: Vector2) -> PackedVector2Array:
+	func _build_squared_slant(shift: Vector2) -> PackedVector2Array:
 		var w := card_box_size.x
 		var h := card_box_size.y
 		var s := (h * SLANT_RATIO) * 0.5
@@ -631,8 +592,9 @@ class _BubbleCard extends Control:
 		var c_bl := Vector2(-s, h) + shift
 		var r := minf(CORNER_RADIUS, minf(h * 0.42, w * 0.22))
 
-		var min_tx := c_bl.x + r + TAIL_BASE_HALF_W + 2.0
-		var max_tx := maxf(min_tx, c_br.x - r - TAIL_BASE_HALF_W - 2.0)
+		var inset := maxf(6.0, r) + TAIL_BASE_HALF_W + 3.0
+		var min_tx := c_bl.x + inset
+		var max_tx := maxf(min_tx, c_br.x - inset)
 		var tx := clampf(_tail_base_local.x + shift.x, min_tx, max_tx)
 
 		var pts := PackedVector2Array()
@@ -645,88 +607,6 @@ class _BubbleCard extends Control:
 		_append_quad_corner(pts, _step_along(c_bl, c_br, r), c_bl, _step_along(c_bl, c_tl, r))
 		return pts
 
-	func _build_shout_burst(shift: Vector2) -> PackedVector2Array:
-		var spikes := 22
-		var samples := _sample_rounded_perimeter(card_box_size, spikes * 2)
-		var tip := _tail_tip_local + shift
-		var best_idx := 0
-		var best_dist := INF
-		for i in range(0, samples.size(), 2):
-			var sp: Vector2 = samples[i]["pt"] + shift
-			var d := sp.distance_to(tip)
-			if d < best_dist:
-				best_dist = d
-				best_idx = i
-		var pts := PackedVector2Array()
-		for i in range(samples.size()):
-			if i == best_idx:
-				pts.append(tip)
-				continue
-			var extrude := 12.0 if (i % 2) == 0 else -2.0
-			var base_pt: Vector2 = samples[i]["pt"]
-			var nrm: Vector2 = samples[i]["normal"]
-			pts.append(base_pt + nrm * extrude + shift)
-		return pts
-
-	func _build_cloud_perimeter(shift: Vector2) -> PackedVector2Array:
-		var lobes := 16
-		var samples := _sample_rounded_perimeter(card_box_size, lobes * 2)
-		var pts := PackedVector2Array()
-		for i in range(lobes):
-			var s0: Dictionary = samples[i * 2]
-			var sm: Dictionary = samples[i * 2 + 1]
-			var s1: Dictionary = samples[(i * 2 + 2) % samples.size()]
-			var p0: Vector2 = (s0["pt"] as Vector2) - (s0["normal"] as Vector2) * 1.5 + shift
-			var p1: Vector2 = (s1["pt"] as Vector2) - (s1["normal"] as Vector2) * 1.5 + shift
-			var ctrl: Vector2 = (sm["pt"] as Vector2) + (sm["normal"] as Vector2) * 14.0 + shift
-			_append_quad_corner(pts, p0, ctrl, p1)
-		return pts
-
-	static func _sample_rounded_perimeter(box_sz: Vector2, count: int) -> Array[Dictionary]:
-		var w := box_sz.x
-		var h := box_sz.y
-		var r := minf(22.0, minf(h * 0.45, w * 0.25))
-		var sw := maxf(0.0, w - 2.0 * r)
-		var sh := maxf(0.0, h - 2.0 * r)
-		var arc := 0.5 * PI * r
-		var total := 2.0 * sw + 2.0 * sh + 4.0 * arc
-		var out: Array[Dictionary] = []
-		for i in range(count):
-			var raw := _point_on_rounded_rect(w, h, r, sw, sh, arc, (float(i) * total) / float(count))
-			var pt: Vector2 = raw["pt"]
-			var slant_shift := ((h * 0.5 - pt.y) / maxf(h, 1.0)) * (h * SLANT_RATIO)
-			out.append({"pt": Vector2(pt.x + slant_shift, pt.y), "normal": raw["normal"]})
-		return out
-
-	static func _point_on_rounded_rect(w: float, h: float, r: float, sw: float, sh: float, arc: float, s: float) -> Dictionary:
-		var d := s
-		if d < sw:
-			return {"pt": Vector2(r + d, 0.0), "normal": Vector2(0.0, -1.0)}
-		d -= sw
-		if d < arc:
-			var a := -PI * 0.5 + (d / arc) * (PI * 0.5)
-			return {"pt": Vector2(w - r, r) + Vector2(cos(a), sin(a)) * r, "normal": Vector2(cos(a), sin(a))}
-		d -= arc
-		if d < sh:
-			return {"pt": Vector2(w, r + d), "normal": Vector2(1.0, 0.0)}
-		d -= sh
-		if d < arc:
-			var a := (d / arc) * (PI * 0.5)
-			return {"pt": Vector2(w - r, h - r) + Vector2(cos(a), sin(a)) * r, "normal": Vector2(cos(a), sin(a))}
-		d -= arc
-		if d < sw:
-			return {"pt": Vector2(w - r - d, h), "normal": Vector2(0.0, 1.0)}
-		d -= sw
-		if d < arc:
-			var a := PI * 0.5 + (d / arc) * (PI * 0.5)
-			return {"pt": Vector2(r, h - r) + Vector2(cos(a), sin(a)) * r, "normal": Vector2(cos(a), sin(a))}
-		d -= arc
-		if d < sh:
-			return {"pt": Vector2(0.0, h - r - d), "normal": Vector2(-1.0, 0.0)}
-		d -= sh
-		var a_tl := PI + (d / maxf(arc, 0.001)) * (PI * 0.5)
-		return {"pt": Vector2(r, r) + Vector2(cos(a_tl), sin(a_tl)) * r, "normal": Vector2(cos(a_tl), sin(a_tl))}
-
 	static func _step_along(from_pt: Vector2, to_pt: Vector2, dist: float) -> Vector2:
 		var dir := to_pt - from_pt
 		var seg_len := dir.length()
@@ -735,7 +615,7 @@ class _BubbleCard extends Control:
 		return from_pt + (dir / seg_len) * dist
 
 	static func _append_quad_corner(pts: PackedVector2Array, p0: Vector2, ctrl: Vector2, p1: Vector2) -> void:
-		const STEPS := 5
+		const STEPS := 4
 		for i in range(STEPS + 1):
 			var t := float(i) / float(STEPS)
 			var omt := 1.0 - t

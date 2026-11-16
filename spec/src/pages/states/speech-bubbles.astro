@@ -6,9 +6,9 @@ import SpeechBubbleMock from '../../components/screens/SpeechBubbleMock';
 
 const chart = `flowchart LR
   Anchor["Node3D (live AABB top + 0.22m) or Vector3"] --> Proj["Camera3D project / off-screen bearing"]
-  Proj --> Style["Resolve speaker pastel tint + tone shape"]
-  Style --> Clamp["Float above actor, clamp viewport & HUD"]
-  Clamp --> Arrow["Stretch pointer arrow (or cloud trail) back to speaker"]
+  Proj --> Style["Resolve speaker pastel tint"]
+  Style --> Clamp["Float squared PSO card above actor, clamp viewport & HUD"]
+  Clamp --> Arrow["Stretch pointer arrow back to speaker"]
 `;
 ---
 
@@ -19,26 +19,25 @@ const chart = `flowchart LR
 
   <p>
     Non-blocking NPC and companion callouts — field companion reactions, the Guild Counter clerk's send-off,
-    and Principal's Office quest briefings — share a single PSO-styled screen-space speech bubble component
-    (<a href="https://github.com/kion-dgl/psz-godot/issues/557">issue #557</a>). Bubbles float comfortably above
-    the action in PSO's forward-slanted silhouette with a solid black offset backdrop, per-character pastel tint,
-    tone-adaptive contour, and a dynamic pointer arrow stretching back to the speaker.
+    and Principal's Office quest briefings — share a single screen-space speech bubble component
+    (<a href="https://github.com/kion-dgl/psz-godot/issues/557">issue #557</a>). Rather than generic pill bubbles
+    or static comic bursts, the bubble uses a crisp, squared-off forward-leaning PSO silhouette with a solid
+    jet-black offset backdrop, per-character pastel fills, and a stretching pointer tail back to the speaker.
   </p>
 
-  <h2>Interactive PSO Shape, Speaker Color &amp; Placement Mock</h2>
+  <h2>Interactive Shape Identity, Speaker Color &amp; Placement Mock</h2>
   <p>
-    Switch between PSO scenarios, character color swatches, and tone shapes (<strong>Normal</strong> slanted pill,
-    <strong>Shout</strong> spiky burst, <strong>Thought</strong> cloud), or drag the orange head-anchor pin across
-    HUD corners and off-screen edges.
+    Compare squared-slant vs chamfered vs classic-PSO corner treatments, test character pastel swatches, or drag
+    the orange head-anchor pin across HUD corners and off-screen edges.
   </p>
   <SpeechBubbleMock client:only="react" />
 
-  <h2>PSO visual grammar: shape, black backdrop, and tone</h2>
+  <h2>Visual grammar: squared PSO slant &amp; solid black backdrop</h2>
   <ul>
-    <li><strong>Normal (<code>normal</code>, default):</strong> A forward-slanted rounded parallelogram (<code>SLANT_RATIO = 0.26</code>, <code>18 px</code> rounded corners) with horizontal top and bottom edges and bold dark ink (<code>#080A10</code>, <code>JetBrainsMono-Bold.ttf</code> <code>15 px</code>). No inline speaker-name label is rendered inside the bubble — attribution comes from the character's pastel tint and the pointer arrow aimed directly at them.</li>
-    <li><strong>Shout (<code>shout</code>):</strong> An angled spiky starburst perimeter with a stretching pointer spike aimed at the speaker, used for urgent battle warnings, ambushes, and exclaimed callouts (explicit <code>tone = "shout"</code> or <code>!!</code> lines under <code>auto</code>).</li>
-    <li><strong>Thought (<code>thought</code>):</strong> A scalloped cloud perimeter with three diminishing circular puffs stepping toward the speaker, used for quiet murmurs, hesitation, and internal asides (explicit <code>tone = "thought"</code> or parenthesized / leading-ellipsis murmurs under <code>auto</code>).</li>
-    <li><strong>Solid black offset backdrop:</strong> Every bubble and tail/puff <strong>MUST</strong> draw a solid jet-black (<code>#000000</code>) duplicate silhouette offset by <code>(+6 px, +5 px)</code> behind the foreground fill, paired with a crisp dark hairline border so bright pastels pop cleanly against snow, sky, forest, and dark ruins alike.</li>
+    <li><strong>Single crisp normal silhouette:</strong> Speech bubbles <strong>MUST</strong> use a compact, squared-off forward-leaning parallelogram (<code>CORNER_RADIUS = 5 px</code>, <code>SLANT_RATIO = 0.16</code>, <code>MAX_WIDTH = 316 px</code>) with horizontal top and bottom edges and bold dark ink (<code>#080A10</code>, <code>JetBrainsMono-Bold.ttf</code> <code>15 px</code>). Tight corners and a narrower wrap give the bubble a boxy, graphic PSO identity instead of a wide pill ribbon.</li>
+    <li><strong>No inline speaker header:</strong> No separate speaker-name row is drawn inside the bubble — attribution comes from the character's consistent pastel fill and the pointer arrow aimed directly at them.</li>
+    <li><strong>Solid black offset backdrop:</strong> Every bubble and its pointer tail <strong>MUST</strong> render a solid jet-black (<code>#000000</code>) duplicate silhouette offset by <code>(+6 px, +5 px)</code> behind the foreground fill, paired with a crisp dark border (<code>1.6 px</code>) so bright pastels stand off snow, sky, forest, and dark stone alike.</li>
+    <li><strong>Why static shout/thought shapes are excluded:</strong> Thought clouds do not fit diegetic field callouts, and a spiky shout bubble only reads properly when its jagged vertices actively animate/jitter frame-by-frame (as in original PSZ's animated shout bursts). Static burst and cloud shapes <strong>MUST NOT</strong> be used; an animated vertex-jitter shout variant remains a separate future option if needed.</li>
   </ul>
 
   <h2>Consistent per-character pastel palette</h2>
@@ -82,10 +81,10 @@ const chart = `flowchart LR
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/3d/ui/speech_bubble.gd</code> — shared PSO <code>SpeechBubble</code> layer, speaker palette, <code>normal</code> / <code>shout</code> / <code>thought</code> vector shapes with solid black backdrop, AABB head-offset resolver, and stretching/directional arrow solver.</li>
+    <li><code>scripts/3d/ui/speech_bubble.gd</code> — shared squared-slant PSO <code>SpeechBubble</code> layer, speaker palette, solid black backdrop, AABB head-offset resolver, and stretching/directional arrow solver.</li>
     <li><code>scripts/3d/elements/companion_npc.gd</code> — field companion reactions (<a href={siteUrl('/states/companion-combat')}>Companion Combat</a> speech hold preserved).</li>
     <li><code>scripts/3d/city/city_office_controller.gd</code> — Principal and quest-client multi-page briefing bubbles.</li>
     <li><code>scripts/3d/city/city_counter_controller.gd</code> — Guild Counter quest-accept send-off bubble.</li>
-    <li><code>scripts/tools/speech_bubble_tests.gd</code> — deterministic unit tests (palette, tone shapes, AABB scale, clamping, directional arrows) and live 3D camera projection probe.</li>
+    <li><code>scripts/tools/speech_bubble_tests.gd</code> — deterministic unit tests (palette, squared-slant chrome, AABB scale, clamping, directional arrows) and live 3D camera projection probe.</li>
   </ul>
 </Concept>

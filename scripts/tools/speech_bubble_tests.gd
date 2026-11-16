@@ -23,16 +23,11 @@ static func _test_chrome_palette_and_tones(runner: Node) -> void:
 	runner.assert_eq(SpeechBubble.color_for_speaker("Dr. Carlo"), Color("#DAE7FF"), "Dr. Carlo normalizes punctuation to periwinkle")
 	runner.assert_eq(SpeechBubble.color_for_speaker("Guild Counter"), Color("#FFFFFF"), "unnamed town NPC resolves PSO crisp white")
 
-	runner.assert_eq(SpeechBubble.resolve_tone("Find that android! Understand?", "auto"), "normal", "single ! stays normal PSO slanted bubble")
-	runner.assert_eq(SpeechBubble.resolve_tone("Ambush ahead!!", "auto"), "shout", "double !! resolves shout burst")
-	runner.assert_eq(SpeechBubble.resolve_tone("...can't feel my hands anymore.", "auto"), "thought", "leading ellipsis resolves thought cloud")
-	runner.assert_eq(SpeechBubble.resolve_tone("Calm line", "shout"), "shout", "explicit tone overrides auto")
-
 	var bubble := SpeechBubble.new()
 	runner.add_child(bubble)
 	var marker := Node3D.new()
 	runner.add_child(marker)
-	bubble.present(marker, "Short line.", 3.0, "Ogi", false, "normal")
+	bubble.present(marker, "Short line.", 3.0, "Ogi", false)
 
 	runner.assert_eq(bubble.layer, SpeechBubble.LAYER, "speech bubble renders on layer 40")
 	runner.assert_true(bubble.is_active(), "present() activates speech bubble")
@@ -43,19 +38,17 @@ static func _test_chrome_palette_and_tones(runner: Node) -> void:
 	var body_lbl := card.get_node("BodyLabel") as Label
 	runner.assert_eq(body_lbl.get_theme_font("font"), SpeechBubble.FONT_BOLD, "body label uses bold JetBrainsMono")
 	runner.assert_eq(card.get("fill_color"), Color("#C6F3FF"), "card stores Ogi pastel fill")
-	runner.assert_eq(str(card.get("tone")), "normal", "card stores resolved tone")
-	runner.assert_true(card.size.x >= SpeechBubble.MIN_WIDTH - 0.5 and card.size.x < 260.0, "short line shrink-wraps cleanly")
+	runner.assert_true(card.size.x >= SpeechBubble.MIN_WIDTH - 0.5 and card.size.x < 240.0, "short line shrink-wraps cleanly")
 
 	bubble.present(
 		Vector3(0.0, 2.0, 0.0),
 		"Please head to the Principal's office for your briefing right away before departing to Gurhacia Valley.",
 		4.0,
 		"Kai",
-		false,
-		"thought"
+		false
 	)
-	runner.assert_eq(str(card.get("tone")), "thought", "card switches to thought cloud")
-	runner.assert_true(card.size.x <= SpeechBubble.MAX_WIDTH + 0.5 and card.size.y > 55.0, "long prose wraps within MAX_WIDTH")
+	runner.assert_eq(card.get("fill_color"), Color("#FFF1BE"), "card updates to Kai pastel fill")
+	runner.assert_true(card.size.x <= SpeechBubble.MAX_WIDTH + 0.5 and card.size.y > 70.0, "long prose wraps into compact squared block within MAX_WIDTH")
 
 	bubble.dismiss()
 	runner.assert_true(not bubble.is_active(), "dismiss() deactivates bubble")

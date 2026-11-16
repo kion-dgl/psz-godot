@@ -827,11 +827,11 @@ func _dismiss_speech() -> void:
 
 ## Show a PSO-style speech bubble above the companion's head.
 ## Auto-dismisses after duration seconds.
-func show_speech(text: String, speaker: String = "", duration: float = 4.0, tone: String = "auto") -> void:
+func show_speech(text: String, speaker: String = "", duration: float = 4.0) -> void:
 	print("[Companion] show_speech: text='%s' duration=%.1f" % [text.left(50), duration])
 	var speaker_label := speaker if not speaker.is_empty() else companion_id.capitalize()
 	if _speech_bubble:
-		_speech_bubble.present(self, text, duration, speaker_label, true, tone)
+		_speech_bubble.present(self, text, duration, speaker_label)
 	_speaking = true
 	if _name_label:
 		_name_label.visible = false
