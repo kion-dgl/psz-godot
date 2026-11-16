@@ -47,7 +47,7 @@
       "area": "HUD",
       "grade": "B",
       "assessment": "Better than the original overall, but pixelated and still improvable.",
-      "next": "Verify crisp rendering, readability and layout at supported resolutions, including effective levels in boss health bars; grade unchanged.",
+      "next": "Verify crisp rendering, readability and layout at supported resolutions, including effective levels in boss health bars, and playtest the #557 shared native-resolution speech bubbles (head-height placement, viewport/HUD clamping and behind-camera companion pinning across field, Guild Counter and Principal’s Office briefings); grade unchanged.",
       "label": "score:hud"
     },
     {

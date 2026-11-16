@@ -1,0 +1,74 @@
+---
+import { siteUrl } from '../../utils/site';
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import SpeechBubbleMock from '../../components/screens/SpeechBubbleMock';
+
+const chart = `flowchart LR
+  Anchor["Node3D (live AABB top + 0.22m) or Vector3"] --> Proj["Camera3D project / behind-camera guard"]
+  Proj --> Clamp["Clamp to safe viewport rect"]
+  Clamp --> Hud["Nudge clear of active HUD corners"]
+  Hud --> Overlap["Nudge clear of lower active bubbles"]
+  Overlap --> Tail["Slide tail X toward speaker anchor"]
+`;
+---
+
+<Concept title="Speech Bubbles">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
+
+  <p>
+    Non-blocking NPC and companion callouts — field companion reactions, the Guild Counter clerk's send-off,
+    and Principal's Office quest briefings — share a single screen-space speech bubble component
+    (<a href="https://github.com/kion-dgl/psz-godot/issues/557">issue #557</a>). A speech bubble keeps the world
+    and player readable while attributing lines directly to the speaking 3D actor.
+  </p>
+
+  <h2>Interactive Placement &amp; Clamping Mock</h2>
+  <p>
+    Select a preset or drag the orange head-anchor pin across edges, HUD corners, aspect ratios, and bright/dark
+    biomes to inspect the clamping, HUD-avoidance, behind-camera, and multi-speaker de-overlap rules defined below.
+  </p>
+  <SpeechBubbleMock client:only="react" />
+
+  <h2>Single shared implementation</h2>
+  <ul>
+    <li>All 3D-anchored speech bubbles <strong>MUST</strong> use <code>scripts/3d/ui/speech_bubble.gd</code> (<code>SpeechBubble</code>). Individual scenes and NPC controllers <strong>MUST NOT</strong> build private <code>SubViewport</code> → <code>Sprite3D</code> copies.</li>
+    <li><code>SpeechBubble</code> <strong>MUST</strong> render as a native-resolution 2D <code>Control</code> inside a <code>CanvasLayer</code> at layer <code>40</code> — above the 3D viewport (<code>0</code>), below <code>SceneManager</code> shop/menu overlays (<code>50</code>), map overlays (<code>100</code>), <a href={siteUrl('/states/start-menu')}>Start Menu</a> (<code>150</code>), <code>FieldHud</code> / <code>HudStats</code> (<code>200</code>), scene fade (<code>250</code>), and <a href={siteUrl('/states/crt-filter')}>CRT Filter</a> (<code>260</code>).</li>
+    <li>Because bubbles live in 2D canvas space rather than 3D <code>Sprite3D</code> textures, they <strong>MUST NOT</strong> allocate per-bubble <code>SubViewport</code> render targets or run <code>SubViewport.UPDATE_ALWAYS</code>, <strong>MUST</strong> remain crisp at native UI resolution across all 3D render scales (<code>0.5x</code>–<code>2x</code>), and <strong>MUST</strong> only redraw their vector chrome when text, alpha, or local tail offset changes.</li>
+  </ul>
+
+  <h2>Anchor resolution (<code>Node3D</code> or <code>Vector3</code>)</h2>
+  <ul>
+    <li><code>SpeechBubble.present(anchor, text, duration, speaker)</code> <strong>MUST</strong> accept either a <code>Node3D</code> to follow each frame or a fixed <code>Vector3</code> world position.</li>
+    <li>When anchored to a <code>Node3D</code>, the vertical head offset above <code>anchor.global_position</code> <strong>MUST</strong> be derived from the actor's static visual mesh bounds scaled by the actor's world Y scale plus <code>HEAD_CLEARANCE = 0.22 m</code> (clamped to <code>[1.1 m, 2.4 m] + 0.22 m</code>), excluding held weapon <code>BoneAttachment3D</code> subtrees so raised weapons do not push the bubble upward.</li>
+    <li>Scaled actors such as the Principal (<code>NPC_SCALE = 0.09</code> on the <code>1.05 m</code> <a href={siteUrl('/journey/city/office')}>Principal's Office</a> landing) and unscaled GLB/capsule actors <strong>MUST</strong> use the same rule without per-caller magic heights. When no mesh is loaded (such as repo-only headless CI), the anchor <strong>MUST</strong> fall back to <code>DEFAULT_HEAD_HEIGHT = 1.80 m</code> + <code>0.22 m</code>.</li>
+  </ul>
+
+  <h2>Screen-space clamping, HUD clearance, and tail tracking</h2>
+  <ul>
+    <li>When the world anchor is in front of the active <code>Camera3D</code>, its screen point <strong>MUST</strong> be projected with <code>Camera3D.unproject_position</code> inside <code>Viewport.get_visible_rect()</code>.</li>
+    <li>When the speaker is behind the camera near plane (for example a trailing companion during field dialog), the bubble <strong>MUST NOT</strong> invert across perspective divide to the top/opposite edge; it <strong>MUST</strong> pin to the bottom safe margin on the speaker's horizontal camera-local side so active companion lines stay legible.</li>
+    <li>The bubble card + tail <strong>MUST</strong> clamp inside safe viewport margins (<code>24 px</code> left/right, <code>20 px</code> top, <code>28 px</code> bottom) across <code>16:9</code>, <code>4:3</code>, and <code>21:9</code> aspect presets.</li>
+    <li>The bubble <strong>MUST</strong> nudge clear of active HUD corner regions: <code>HudStats</code> (top-left) in all 3D scenes, plus <code>RoomMinimap</code> (top-right), <code>ActionPalette</code> (bottom-right), and <code>TargetInfo</code> / <code>QuickWeaponMenu</code> (bottom-left) in field scenes, choosing the minimum-displacement valid shift.</li>
+    <li>When multiple bubbles are visible simultaneously, higher/later bubbles <strong>MUST</strong> nudge vertically clear of already-placed lower bubbles by at least <code>8 px</code> so overlapping NPCs remain readable.</li>
+    <li>The speech tail <strong>MUST</strong> track the speaker's projected X coordinate along the bubble's bottom edge, clamped inside the corner radii (<code>CORNER_RADIUS + TAIL_HALF_W + 4 px</code>), so edge-clamped bubbles still point unambiguously at their speaker.</li>
+  </ul>
+
+  <h2>Typography, contrast, and lifecycle</h2>
+  <ul>
+    <li>Body text <strong>MUST</strong> use the vendored <code>JetBrainsMono-Regular.ttf</code> font (<code>15 px</code>, smart word wrap, <code>[140 px, 360 px]</code> content-hugged card width) in dark ink (<code>#1a1a2b</code>) over a high-opacity ivory-white card (<code>rgba(250, 252, 255, 0.96)</code>) with a <code>2 px</code> slate border and soft drop shadow so text reads cleanly over bright snowfields and dark ruins alike.</li>
+    <li>When a non-empty <code>speaker</code> name is supplied, the card <strong>MUST</strong> display a compact bold header in <code>JetBrainsMono-Bold.ttf</code> (<code>12 px</code>).</li>
+    <li>Bubbles <strong>MUST</strong> fade out over the final <code>0.5 s</code> of their <code>duration</code>, emit <code>finished</code> on expiry or manual <code>dismiss()</code>, and hide while full-screen <code>SceneManager</code> overlays or <code>PsoStartMenu</code> are open.</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/ui/speech_bubble.gd</code> — shared <code>SpeechBubble</code> layer, AABB head-offset resolver, pure <code>compute_placement</code> solver, and vector bubble card.</li>
+    <li><code>scripts/3d/elements/companion_npc.gd</code> — field companion reactions (<a href={siteUrl('/states/companion-combat')}>Companion Combat</a> speech hold preserved).</li>
+    <li><code>scripts/3d/city/city_office_controller.gd</code> — Principal and quest-client multi-page briefing bubbles.</li>
+    <li><code>scripts/3d/city/city_counter_controller.gd</code> — Guild Counter quest-accept send-off bubble.</li>
+    <li><code>scripts/tools/speech_bubble_tests.gd</code> — deterministic placement/AABB unit tests and live 3D camera projection probe.</li>
+  </ul>
+</Concept>
