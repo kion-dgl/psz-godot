@@ -80,15 +80,15 @@ export function colorForSpeaker(speaker: string): string {
 }
 
 const SHAPE_PRESETS: Record<ShapeStyleId, { label: string; desc: string; tuning: ShapeTuning }> = {
-  'squared-slant': {
-    label: 'Squared PSO Slant (Default)',
-    desc: 'Tight 5px corners, subtle 0.16 forward slant, boxier 316px wrap',
-    tuning: { cornerRadius: 5, slantRatio: 0.16, maxWidth: 316, padX: 22, padY: 16, chamfer: false },
-  },
   'chamfer-slant': {
-    label: 'Chamfered Hunter Tag',
-    desc: 'Crisp 8px angled corner cuts + 0.14 forward slant',
+    label: 'Chamfered Hunter Tag (Default)',
+    desc: 'Crisp 8px angled corner cuts + 0.14 forward slant, 316px wrap',
     tuning: { cornerRadius: 8, slantRatio: 0.14, maxWidth: 316, padX: 22, padY: 16, chamfer: true },
+  },
+  'squared-slant': {
+    label: 'Squared PSO Slant',
+    desc: 'Tight 5px rounded corners, 0.16 forward slant, boxier 316px wrap',
+    tuning: { cornerRadius: 5, slantRatio: 0.16, maxWidth: 316, padX: 22, padY: 16, chamfer: false },
   },
   'sharp-box': {
     label: 'Crisp Square Block',
@@ -467,8 +467,8 @@ export default function SpeechBubbleMock() {
   const [aspect, setAspect] = useState<AspectId>('16:9');
   const [preset, setPreset] = useState<PresetId>('pso-field');
   const [backdrop, setBackdrop] = useState<BackdropId>('forest');
-  const [shapePreset, setShapePreset] = useState<ShapeStyleId>('squared-slant');
-  const [tuning, setTuning] = useState<ShapeTuning>(SHAPE_PRESETS['squared-slant'].tuning);
+  const [shapePreset, setShapePreset] = useState<ShapeStyleId>('chamfer-slant');
+  const [tuning, setTuning] = useState<ShapeTuning>(SHAPE_PRESETS['chamfer-slant'].tuning);
   const [speakers, setSpeakers] = useState<SpeakerInput[]>(PRESETS['pso-field'].speakers);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);

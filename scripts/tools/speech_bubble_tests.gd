@@ -38,6 +38,10 @@ static func _test_chrome_palette_and_tones(runner: Node) -> void:
 	var body_lbl := card.get_node("BodyLabel") as Label
 	runner.assert_eq(body_lbl.get_theme_font("font"), SpeechBubble.FONT_BOLD, "body label uses bold JetBrainsMono")
 	runner.assert_eq(card.get("fill_color"), Color("#C6F3FF"), "card stores Ogi pastel fill")
+	runner.assert_almost_eq(SpeechBubble.CHAMFER_SIZE, 8.0, 0.01, "Chamfered Hunter Tag uses 8px corner cuts")
+	runner.assert_almost_eq(SpeechBubble.SLANT_RATIO, 0.14, 0.005, "Chamfered Hunter Tag uses 0.14 forward slant")
+	var poly: PackedVector2Array = card.call("build_outline_polygon", Vector2.ZERO)
+	runner.assert_eq(poly.size(), 11, "Chamfered Hunter Tag polygon has 8 chamfer vertices + 3 tail vertices")
 	runner.assert_true(card.size.x >= SpeechBubble.MIN_WIDTH - 0.5 and card.size.x < 240.0, "short line shrink-wraps cleanly")
 
 	bubble.present(

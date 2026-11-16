@@ -32,9 +32,9 @@ const chart = `flowchart LR
   </p>
   <SpeechBubbleMock client:only="react" />
 
-  <h2>Visual grammar: squared PSO slant &amp; solid black backdrop</h2>
+  <h2>Visual grammar: Chamfered Hunter Tag &amp; solid black backdrop</h2>
   <ul>
-    <li><strong>Single crisp normal silhouette:</strong> Speech bubbles <strong>MUST</strong> use a compact, squared-off forward-leaning parallelogram (<code>CORNER_RADIUS = 5 px</code>, <code>SLANT_RATIO = 0.16</code>, <code>MAX_WIDTH = 316 px</code>) with horizontal top and bottom edges and bold dark ink (<code>#080A10</code>, <code>JetBrainsMono-Bold.ttf</code> <code>15 px</code>). Tight corners and a narrower wrap give the bubble a boxy, graphic PSO identity instead of a wide pill ribbon.</li>
+    <li><strong>Chamfered Hunter Tag silhouette:</strong> Speech bubbles <strong>MUST</strong> use a compact, forward-leaning chamfered parallelogram (<code>CHAMFER_SIZE = 8 px</code> angled corner cuts on all four vertices, <code>SLANT_RATIO = 0.14</code>, <code>MAX_WIDTH = 316 px</code>) with horizontal top and bottom edges and bold dark ink (<code>#080A10</code>, <code>JetBrainsMono-Bold.ttf</code> <code>15 px</code>). Crisp 8 px corner chamfers and a subtle forward lean honor PSO's slanted silhouette while giving PSZ-Godot a distinct hunter-comms identity.</li>
     <li><strong>No inline speaker header:</strong> No separate speaker-name row is drawn inside the bubble — attribution comes from the character's consistent pastel fill and the pointer arrow aimed directly at them.</li>
     <li><strong>Solid black offset backdrop:</strong> Every bubble and its pointer tail <strong>MUST</strong> render a solid jet-black (<code>#000000</code>) duplicate silhouette offset by <code>(+6 px, +5 px)</code> behind the foreground fill, paired with a crisp dark border (<code>1.6 px</code>) so bright pastels stand off snow, sky, forest, and dark stone alike.</li>
     <li><strong>Why static shout/thought shapes are excluded:</strong> Thought clouds do not fit diegetic field callouts, and a spiky shout bubble only reads properly when its jagged vertices actively animate/jitter frame-by-frame (as in original PSZ's animated shout bursts). Static burst and cloud shapes <strong>MUST NOT</strong> be used; an animated vertex-jitter shout variant remains a separate future option if needed.</li>

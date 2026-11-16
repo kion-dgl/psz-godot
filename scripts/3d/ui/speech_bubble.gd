@@ -6,9 +6,9 @@ class_name SpeechBubble
 ## Visual & placement contract:
 ##   - Renders in 2D canvas space at layer 40 (above 3D world, below shops/menus/HUD/CRT,
 ##     crisp across all 3D render scales, zero SubViewport render targets).
-##   - Squared-off forward-leaning PSO parallelogram (CORNER_RADIUS = 5px, SLANT_RATIO = 0.16,
-##     boxier 316px max wrap) backed by a solid #000000 offset silhouette (+6, +5) and
-##     bold #080A10 JetBrainsMono-Bold lettering.
+##   - Chamfered Hunter Tag silhouette (CHAMFER_SIZE = 8px angled corner cuts,
+##     SLANT_RATIO = 0.14 forward lean, boxier 316px max wrap) backed by a solid
+##     #000000 offset silhouette (+6, +5) and bold #080A10 JetBrainsMono-Bold lettering.
 ##   - Consistent per-character pastel fills (Kai, Sarisa, Ogi, Principal, etc.).
 ##   - Floats comfortably above the actor while stretching a sharp pointer tail
 ##     back to the speaker's head (or a directional arrow when off-screen/behind camera).
@@ -27,8 +27,8 @@ const MIN_WIDTH := 164.0
 const MAX_WIDTH := 316.0
 const PAD_X := 22.0
 const PAD_Y := 16.0
-const CORNER_RADIUS := 5.0
-const SLANT_RATIO := 0.16
+const CHAMFER_SIZE := 8.0
+const SLANT_RATIO := 0.14
 const BORDER_WIDTH := 1.6
 const FLOAT_GAP := 86.0
 const TAIL_BASE_HALF_W := 11.0
@@ -452,7 +452,7 @@ static func _compute_tail_segment(
 	anchor_px: Vector2,
 	offscreen: bool
 ) -> Dictionary:
-	var inset := maxf(6.0, CORNER_RADIUS) + TAIL_BASE_HALF_W + 4.0
+	var inset := maxf(6.0, CHAMFER_SIZE) + TAIL_BASE_HALF_W + 4.0
 	var min_bx := box.position.x - half_slant + inset
 	var max_bx := maxf(min_bx, box.end.x - half_slant - inset)
 	var blend_x := anchor_px.x * 0.35 + (box.position.x + box.size.x * 0.5 - half_slant) * 0.65
@@ -574,15 +574,15 @@ class _BubbleCard extends Control:
 		queue_redraw()
 
 	func _draw() -> void:
-		var poly := _build_squared_slant(Vector2.ZERO)
-		var back_poly := _build_squared_slant(BACKDROP_OFFSET)
+		var poly := build_outline_polygon(Vector2.ZERO)
+		var back_poly := build_outline_polygon(BACKDROP_OFFSET)
 		draw_colored_polygon(back_poly, BACKDROP_COLOR)
 		draw_colored_polygon(poly, fill_color)
 		var closed := PackedVector2Array(poly)
 		closed.append(poly[0])
 		draw_polyline(closed, BORDER_COLOR, BORDER_WIDTH, true)
 
-	func _build_squared_slant(shift: Vector2) -> PackedVector2Array:
+	func build_outline_polygon(shift: Vector2) -> PackedVector2Array:
 		var w := card_box_size.x
 		var h := card_box_size.y
 		var s := (h * SLANT_RATIO) * 0.5
@@ -590,21 +590,26 @@ class _BubbleCard extends Control:
 		var c_tr := Vector2(w + s, 0.0) + shift
 		var c_br := Vector2(w - s, h) + shift
 		var c_bl := Vector2(-s, h) + shift
-		var r := minf(CORNER_RADIUS, minf(h * 0.42, w * 0.22))
+		var c := minf(CHAMFER_SIZE, minf(h * 0.42, w * 0.22))
 
-		var inset := maxf(6.0, r) + TAIL_BASE_HALF_W + 3.0
+		var inset := maxf(6.0, c) + TAIL_BASE_HALF_W + 3.0
 		var min_tx := c_bl.x + inset
 		var max_tx := maxf(min_tx, c_br.x - inset)
 		var tx := clampf(_tail_base_local.x + shift.x, min_tx, max_tx)
 
-		var pts := PackedVector2Array()
-		_append_quad_corner(pts, _step_along(c_tl, c_bl, r), c_tl, _step_along(c_tl, c_tr, r))
-		_append_quad_corner(pts, _step_along(c_tr, c_tl, r), c_tr, _step_along(c_tr, c_br, r))
-		_append_quad_corner(pts, _step_along(c_br, c_tr, r), c_br, _step_along(c_br, c_bl, r))
-		pts.append(Vector2(tx + TAIL_BASE_HALF_W, h + shift.y))
-		pts.append(_tail_tip_local + shift)
-		pts.append(Vector2(tx - TAIL_BASE_HALF_W, h + shift.y))
-		_append_quad_corner(pts, _step_along(c_bl, c_br, r), c_bl, _step_along(c_bl, c_tl, r))
+		var pts := PackedVector2Array([
+			_step_along(c_tl, c_bl, c),
+			_step_along(c_tl, c_tr, c),
+			_step_along(c_tr, c_tl, c),
+			_step_along(c_tr, c_br, c),
+			_step_along(c_br, c_tr, c),
+			_step_along(c_br, c_bl, c),
+			Vector2(tx + TAIL_BASE_HALF_W, h + shift.y),
+			_tail_tip_local + shift,
+			Vector2(tx - TAIL_BASE_HALF_W, h + shift.y),
+			_step_along(c_bl, c_br, c),
+			_step_along(c_bl, c_tl, c),
+		])
 		return pts
 
 	static func _step_along(from_pt: Vector2, to_pt: Vector2, dist: float) -> Vector2:
@@ -613,10 +618,3 @@ class _BubbleCard extends Control:
 		if seg_len <= 0.001:
 			return from_pt
 		return from_pt + (dir / seg_len) * dist
-
-	static func _append_quad_corner(pts: PackedVector2Array, p0: Vector2, ctrl: Vector2, p1: Vector2) -> void:
-		const STEPS := 4
-		for i in range(STEPS + 1):
-			var t := float(i) / float(STEPS)
-			var omt := 1.0 - t
-			pts.append(p0 * (omt * omt) + ctrl * (2.0 * omt * t) + p1 * (t * t))
