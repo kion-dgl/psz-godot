@@ -237,6 +237,7 @@ func _play_bubble_page() -> void:
 	var page: Dictionary = _briefing_pages[_briefing_index]
 	var speaker: String = str(page.get("speaker", ""))
 	var text: String = str(page.get("text", ""))
+	var tone: String = str(page.get("tone", "auto"))
 	var duration := maxf(3.0, text.length() / 20.0)
 	var anchor_node: Node3D = _speaker_anchors.get(speaker, _principal_npc) as Node3D
 
@@ -245,7 +246,7 @@ func _play_bubble_page() -> void:
 		if name_lbl != null and name_lbl.visible:
 			name_lbl.visible = false
 			_hidden_speaker_label = name_lbl
-		_briefing_bubble.present(anchor_node, text, duration, speaker)
+		_briefing_bubble.present(anchor_node, text, duration, speaker, true, tone)
 	else:
 		SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
 

@@ -1,44 +1,46 @@
 extends CanvasLayer
 class_name SpeechBubble
-## Shared native-resolution 2D speech bubble anchored to a 3D actor or world point
-## (issue #557; spec /states/speech-bubbles).
+## Shared PSO-styled native-resolution 2D speech bubble anchored to a 3D actor
+## or world point (issue #557; spec /states/speech-bubbles).
 ##
-## Replaces the three private SubViewport -> Sprite3D copies in companion_npc,
-## city_office_controller, and city_counter_controller:
-##   - Renders in 2D canvas space at layer 40 (below shops/menus/HUD/fade/CRT,
+## Visual & placement contract:
+##   - Renders in 2D canvas space at layer 40 (above 3D world, below shops/menus/HUD/CRT,
 ##     crisp across all 3D render scales, zero SubViewport render targets).
-##   - Resolves head height from static MeshInstance3D bounds * world Y scale.
-##   - Projects via Camera3D.unproject_position with behind-camera bottom pinning,
-##     viewport margin clamping, HUD corner avoidance, multi-bubble de-overlap,
-##     and a dynamic bottom tail tracking the speaker's horizontal position.
+##   - Forward-slanted rounded parallelogram (`normal`), spiky starburst (`shout`),
+##     or scalloped cloud with trailing puffs (`thought`), backed by a solid #000000
+##     offset silhouette (+6, +5) and bold #080A10 JetBrainsMono-Bold lettering.
+##   - Consistent per-character pastel fills (Kai, Sarisa, Ogi, Principal, etc.).
+##   - Floats comfortably above the actor while stretching a sharp pointer tail
+##     back to the speaker's head (or a directional arrow when off-screen/behind camera).
 
 signal finished
 
 const LAYER := 40
 
-const FONT_REGULAR: FontFile = preload("res://assets/fonts/JetBrainsMono-Regular.ttf")
 const FONT_BOLD: FontFile = preload("res://assets/fonts/JetBrainsMono-Bold.ttf")
 const OPEN_SFX_PATH := "res://assets/sfx/ui/dialog_open.wav"
 
 const FONT_SIZE := 15
-const SPEAKER_FONT_SIZE := 12
-const LINE_SPACING := 3
+const LINE_SPACING := 4
 
-const MIN_WIDTH := 140.0
-const MAX_WIDTH := 360.0
-const PAD_X := 15.0
-const PAD_Y := 10.0
-const SPEAKER_GAP := 3.0
-const CORNER_RADIUS := 10.0
-const BORDER_WIDTH := 2.0
-const TAIL_HALF_W := 8.0
-const TAIL_H := 11.0
+const MIN_WIDTH := 176.0
+const MAX_WIDTH := 392.0
+const PAD_X := 26.0
+const PAD_Y := 14.0
+const CORNER_RADIUS := 18.0
+const SLANT_RATIO := 0.26
+const BORDER_WIDTH := 1.5
+const FLOAT_GAP := 86.0
+const TAIL_BASE_HALF_W := 11.0
+const MAX_OFFSCREEN_TAIL := 56.0
+const MAX_ONSCREEN_TAIL := 185.0
+const BACKDROP_OFFSET := Vector2(6.0, 5.0)
 
-const SAFE_MARGIN_X := 24.0
-const SAFE_MARGIN_TOP := 20.0
-const SAFE_MARGIN_BOTTOM := 28.0
-const HUD_GAP := 8.0
-const OVERLAP_GAP := 8.0
+const SAFE_MARGIN_X := 28.0
+const SAFE_MARGIN_TOP := 22.0
+const SAFE_MARGIN_BOTTOM := 30.0
+const HUD_GAP := 12.0
+const OVERLAP_GAP := 12.0
 
 const DEFAULT_HEAD_HEIGHT := 1.80
 const MIN_HEAD_HEIGHT := 1.10
@@ -46,12 +48,26 @@ const MAX_HEAD_HEIGHT := 2.40
 const HEAD_CLEARANCE := 0.22
 const FADE_DURATION := 0.50
 
-const BG_COLOR := Color(0.98, 0.99, 1.0, 0.96)
-const BORDER_COLOR := Color(0.22, 0.32, 0.46, 0.95)
-const SHADOW_COLOR := Color(0.0, 0.04, 0.10, 0.38)
-const SHADOW_OFFSET := Vector2(0.0, 3.0)
-const TEXT_COLOR := Color(0.10, 0.10, 0.17)
-const SPEAKER_COLOR := Color(0.20, 0.36, 0.62)
+const DEFAULT_FILL := Color(1.0, 1.0, 1.0, 1.0)
+const BACKDROP_COLOR := Color(0.0, 0.0, 0.0, 1.0)
+const BORDER_COLOR := Color(0.04, 0.055, 0.08, 0.78)
+const TEXT_COLOR := Color(0.031, 0.039, 0.063, 1.0)
+
+const SPEAKER_COLORS := {
+	"default": Color("#FFFFFF"),
+	"principal": Color("#F5F7FF"),
+	"kai": Color("#FFF1BE"),
+	"sarisa": Color("#FFDDF0"),
+	"ogi": Color("#C6F3FF"),
+	"elio": Color("#D6F7E2"),
+	"fern": Color("#E8F7C8"),
+	"dr_carlo": Color("#DAE7FF"),
+	"ren": Color("#CCF6F4"),
+	"dorn": Color("#FFE4C8"),
+	"mira": Color("#EADBFF"),
+	"ana": Color("#EEF0FF"),
+	"vash": Color("#E2E8EE"),
+}
 
 static var _active_bubbles: Array[SpeechBubble] = []
 static var _autopilot_logged_ok := false
@@ -83,12 +99,13 @@ static func spawn(
 	text_str: String,
 	dur_sec: float = 4.0,
 	speaker_name: String = "",
-	play_sfx: bool = true
+	play_sfx: bool = true,
+	tone_id: String = "auto"
 ) -> SpeechBubble:
 	var bubble := SpeechBubble.new()
 	host.add_child(bubble)
 	bubble.finished.connect(bubble.queue_free)
-	bubble.present(anchor_target, text_str, dur_sec, speaker_name, play_sfx)
+	bubble.present(anchor_target, text_str, dur_sec, speaker_name, play_sfx, tone_id)
 	return bubble
 
 
@@ -97,7 +114,8 @@ func present(
 	text_str: String,
 	dur_sec: float = 4.0,
 	speaker_name: String = "",
-	play_sfx: bool = true
+	play_sfx: bool = true,
+	tone_id: String = "auto"
 ) -> void:
 	_ensure_card()
 	if anchor_target is Node3D:
@@ -113,7 +131,9 @@ func present(
 		push_warning("[SpeechBubble] Unsupported anchor type; expected Node3D or Vector3")
 		return
 
-	_card.set_content(speaker_name, text_str)
+	var fill := color_for_speaker(speaker_name)
+	var resolved_tone := resolve_tone(text_str, tone_id)
+	_card.set_content(text_str, fill, resolved_tone)
 	_card.modulate.a = 1.0
 	_remaining = maxf(0.1, dur_sec)
 	_active = true
@@ -150,6 +170,25 @@ func get_placed_rect() -> Rect2:
 func get_card_control() -> Control:
 	_ensure_card()
 	return _card
+
+
+static func color_for_speaker(speaker_name: String) -> Color:
+	var key := speaker_name.strip_edges().to_lower().replace(".", "").replace(" ", "_")
+	if SPEAKER_COLORS.has(key):
+		return SPEAKER_COLORS[key]
+	return DEFAULT_FILL
+
+
+static func resolve_tone(text_str: String, explicit_tone: String = "auto") -> String:
+	var clean_tone := explicit_tone.strip_edges().to_lower()
+	if clean_tone in ["normal", "shout", "thought"]:
+		return clean_tone
+	var trimmed := text_str.strip_edges()
+	if (trimmed.begins_with("(") and trimmed.ends_with(")")) or trimmed.begins_with("..."):
+		return "thought"
+	if "!!" in trimmed or "—" in trimmed and trimmed.ends_with("!"):
+		return "shout"
+	return "normal"
 
 
 func _process(delta: float) -> void:
@@ -239,9 +278,12 @@ func _sync_placement() -> void:
 	var box_rect: Rect2 = placed["box_rect"]
 	_last_placed_total = placed["total_rect"]
 	_card.position = box_rect.position
-	_card.set_tail(float(placed["tail_local_x"]), float(placed["tail_tip_local_x"]))
+	_card.set_tail_points(
+		(placed["tail_base"] as Vector2) - box_rect.position,
+		(placed["tail_tip"] as Vector2) - box_rect.position
+	)
 	_card.visible = true
-	_check_autopilot_invariant(vp_rect, _last_placed_total)
+	_check_autopilot_invariant(vp_rect, _last_placed_total, placed["tail_tip"] as Vector2)
 
 
 func _collect_lower_bubble_rects(vp: Viewport) -> Array[Rect2]:
@@ -261,16 +303,17 @@ func _collect_lower_bubble_rects(vp: Viewport) -> Array[Rect2]:
 	return out
 
 
-func _check_autopilot_invariant(vp_rect: Rect2, total_rect: Rect2) -> void:
+func _check_autopilot_invariant(vp_rect: Rect2, total_rect: Rect2, tail_tip: Vector2) -> void:
 	if not OS.has_environment("PSZ_AUTOPILOT"):
 		return
-	var eps := 1.5
+	var eps := 2.0
 	var inside := total_rect.position.x >= vp_rect.position.x - eps \
 		and total_rect.position.y >= vp_rect.position.y - eps \
 		and total_rect.end.x <= vp_rect.end.x + eps \
-		and total_rect.end.y <= vp_rect.end.y + eps
+		and total_rect.end.y <= vp_rect.end.y + eps \
+		and vp_rect.grow(eps).has_point(tail_tip)
 	if not inside:
-		push_error("[sanity] FAIL: speech bubble rect %s escaped viewport %s" % [str(total_rect), str(vp_rect)])
+		push_error("[sanity] FAIL: speech bubble %s / tail %s escaped viewport %s" % [str(total_rect), str(tail_tip), str(vp_rect)])
 		return
 	if not _autopilot_logged_ok:
 		_autopilot_logged_ok = true
@@ -310,18 +353,18 @@ static func _max_actor_mesh_y(node: Node, local_xform: Transform3D, is_root: boo
 
 
 ## Project `world_pos` through `cam` into `vp_rect`, guarding behind-camera coordinates
-## so trailing companions pin to the bottom edge instead of inverting across w < 0.
+## so trailing companions aim a directional bottom arrow instead of inverting across w < 0.
 static func project_world_anchor(cam: Camera3D, world_pos: Vector3, vp_rect: Rect2) -> Dictionary:
 	if cam == null:
-		var center := vp_rect.position + Vector2(vp_rect.size.x * 0.5, vp_rect.size.y * 0.5)
+		var center := vp_rect.position + Vector2(vp_rect.size.x * 0.5, vp_rect.size.y * 0.58)
 		return {"anchor_px": center, "behind": false}
 	var cam_local: Vector3 = cam.global_transform.affine_inverse() * world_pos
 	if cam_local.z >= -0.2:
 		var denom := maxf(absf(cam_local.z) + absf(cam_local.x), 0.001)
-		var bearing := clampf(0.5 + (cam_local.x / denom) * 0.42, 0.12, 0.88)
+		var bearing := clampf(0.5 + (cam_local.x / denom) * 0.42, 0.14, 0.86)
 		var pinned := Vector2(
 			vp_rect.position.x + vp_rect.size.x * bearing,
-			vp_rect.end.y - SAFE_MARGIN_BOTTOM
+			vp_rect.end.y + 36.0
 		)
 		return {"anchor_px": pinned, "behind": true}
 	return {"anchor_px": cam.unproject_position(world_pos), "behind": false}
@@ -342,7 +385,7 @@ static func hud_exclusion_rects(vp_rect: Rect2, in_city: bool) -> Array[Rect2]:
 	return zones
 
 
-## Pure screen-space placement solver (spec /states/speech-bubbles).
+## Pure PSO screen-space placement + stretching/directional arrow solver.
 static func compute_placement(
 	vp_rect: Rect2,
 	card_box_size: Vector2,
@@ -353,34 +396,48 @@ static func compute_placement(
 ) -> Dictionary:
 	var w := card_box_size.x
 	var h := card_box_size.y
-	var total_h := h + TAIL_H
-	var left_b := vp_rect.position.x + SAFE_MARGIN_X
-	var right_b := maxf(left_b, vp_rect.end.x - SAFE_MARGIN_X - w)
+	var half_slant := (h * SLANT_RATIO) * 0.5
+	var left_b := vp_rect.position.x + SAFE_MARGIN_X + half_slant
+	var right_b := maxf(left_b, vp_rect.end.x - SAFE_MARGIN_X - w - half_slant - BACKDROP_OFFSET.x)
 	var top_b := vp_rect.position.y + SAFE_MARGIN_TOP
-	var bottom_b := maxf(top_b, vp_rect.end.y - SAFE_MARGIN_BOTTOM - total_h)
+	var bottom_b := maxf(top_b, vp_rect.end.y - SAFE_MARGIN_BOTTOM - h - 42.0)
+
+	var offscreen := behind_camera \
+		or raw_anchor_px.x < vp_rect.position.x + 8.0 \
+		or raw_anchor_px.x > vp_rect.end.x - 8.0 \
+		or raw_anchor_px.y < vp_rect.position.y + 8.0 \
+		or raw_anchor_px.y > vp_rect.end.y - 8.0
 
 	var anchor_px := raw_anchor_px
 	if behind_camera:
 		anchor_px = Vector2(
-			clampf(raw_anchor_px.x, vp_rect.position.x + vp_rect.size.x * 0.12, vp_rect.position.x + vp_rect.size.x * 0.88),
-			vp_rect.end.y - SAFE_MARGIN_BOTTOM
+			clampf(raw_anchor_px.x, vp_rect.position.x + vp_rect.size.x * 0.14, vp_rect.position.x + vp_rect.size.x * 0.86),
+			vp_rect.end.y + 36.0
 		)
 
-	var ideal := Vector2(anchor_px.x - w * 0.5, anchor_px.y - total_h)
-	var bx := clampf(ideal.x, left_b, right_b)
-	var by := clampf(ideal.y, top_b, bottom_b)
-	var clamped_edge := absf(bx - ideal.x) > 0.5 or absf(by - ideal.y) > 0.5
+	var ideal_x := anchor_px.x - w * 0.54
+	var ideal_y := (vp_rect.end.y - SAFE_MARGIN_BOTTOM - h - 44.0) if behind_camera else (anchor_px.y - h - FLOAT_GAP)
+	var bx := clampf(ideal_x, left_b, right_b)
+	var by := clampf(ideal_y, top_b, bottom_b)
+	var clamped_edge := absf(bx - ideal_x) > 0.5 or absf(by - ideal_y) > 0.5
 
-	var shifted := _nudge_from_hud(Vector2(bx, by), Vector2(w, total_h), Rect2(left_b, top_b, right_b - left_b, bottom_b - top_b), hud_rects)
+	var shifted := _nudge_from_hud(
+		Vector2(bx, by),
+		Vector2(w, h),
+		half_slant,
+		Rect2(left_b, top_b, right_b - left_b, bottom_b - top_b),
+		hud_rects
+	)
 	var nudged_hud: bool = shifted["nudged"]
 	bx = shifted["pos"].x
 	by = shifted["pos"].y
 
 	var nudged_overlap := false
 	for occ in occupied_rects:
-		if not Rect2(bx, by, w, total_h).intersects(occ):
+		var footprint := Rect2(bx - half_slant, by, w + half_slant * 2.0, h + 16.0)
+		if not footprint.intersects(occ):
 			continue
-		var up_y := occ.position.y - total_h - OVERLAP_GAP
+		var up_y := occ.position.y - h - OVERLAP_GAP - 14.0
 		var down_y := occ.end.y + OVERLAP_GAP
 		if up_y >= top_b:
 			by = up_y
@@ -388,39 +445,71 @@ static func compute_placement(
 			by = down_y
 		nudged_overlap = true
 
-	var min_tail := CORNER_RADIUS + TAIL_HALF_W + 4.0
-	var max_tail := maxf(min_tail, w - CORNER_RADIUS - TAIL_HALF_W - 4.0)
-	var tail_local_x := clampf(anchor_px.x - bx, min_tail, max_tail)
-	var tail_tip_local_x := clampf(anchor_px.x - bx, CORNER_RADIUS + 2.0, maxf(CORNER_RADIUS + 2.0, w - CORNER_RADIUS - 2.0))
+	var tail := _compute_tail_segment(vp_rect, Rect2(bx, by, w, h), half_slant, anchor_px, offscreen)
+	var total_rect := Rect2(bx - half_slant, by, w + half_slant * 2.0 + BACKDROP_OFFSET.x, h + BACKDROP_OFFSET.y + 16.0)
 
 	return {
 		"box_rect": Rect2(bx, by, w, h),
-		"total_rect": Rect2(bx, by, w, total_h),
+		"total_rect": total_rect,
 		"anchor_px": anchor_px,
-		"tail_local_x": tail_local_x,
-		"tail_tip_local_x": tail_tip_local_x,
+		"tail_base": tail["base"],
+		"tail_tip": tail["tip"],
+		"offscreen": offscreen,
 		"clamped_edge": clamped_edge,
 		"nudged_hud": nudged_hud,
 		"nudged_overlap": nudged_overlap,
 	}
 
 
+static func _compute_tail_segment(
+	vp_rect: Rect2,
+	box: Rect2,
+	half_slant: float,
+	anchor_px: Vector2,
+	offscreen: bool
+) -> Dictionary:
+	var min_bx := box.position.x - half_slant + CORNER_RADIUS + TAIL_BASE_HALF_W + 4.0
+	var max_bx := maxf(min_bx, box.end.x - half_slant - CORNER_RADIUS - TAIL_BASE_HALF_W - 4.0)
+	var blend_x := anchor_px.x * 0.35 + (box.position.x + box.size.x * 0.5 - half_slant) * 0.65
+	var base := Vector2(clampf(blend_x, min_bx, max_bx), box.end.y)
+	var tip := Vector2(anchor_px.x, maxf(box.end.y + 16.0, anchor_px.y - 8.0))
+	if offscreen:
+		tip = _clamp_reach(base, anchor_px, MAX_OFFSCREEN_TAIL)
+		tip.x = clampf(tip.x, vp_rect.position.x + 10.0, vp_rect.end.x - 10.0)
+		tip.y = clampf(tip.y, box.end.y + 14.0, vp_rect.end.y - 10.0)
+	else:
+		tip = _clamp_reach(base, tip, MAX_ONSCREEN_TAIL)
+	return {"base": base, "tip": tip}
+
+
+static func _clamp_reach(from_pt: Vector2, to_pt: Vector2, max_len: float) -> Vector2:
+	var delta := to_pt - from_pt
+	var dist := delta.length()
+	if dist <= max_len or dist <= 0.001:
+		return to_pt
+	return from_pt + (delta / dist) * max_len
+
+
 static func _nudge_from_hud(
 	cur_pos: Vector2,
-	total_size: Vector2,
+	box_size: Vector2,
+	half_slant: float,
 	bounds: Rect2,
 	hud_rects: Array[Rect2]
 ) -> Dictionary:
 	var pos := cur_pos
 	var nudged := false
+	var w := box_size.x
+	var h := box_size.y
 	for hud in hud_rects:
-		if not Rect2(pos, total_size).intersects(hud):
+		var footprint := Rect2(pos.x - half_slant, pos.y, w + half_slant * 2.0, h + 18.0)
+		if not footprint.intersects(hud):
 			continue
 		var candidates: Array[Vector2] = [
 			Vector2(pos.x, hud.end.y + HUD_GAP),
-			Vector2(pos.x, hud.position.y - total_size.y - HUD_GAP),
-			Vector2(hud.end.x + HUD_GAP, pos.y),
-			Vector2(hud.position.x - total_size.x - HUD_GAP, pos.y),
+			Vector2(pos.x, hud.position.y - h - 28.0 - HUD_GAP),
+			Vector2(hud.end.x + HUD_GAP + half_slant, pos.y),
+			Vector2(hud.position.x - w - HUD_GAP - half_slant, pos.y),
 		]
 		var best := pos
 		var best_dist := INF
@@ -429,7 +518,8 @@ static func _nudge_from_hud(
 				continue
 			if cand.y < bounds.position.y - 0.5 or cand.y > bounds.end.y + 0.5:
 				continue
-			if _intersects_any(Rect2(cand, total_size), hud_rects):
+			var cand_fp := Rect2(cand.x - half_slant, cand.y, w + half_slant * 2.0, h + 18.0)
+			if _intersects_any(cand_fp, hud_rects):
 				continue
 			var d := pos.distance_to(cand)
 			if d < best_dist:
@@ -449,43 +539,34 @@ static func _intersects_any(rect: Rect2, zones: Array[Rect2]) -> bool:
 
 
 class _BubbleCard extends Control:
-	var card_box_size := Vector2(MIN_WIDTH, 44.0)
-	var _speaker_label: Label
+	var card_box_size := Vector2(MIN_WIDTH, 50.0)
+	var fill_color := DEFAULT_FILL
+	var tone := "normal"
 	var _body_label: Label
-	var _tail_local_x := MIN_WIDTH * 0.5
-	var _tail_tip_local_x := MIN_WIDTH * 0.5
+	var _tail_base_local := Vector2(MIN_WIDTH * 0.5, 50.0)
+	var _tail_tip_local := Vector2(MIN_WIDTH * 0.5, 86.0)
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_speaker_label = Label.new()
-		_speaker_label.name = "SpeakerLabel"
-		_speaker_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_speaker_label.add_theme_font_override("font", FONT_BOLD)
-		_speaker_label.add_theme_font_size_override("font_size", SPEAKER_FONT_SIZE)
-		_speaker_label.add_theme_color_override("font_color", SPEAKER_COLOR)
-		add_child(_speaker_label)
-
 		_body_label = Label.new()
 		_body_label.name = "BodyLabel"
 		_body_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_body_label.add_theme_font_override("font", FONT_REGULAR)
+		_body_label.add_theme_font_override("font", FONT_BOLD)
 		_body_label.add_theme_font_size_override("font_size", FONT_SIZE)
 		_body_label.add_theme_color_override("font_color", TEXT_COLOR)
 		_body_label.add_theme_constant_override("line_spacing", LINE_SPACING)
 		add_child(_body_label)
 
-	func set_content(speaker_name: String, text_str: String) -> void:
-		var clean_speaker := speaker_name.strip_edges()
+	func set_content(text_str: String, tint: Color, tone_name: String) -> void:
+		fill_color = tint
+		tone = tone_name
 		var max_inner_w := MAX_WIDTH - PAD_X * 2.0
-		var single_w := FONT_REGULAR.get_multiline_string_size(
+		var single_w := FONT_BOLD.get_multiline_string_size(
 			text_str, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE
 		).x
-		var speaker_w := 0.0
-		if not clean_speaker.is_empty():
-			speaker_w = FONT_BOLD.get_string_size(clean_speaker, HORIZONTAL_ALIGNMENT_LEFT, -1, SPEAKER_FONT_SIZE).x
-		var inner_w := clampf(ceilf(maxf(minf(single_w, max_inner_w), speaker_w)) + 4.0, MIN_WIDTH - PAD_X * 2.0, max_inner_w)
-		var body_metrics := FONT_REGULAR.get_multiline_string_size(
+		var inner_w := clampf(ceilf(minf(single_w, max_inner_w)) + 4.0, MIN_WIDTH - PAD_X * 2.0, max_inner_w)
+		var body_metrics := FONT_BOLD.get_multiline_string_size(
 			text_str,
 			HORIZONTAL_ALIGNMENT_LEFT,
 			inner_w,
@@ -493,60 +574,169 @@ class _BubbleCard extends Control:
 			-1,
 			TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND
 		)
-		var speaker_h := 0.0
-		if not clean_speaker.is_empty():
-			speaker_h = FONT_BOLD.get_height(SPEAKER_FONT_SIZE) + SPEAKER_GAP
-			_speaker_label.text = clean_speaker
-			_speaker_label.position = Vector2(PAD_X, PAD_Y)
-			_speaker_label.size = Vector2(inner_w, speaker_h)
-			_speaker_label.visible = true
-		else:
-			_speaker_label.text = ""
-			_speaker_label.visible = false
-
-		var body_h := maxf(FONT_REGULAR.get_height(FONT_SIZE), ceilf(body_metrics.y))
+		var body_h := maxf(FONT_BOLD.get_height(FONT_SIZE), ceilf(body_metrics.y))
 		_body_label.text = text_str
-		_body_label.position = Vector2(PAD_X, PAD_Y + speaker_h)
+		_body_label.position = Vector2(PAD_X, PAD_Y)
 		_body_label.size = Vector2(inner_w, body_h)
 
-		card_box_size = Vector2(inner_w + PAD_X * 2.0, PAD_Y * 2.0 + speaker_h + body_h)
-		size = Vector2(card_box_size.x, card_box_size.y + TAIL_H)
+		card_box_size = Vector2(inner_w + PAD_X * 2.0, PAD_Y * 2.0 + body_h)
+		size = card_box_size
 		queue_redraw()
 
-	func set_tail(local_x: float, tip_local_x: float) -> void:
-		if absf(local_x - _tail_local_x) <= 0.25 and absf(tip_local_x - _tail_tip_local_x) <= 0.25:
+	func set_tail_points(base_local: Vector2, tip_local: Vector2) -> void:
+		if base_local.distance_to(_tail_base_local) <= 0.25 and tip_local.distance_to(_tail_tip_local) <= 0.25:
 			return
-		_tail_local_x = local_x
-		_tail_tip_local_x = tip_local_x
+		_tail_base_local = base_local
+		_tail_tip_local = tip_local
 		queue_redraw()
 
 	func _draw() -> void:
-		var poly := _build_outline(card_box_size, _tail_local_x, _tail_tip_local_x, Vector2.ZERO)
-		var shadow_poly := _build_outline(card_box_size, _tail_local_x, _tail_tip_local_x, SHADOW_OFFSET)
-		draw_colored_polygon(shadow_poly, SHADOW_COLOR)
-		draw_colored_polygon(poly, BG_COLOR)
+		if tone == "thought":
+			_draw_thought_cloud()
+			return
+		var poly := _build_shout_burst(Vector2.ZERO) if tone == "shout" else _build_slanted_normal(Vector2.ZERO)
+		var back_poly := _build_shout_burst(BACKDROP_OFFSET) if tone == "shout" else _build_slanted_normal(BACKDROP_OFFSET)
+		draw_colored_polygon(back_poly, BACKDROP_COLOR)
+		draw_colored_polygon(poly, fill_color)
 		var closed := PackedVector2Array(poly)
 		closed.append(poly[0])
 		draw_polyline(closed, BORDER_COLOR, BORDER_WIDTH, true)
 
-	static func _build_outline(box_sz: Vector2, tail_x: float, tip_x: float, shift: Vector2) -> PackedVector2Array:
+	func _draw_thought_cloud() -> void:
+		var cloud := _build_cloud_perimeter(Vector2.ZERO)
+		var cloud_back := _build_cloud_perimeter(BACKDROP_OFFSET)
+		var trail_ts := [0.28, 0.58, 0.85]
+		var trail_rs := [8.5, 6.0, 3.8]
+		draw_colored_polygon(cloud_back, BACKDROP_COLOR)
+		for i in range(trail_ts.size()):
+			var c := _tail_base_local.lerp(_tail_tip_local, float(trail_ts[i])) + Vector2(0.0, 4.0)
+			draw_circle(c + BACKDROP_OFFSET, float(trail_rs[i]), BACKDROP_COLOR)
+		draw_colored_polygon(cloud, fill_color)
+		var closed := PackedVector2Array(cloud)
+		closed.append(cloud[0])
+		draw_polyline(closed, BORDER_COLOR, BORDER_WIDTH, true)
+		for i in range(trail_ts.size()):
+			var c := _tail_base_local.lerp(_tail_tip_local, float(trail_ts[i])) + Vector2(0.0, 4.0)
+			var rad := float(trail_rs[i])
+			draw_circle(c, rad, fill_color)
+			draw_arc(c, rad, 0.0, TAU, 20, BORDER_COLOR, BORDER_WIDTH, true)
+
+	func _build_slanted_normal(shift: Vector2) -> PackedVector2Array:
+		var w := card_box_size.x
+		var h := card_box_size.y
+		var s := (h * SLANT_RATIO) * 0.5
+		var c_tl := Vector2(s, 0.0) + shift
+		var c_tr := Vector2(w + s, 0.0) + shift
+		var c_br := Vector2(w - s, h) + shift
+		var c_bl := Vector2(-s, h) + shift
+		var r := minf(CORNER_RADIUS, minf(h * 0.42, w * 0.22))
+
+		var min_tx := c_bl.x + r + TAIL_BASE_HALF_W + 2.0
+		var max_tx := maxf(min_tx, c_br.x - r - TAIL_BASE_HALF_W - 2.0)
+		var tx := clampf(_tail_base_local.x + shift.x, min_tx, max_tx)
+
 		var pts := PackedVector2Array()
-		var r := CORNER_RADIUS
-		var w := box_sz.x
-		var h := box_sz.y
-		_append_arc(pts, Vector2(r, r) + shift, r, PI, PI * 1.5)
-		_append_arc(pts, Vector2(w - r, r) + shift, r, -PI * 0.5, 0.0)
-		_append_arc(pts, Vector2(w - r, h - r) + shift, r, 0.0, PI * 0.5)
-		var tail_r := clampf(tail_x + TAIL_HALF_W, r + 2.0, w - r - 2.0)
-		var tail_l := clampf(tail_x - TAIL_HALF_W, r + 2.0, tail_r - 2.0)
-		pts.append(Vector2(tail_r, h) + shift)
-		pts.append(Vector2(tip_x, h + TAIL_H) + shift)
-		pts.append(Vector2(tail_l, h) + shift)
-		_append_arc(pts, Vector2(r, h - r) + shift, r, PI * 0.5, PI)
+		_append_quad_corner(pts, _step_along(c_tl, c_bl, r), c_tl, _step_along(c_tl, c_tr, r))
+		_append_quad_corner(pts, _step_along(c_tr, c_tl, r), c_tr, _step_along(c_tr, c_br, r))
+		_append_quad_corner(pts, _step_along(c_br, c_tr, r), c_br, _step_along(c_br, c_bl, r))
+		pts.append(Vector2(tx + TAIL_BASE_HALF_W, h + shift.y))
+		pts.append(_tail_tip_local + shift)
+		pts.append(Vector2(tx - TAIL_BASE_HALF_W, h + shift.y))
+		_append_quad_corner(pts, _step_along(c_bl, c_br, r), c_bl, _step_along(c_bl, c_tl, r))
 		return pts
 
-	static func _append_arc(pts: PackedVector2Array, center: Vector2, radius: float, a0: float, a1: float) -> void:
+	func _build_shout_burst(shift: Vector2) -> PackedVector2Array:
+		var spikes := 22
+		var samples := _sample_rounded_perimeter(card_box_size, spikes * 2)
+		var tip := _tail_tip_local + shift
+		var best_idx := 0
+		var best_dist := INF
+		for i in range(0, samples.size(), 2):
+			var sp: Vector2 = samples[i]["pt"] + shift
+			var d := sp.distance_to(tip)
+			if d < best_dist:
+				best_dist = d
+				best_idx = i
+		var pts := PackedVector2Array()
+		for i in range(samples.size()):
+			if i == best_idx:
+				pts.append(tip)
+				continue
+			var extrude := 12.0 if (i % 2) == 0 else -2.0
+			var base_pt: Vector2 = samples[i]["pt"]
+			var nrm: Vector2 = samples[i]["normal"]
+			pts.append(base_pt + nrm * extrude + shift)
+		return pts
+
+	func _build_cloud_perimeter(shift: Vector2) -> PackedVector2Array:
+		var lobes := 16
+		var samples := _sample_rounded_perimeter(card_box_size, lobes * 2)
+		var pts := PackedVector2Array()
+		for i in range(lobes):
+			var s0: Dictionary = samples[i * 2]
+			var sm: Dictionary = samples[i * 2 + 1]
+			var s1: Dictionary = samples[(i * 2 + 2) % samples.size()]
+			var p0: Vector2 = (s0["pt"] as Vector2) - (s0["normal"] as Vector2) * 1.5 + shift
+			var p1: Vector2 = (s1["pt"] as Vector2) - (s1["normal"] as Vector2) * 1.5 + shift
+			var ctrl: Vector2 = (sm["pt"] as Vector2) + (sm["normal"] as Vector2) * 14.0 + shift
+			_append_quad_corner(pts, p0, ctrl, p1)
+		return pts
+
+	static func _sample_rounded_perimeter(box_sz: Vector2, count: int) -> Array[Dictionary]:
+		var w := box_sz.x
+		var h := box_sz.y
+		var r := minf(22.0, minf(h * 0.45, w * 0.25))
+		var sw := maxf(0.0, w - 2.0 * r)
+		var sh := maxf(0.0, h - 2.0 * r)
+		var arc := 0.5 * PI * r
+		var total := 2.0 * sw + 2.0 * sh + 4.0 * arc
+		var out: Array[Dictionary] = []
+		for i in range(count):
+			var raw := _point_on_rounded_rect(w, h, r, sw, sh, arc, (float(i) * total) / float(count))
+			var pt: Vector2 = raw["pt"]
+			var slant_shift := ((h * 0.5 - pt.y) / maxf(h, 1.0)) * (h * SLANT_RATIO)
+			out.append({"pt": Vector2(pt.x + slant_shift, pt.y), "normal": raw["normal"]})
+		return out
+
+	static func _point_on_rounded_rect(w: float, h: float, r: float, sw: float, sh: float, arc: float, s: float) -> Dictionary:
+		var d := s
+		if d < sw:
+			return {"pt": Vector2(r + d, 0.0), "normal": Vector2(0.0, -1.0)}
+		d -= sw
+		if d < arc:
+			var a := -PI * 0.5 + (d / arc) * (PI * 0.5)
+			return {"pt": Vector2(w - r, r) + Vector2(cos(a), sin(a)) * r, "normal": Vector2(cos(a), sin(a))}
+		d -= arc
+		if d < sh:
+			return {"pt": Vector2(w, r + d), "normal": Vector2(1.0, 0.0)}
+		d -= sh
+		if d < arc:
+			var a := (d / arc) * (PI * 0.5)
+			return {"pt": Vector2(w - r, h - r) + Vector2(cos(a), sin(a)) * r, "normal": Vector2(cos(a), sin(a))}
+		d -= arc
+		if d < sw:
+			return {"pt": Vector2(w - r - d, h), "normal": Vector2(0.0, 1.0)}
+		d -= sw
+		if d < arc:
+			var a := PI * 0.5 + (d / arc) * (PI * 0.5)
+			return {"pt": Vector2(r, h - r) + Vector2(cos(a), sin(a)) * r, "normal": Vector2(cos(a), sin(a))}
+		d -= arc
+		if d < sh:
+			return {"pt": Vector2(0.0, h - r - d), "normal": Vector2(-1.0, 0.0)}
+		d -= sh
+		var a_tl := PI + (d / maxf(arc, 0.001)) * (PI * 0.5)
+		return {"pt": Vector2(r, r) + Vector2(cos(a_tl), sin(a_tl)) * r, "normal": Vector2(cos(a_tl), sin(a_tl))}
+
+	static func _step_along(from_pt: Vector2, to_pt: Vector2, dist: float) -> Vector2:
+		var dir := to_pt - from_pt
+		var seg_len := dir.length()
+		if seg_len <= 0.001:
+			return from_pt
+		return from_pt + (dir / seg_len) * dist
+
+	static func _append_quad_corner(pts: PackedVector2Array, p0: Vector2, ctrl: Vector2, p1: Vector2) -> void:
 		const STEPS := 5
 		for i in range(STEPS + 1):
-			var ang := lerpf(a0, a1, float(i) / float(STEPS))
-			pts.append(center + Vector2(cos(ang), sin(ang)) * radius)
+			var t := float(i) / float(STEPS)
+			var omt := 1.0 - t
+			pts.append(p0 * (omt * omt) + ctrl * (2.0 * omt * t) + p1 * (t * t))
