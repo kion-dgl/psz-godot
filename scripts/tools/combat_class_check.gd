@@ -37,6 +37,7 @@ static func check_force(probe) -> void:
 	await probe.ticks(2)
 	var cue: Dictionary = preload("res://scripts/3d/player/combat_palette_cue.gd").read(p)
 	probe._check(cue.get("charging", false) and cue.get("slot", -1) == 0, "front Foie slot exposes its charge circle")
+	await probe.ticks(60)
 	click = click.duplicate()
 	click.pressed = false
 	Input.parse_input_event(click)
@@ -54,8 +55,11 @@ static func check_other_techniques(probe, target) -> void:
 	var p = probe.player
 	var hp: int = target.current_hp
 	var pp: int = GameState.mp
+	GameState.set_mp(GameState.max_mp)
+	pp = GameState.mp
 	await cast_button(probe, MOUSE_BUTTON_RIGHT)
 	probe._check(target.current_hp < hp and GameState.mp < pp, "front Barta spends PP and hits locked enemy")
+	GameState.set_mp(GameState.max_mp)
 	GameState.set_hp(maxi(1, GameState.hp - 10))
 	var before: int = GameState.hp
 	await cast_button(probe, MOUSE_BUTTON_MIDDLE)
@@ -68,7 +72,7 @@ static func cast_button(probe, button: int) -> void:
 	click.button_index = button
 	click.pressed = true
 	Input.parse_input_event(click)
-	await probe.ticks(2)
+	await probe.ticks(60)
 	click = click.duplicate()
 	click.pressed = false
 	Input.parse_input_event(click)

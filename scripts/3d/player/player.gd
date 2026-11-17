@@ -681,21 +681,19 @@ func _setup_weapon() -> void:
 		weapon_data.id, weapon_data.name, weapon_data.weapon_type,
 		weapon_data.glb_path, weapon_data.glb_scale, weapon_data.tint_color])
 
-	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.GUN_BLADE:
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.GUN_BLADE and weapon_data.glb_path.is_empty():
 		weapon_data = weapon_data.duplicate() as WeaponData
 		weapon_data.glb_path = "res://assets/weapons/wgbr02/wgbr02/wgbr02_1_o/wgbr02_1_o.glb"
 		weapon_data.glb_scale = 1.0
-	# Use the native PSZ dagger geometry for this fixture. Keep equipped
-	# combat stats unchanged; only the attachment's visual resource is copied.
-	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS:
+	# Use the native PSZ dagger geometry for unpopulated/basic daggers so both
+	# hands match the calibrated grip while keeping custom weapon models intact.
+	if SaberPrototype.enabled(self) and weapon_data.weapon_type == WeaponData.WeaponType.DAGGERS and (weapon_data.glb_path.is_empty() or weapon_data.glb_path.ends_with("/basic/Dagger.glb")):
 		var native_dagger: WeaponData = WeaponRegistry.get_weapon("ein_dagger")
-		if native_dagger == null:
-			push_error("Dagger prototype requires the PSZ Ein Dagger model")
-			return
-		weapon_data = weapon_data.duplicate() as WeaponData
-		weapon_data.glb_path = native_dagger.glb_path
-		weapon_data.glb_scale = native_dagger.glb_scale
-		weapon_data.tint_color = native_dagger.tint_color
+		if native_dagger != null:
+			weapon_data = weapon_data.duplicate() as WeaponData
+			weapon_data.glb_path = native_dagger.glb_path
+			weapon_data.glb_scale = native_dagger.glb_scale
+			weapon_data.tint_color = native_dagger.tint_color
 
 	# Attach to right hand
 	weapon_node = _attach_weapon_to_bone(WEAPON_BONE_NAME, weapon_data)
@@ -2602,7 +2600,8 @@ func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
 	_combo_fumbled = false  # each step gets a clean chain attempt
 
 	if SaberPrototype.enabled(self):
-		if attack_num == 1 and not prepared:
+		var aiming_ready: bool = combat_aim != null and combat_aim.active and combat_aim.allowed()
+		if attack_num == 1 and not prepared and not aiming_ready:
 			_saber_phase = "prepare"
 			_saber_phase_left = SaberPrototype.READY_PREP
 			_attack_step_ended = true
@@ -2979,7 +2978,8 @@ func transition_to(new_state: PlayerState) -> void:
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:
 	if SaberPrototype.enabled(self):
-		if _anim_prefix == "pso_f_da" and anim_name == "pso_f_da_tec": anim_name = "pwda_tec"
+		if _anim_prefix in ["pso_f_da", "pso_ro", "pso_f_ro", "pso_wn", "pso_f_wn", "pso_fi", "pso_f_fi"] and anim_name == _anim_prefix + "_tec":
+			anim_name = SaberPrototype.native_clip(self, "tec")
 		for role in ["esc_f", "dam_d_lp"]:
 			if anim_name == _anim_prefix + "_" + role:
 				anim_name = SaberPrototype.native_clip(self, role)
@@ -3763,6 +3763,9 @@ func _add_prototype_animations(lib: AnimationLibrary, anim_glb: String, prototyp
 			var step := int(clip.right(1)) - 1
 			native_clip.length += prototype_profile.get("recovery", SaberPrototype.RECOVERY)[step]
 		lib.add_animation(clip, native_clip)
+	for step_clip in native.get_animation_list():
+		if ("_stp_" in step_clip or "_step_" in step_clip) and not lib.has_animation(step_clip):
+			lib.add_animation(step_clip, native.get_animation(step_clip).duplicate())
 
 	return true
 
@@ -3773,7 +3776,9 @@ func _caster_pose_hold(clip: String) -> Quaternion:
 	var hold: Dictionary = WEAPON_HOLD.get(_get_equipped_weapon_type(), WEAPON_HOLD_DEFAULT)[mode]
 	weapon_node.position = get_meta("fixture_grip_positions", {}).get(clip, hold.pos)
 	var saved: Dictionary = WAND_SAVED_GRIPS if wand else ROD_SAVED_GRIPS
-	return saved[key].get_rotation_quaternion() if saved.has(key) else Quaternion.from_euler(hold.rot * PI / 180.0)
+	if saved.has(key): return saved[key].get_rotation_quaternion()
+	if wand: return WAND_SAVED_GRIPS["pmwa_wait"].get_rotation_quaternion()
+	return Quaternion.from_euler(hold.rot * PI / 180.0)
 
 func _ranged_pose_hold(clip: String, native: Quaternion) -> Quaternion:
 	if _get_equipped_weapon_type() == WeaponData.WeaponType.RIFLE:

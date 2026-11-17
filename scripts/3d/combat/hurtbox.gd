@@ -50,7 +50,8 @@ func take_attack(packet: Dictionary, knockback: Vector3, source: Node3D = null) 
 		var prototype = preload("res://scripts/3d/player/humar_saber_prototype.gd")
 		if prototype.enabled(source):
 			fixture_contact = true
-			accuracy = prototype.contact_accuracy(owner_node.current_evasion)
+			if OS.get_environment("PSZ_HUMAR_SABER") == "1":
+				accuracy = prototype.contact_accuracy(owner_node.current_evasion)
 	take_hit(power, knockback, accuracy, str(packet.get("element", "")), int(packet.get("element_level", 0)), bool(packet.get("charge_pb", true)), str(packet.get("kind", "physical")), source)
 
 	if fixture_contact and is_instance_valid(owner_node) and owner_node.current_hp < before_hp:

@@ -1,15 +1,20 @@
 extends RefCounted
 ## Palette-only presentation of real attack, charge and recovery clocks.
+const Aim := preload("res://scripts/3d/player/combat_aim.gd")
+
 static func read(p) -> Dictionary:
-	if not is_instance_valid(p) or p.combat_aim == null or not p.combat_aim.eligible() or GameState.is_gameplay_blocked(): return {}
+	if not is_instance_valid(p) or p._is_in_city() or SessionManager.get_location() != "field" or GameState.is_gameplay_blocked(): return {}
+	if p.combat_aim != null and not p.combat_aim.eligible(): return {}
 	if p._charging_slot >= 0:
 		return {"progress": clampf(p._tech_charge_timer / p.TECH_CHARGE_THRESHOLD, 0, 1), "ready": p._tech_charge_ready, "queued": false, "charging": true, "slot": p._charging_slot}
 	if p.current_state == p.PlayerState.DODGING:
 		var duration: float = p._dodge_clip_duration if p._dodge_clip_duration > 0 else p.DODGE_DURATION
 		return {"progress": clampf(p.dodge_timer / duration, 0, 1), "ready": false, "queued": false, "recovery": true}
-	if p.current_state != p.PlayerState.ATTACKING: return {}
-	var feedback: Dictionary = p.combat_aim.combo_feedback()
-	return {"progress": feedback.fraction, "ready": feedback.state == "CLICK", "queued": feedback.state == "QUEUED", "open": feedback.open, "close": feedback.close, "recovery": p.combo_state <= 0 or p.combo_state >= 3}
+	if p.current_state != p.PlayerState.ATTACKING or not p._saber_phase.is_empty() or p._attack_anim_length <= 0.0: return {}
+	var feedback: Dictionary = Aim.combo_feedback(p)
+	if feedback.state == "MISSED": return {}
+	return {"progress": feedback.fraction, "ready": feedback.state == "CLICK", "queued": feedback.state == "QUEUED",
+		"open": feedback.open, "close": feedback.close, "recovery": p.combo_state <= 0 or p.combo_state >= int(feedback.max_combo)}
 
 static func applies(cue: Dictionary, action: String, slot: int) -> bool:
 	if cue.get("charging", false): return slot == int(cue.slot)
