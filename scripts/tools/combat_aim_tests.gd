@@ -68,3 +68,24 @@ static func run(r: Node) -> void:
 	r.assert_eq(Aim.combo_prompt(2, 0.9, window, false, true), "QUEUED", "accepted queue remains visible after window closes")
 	r.assert_eq(Aim.combo_prompt(3, 0.6, window, false, false), "FINISHER", "finisher never offers a fourth hit")
 	r.assert_eq(Aim.combo_prompt(0, 0.6, window, true, true), "FIRE", "interruption clears stale combo feedback")
+	_check_unified_class_profiles(r)
+
+static func _check_unified_class_profiles(r: Node) -> void:
+	const Rules := preload("res://scripts/3d/player/humar_saber_prototype.gd")
+	r.assert_eq(Aim.WEAPONS.size(), 15, "all 15 non-shield weapon types support field aiming and lock-on")
+	r.assert_true(WeaponData.WeaponType.SHIELD not in Aim.WEAPONS, "retired shield weapon type stays excluded from aiming")
+	var player = preload("res://scripts/3d/player/player.gd").new()
+	var saved_slot: int = CharacterManager._active_slot
+	var saved_char = CharacterManager._characters[0]
+	for class_id in ClassRegistry.get_all_class_ids():
+		CharacterManager._characters[0] = null
+		CharacterManager.create_character(0, class_id, "Profile_" + str(class_id))
+		CharacterManager.set_active_slot(0)
+		var cd = ClassRegistry.get_class_data(class_id)
+		var expected_female: bool = cd.gender == "Female"
+		r.assert_eq(Rules.is_female_player(player), expected_female, "gender profile matches class " + str(class_id))
+		var prof: Dictionary = Rules.profile(player)
+		r.assert_true(not prof.is_empty() and str(prof.get("prefix", "")).begins_with("pso_f_" if expected_female else "pso_"), "weapon animation profile resolves for " + str(class_id))
+	CharacterManager._characters[0] = saved_char
+	CharacterManager._active_slot = saved_slot
+	player.free()

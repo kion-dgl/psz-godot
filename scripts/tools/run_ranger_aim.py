@@ -39,8 +39,7 @@ def main():
             'config/name="PSZ Godot"', 'config/name="PSZ Aim Prototype"')
         (project / 'project.godot').write_text(settings)
         env = dict(os.environ, PSZ_AIM_PROTOTYPE='1', PSZ_AIM_CHECK='1' if args.check else '0',
-                   PSZ_AIM_FEMALE='1' if args.female else '0', PSZ_AIM_WEAPON=weapon, PSZ_AIM_CLASS=class_id,
-                   PSZ_HUMAR_SABER='0')
+                   PSZ_AIM_FEMALE='1' if args.female else '0', PSZ_AIM_WEAPON=weapon, PSZ_AIM_CLASS=class_id)
         command = [args.godot, '--path', str(project), '--max-fps', '60']
         if args.check and not args.rendered:
             command.append('--headless')

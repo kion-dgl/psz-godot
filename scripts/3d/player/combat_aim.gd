@@ -1,6 +1,12 @@
 extends RefCounted
-## Opt-in Ranger control slice (#775). OrbitCamera owns the view; Player owns locomotion.
-const WEAPONS := [WeaponData.WeaponType.HANDGUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.MECH_GUN, WeaponData.WeaponType.SABER, WeaponData.WeaponType.SWORD, WeaponData.WeaponType.DAGGERS, WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND]
+## Field aiming, lock-on and strafing (#775). OrbitCamera owns the view; Player owns locomotion.
+const WEAPONS := [
+	WeaponData.WeaponType.SABER, WeaponData.WeaponType.SWORD, WeaponData.WeaponType.DAGGERS,
+	WeaponData.WeaponType.CLAW, WeaponData.WeaponType.DOUBLE_SABER, WeaponData.WeaponType.SPEAR,
+	WeaponData.WeaponType.SLICER, WeaponData.WeaponType.GUN_BLADE, WeaponData.WeaponType.HANDGUN,
+	WeaponData.WeaponType.MECH_GUN, WeaponData.WeaponType.RIFLE, WeaponData.WeaponType.BAZOOKA,
+	WeaponData.WeaponType.LASER_CANNON, WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND,
+]
 const STRAFE_SPEED := 4.5
 enum Mode { NORMAL, SHOULDER, LOCKED }
 var mode := Mode.NORMAL
@@ -17,13 +23,13 @@ var _clip_speed := 1.0
 
 func setup(camera_rig: Node3D) -> void:
 	orbit = camera_rig
-	if OS.get_environment("PSZ_AIM_PROTOTYPE") != "1": return
+	if OS.get_environment("PSZ_AIM_PROTOTYPE") == "0": return
 	for binding in [["combat_aim", KEY_Z], ["combat_lock", KEY_Q], ["combat_switch", KEY_TAB]]:
 		if not InputMap.has_action(binding[0]): InputMap.add_action(binding[0])
 		var key := InputEventKey.new()
 		key.physical_keycode = binding[1]
 		if not InputMap.action_has_event(binding[0], key): InputMap.action_add_event(binding[0], key)
-	# Dedicated keyboard dodge for this opt-in fixture; menus still own Space.
+	# Dedicated keyboard dodge for field play; menus still own Space.
 	var dodge_key := InputEventKey.new()
 	dodge_key.physical_keycode = KEY_SPACE
 	if not InputMap.action_has_event("dodge", dodge_key): InputMap.action_add_event("dodge", dodge_key)
@@ -36,8 +42,11 @@ func setup(camera_rig: Node3D) -> void:
 	reticle.hide()
 
 func eligible() -> bool:
+	if OS.get_environment("PSZ_AIM_PROTOTYPE") == "0": return false
 	var p = orbit.target
-	return OS.get_environment("PSZ_AIM_PROTOTYPE") == "1" and is_instance_valid(p) and p.has_method("_get_equipped_weapon_type") and not p._is_in_city() and p._get_equipped_weapon_type() in WEAPONS
+	if not is_instance_valid(p) or not p.has_method("_get_equipped_weapon_type") or p._is_in_city(): return false
+	if SessionManager.get_location() != "field": return false
+	return p._is_barehanded() or p._get_equipped_weapon_type() in WEAPONS
 
 func allowed() -> bool:
 	if not eligible(): return false
@@ -60,7 +69,10 @@ func update(delta: float) -> void:
 		else:
 			var direction := 1.0 if InputConfig.invert_camera_x else -1.0
 			orbit.camera_rotation += Input.get_axis("camera_left", "camera_right") * orbit.rotation_speed * direction * delta * 60.0
-			orbit.camera_pitch = clampf(orbit.camera_pitch + Input.get_axis("camera_down", "camera_up") * orbit.rotation_speed * delta * 60.0, orbit.min_pitch_offset, orbit.max_pitch_offset)
+			if mode == Mode.SHOULDER or InputConfig.enable_camera_y:
+				orbit.camera_pitch = clampf(orbit.camera_pitch + Input.get_axis("camera_down", "camera_up") * orbit.rotation_speed * delta * 60.0, orbit.min_pitch_offset, orbit.max_pitch_offset)
+			if mode == Mode.NORMAL and Input.is_action_just_pressed("camera_lock"):
+				orbit._center_behind_player()
 	blend = move_toward(blend, 1.0 if mode == Mode.SHOULDER else 0.0, delta / 0.15)
 	if is_instance_valid(reticle):
 		reticle.visible = active
@@ -151,7 +163,8 @@ func play_step(p, input: Vector2) -> void:
 	var ap: AnimationPlayer = p.animation_player
 	if ap == null: return
 	if input.is_zero_approx():
-		if not ap.current_animation.ends_with("_wait"): p.play_animation(p._anim_prefix + "_wait")
+		var ready: String = p._anim_prefix + "_wait"
+		if ap.current_animation != ready: p.play_animation(ready)
 		return
 	var lateral := absf(input.x) > absf(input.y)
 	var suffix := "_stp_lr" if lateral else "_stp_fb"
@@ -163,6 +176,7 @@ func play_step(p, input: Vector2) -> void:
 	if not ap.has_animation(clip): return
 	var speed := (1.0 if input.x > 0 else -1.0) if lateral else (1.0 if input.y < 0 else -1.0)
 	if ap.current_animation != clip or _clip_speed != speed:
+		p._set_sword_pose_hold(clip)
 		ap.play(clip, 0.08, speed, speed < 0.0)
 		_clip_speed = speed
 
@@ -194,16 +208,16 @@ func shot_direction(start: Vector3, max_range: float) -> Vector3:
 	var point: Vector3 = lock.point(lock.target) if mode == Mode.LOCKED and is_instance_valid(lock.target) else aim_point(max_range)
 	return (point - start).normalized()
 
-func combo_feedback() -> Dictionary:
-	var p = orbit.target
+static func combo_feedback(p) -> Dictionary:
+	var max_combo: int = int(p._weapon_combat_config(p._get_equipped_weapon_type()).get("combo_steps", 3))
 	var step: int = p.combo_state if p.current_state == p.PlayerState.ATTACKING else 0
 	var window: Array[float] = [0.0, 0.0]
-	if step > 0 and step < 3:
+	if step > 0 and step < max_combo:
 		var timing: Dictionary = CombatManager.get_combo_timing(p._get_equipped_weapon_type(), step)
 		if not timing.is_empty(): window = p._chain_window(timing)
 	var fraction: float = p._attack_frac()
-	return {"step": step, "fraction": fraction, "open": window[0], "close": window[1],
-		"state": combo_prompt(step, fraction, window, p._combo_fumbled, p._queued_combo != p.ComboQueue.NONE)}
+	return {"step": step, "max_combo": max_combo, "fraction": fraction, "open": window[0], "close": window[1],
+		"state": combo_prompt(step if step < max_combo else 3, fraction, window, p._combo_fumbled, p._queued_combo != p.ComboQueue.NONE)}
 
 static func combo_prompt(step: int, fraction: float, window: Array[float], fumbled: bool, queued: bool) -> String:
 	if step <= 0: return "FIRE"

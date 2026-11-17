@@ -63,10 +63,18 @@ const WEAPON_PROFILES := {
 	WeaponData.WeaponType.WAND: [MALE_WAND_PROFILE, FEMALE_WAND_PROFILE],
 }
 
+static func is_female_player(player) -> bool:
+	var character = CharacterManager.get_active_character()
+	if character != null:
+		var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "humar")))
+		if class_data != null: return class_data.gender == "Female"
+	return bool(player._is_female)
+
 static func profile(player) -> Dictionary:
-	if player._is_barehanded(): return FEMALE_UNARMED_PROFILE if player._is_female else MALE_UNARMED_PROFILE
+	var female := is_female_player(player)
+	if player._is_barehanded(): return FEMALE_UNARMED_PROFILE if female else MALE_UNARMED_PROFILE
 	var pair: Array = WEAPON_PROFILES.get(player._get_equipped_weapon_type(), WEAPON_PROFILES[WeaponData.WeaponType.SABER])
-	var base: Dictionary = pair[1 if player._is_female else 0]
+	var base: Dictionary = pair[1 if female else 0]
 	if gun_mode(player):
 		var shooting := base.duplicate(true)
 		shooting["attack_prefix"] = str(base.native_prefix) + "_shot"
@@ -101,11 +109,12 @@ const RECOVERY := [0.14, 0.16, 0.22]
 const CHAIN: Array[float] = [0.55, 0.95]
 
 static func enabled(player) -> bool:
-	if OS.get_environment("PSZ_HUMAR_SABER") != "1": return false
-	var character = CharacterManager.get_active_character()
-	if character == null or character.get("class_id", "") not in ["humar", "humarl"]: return false
-	if SessionManager.get_location() != "field" or SessionManager.get_session().get("quest_id", "") != "debug_coliseum": return false
-	return player._is_barehanded() or WEAPON_PROFILES.has(player._get_equipped_weapon_type())
+	if OS.get_environment("PSZ_HUMAR_SABER") == "0": return false
+	if not is_instance_valid(player) or not player.is_inside_tree() or player._is_in_city(): return false
+	if SessionManager.get_location() != "field" or CharacterManager.get_active_character() == null: return false
+	if player.animation_player == null: return false
+	if not player._is_barehanded() and not WEAPON_PROFILES.has(player._get_equipped_weapon_type()): return false
+	return ResourceLoader.exists(str(profile(player).library))
 
 static func caution(player, movement_yaw: Variant = null) -> bool:
 	for enemy in player._targeted_enemies:
