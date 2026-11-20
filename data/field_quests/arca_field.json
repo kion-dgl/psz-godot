@@ -188,7 +188,7 @@
                 0,
                 -4
               ],
-              "enemy_id": "finjer-r"
+              "enemy_id": "finjer_r"
             }
           ]
         },
@@ -318,7 +318,7 @@
                 0,
                 4
               ],
-              "enemy_id": "finjer-b"
+              "enemy_id": "finjer_b"
             },
             {
               "type": "enemy",
@@ -412,7 +412,7 @@
                 0,
                 2
               ],
-              "enemy_id": "finjer-r"
+              "enemy_id": "finjer_r"
             },
             {
               "type": "enemy",
@@ -503,7 +503,7 @@
                 0,
                 0
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "box",
@@ -626,7 +626,7 @@
                 0,
                 4
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -635,7 +635,7 @@
                 0,
                 -2
               ],
-              "enemy_id": "finjer-r"
+              "enemy_id": "finjer_r"
             },
             {
               "type": "enemy",
@@ -696,7 +696,7 @@
                 0,
                 -10
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -789,7 +789,7 @@
                 0,
                 -3
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -894,7 +894,7 @@
                 0,
                 -6.4
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -903,7 +903,7 @@
                 0,
                 -5.2
               ],
-              "enemy_id": "finjer-r"
+              "enemy_id": "finjer_r"
             }
           ]
         },
@@ -1111,7 +1111,7 @@
                 0,
                 4.5
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -1271,7 +1271,7 @@
                 0,
                 2
               ],
-              "enemy_id": "finjer-b"
+              "enemy_id": "finjer_b"
             },
             {
               "type": "enemy",
@@ -1280,7 +1280,7 @@
                 0,
                 -4
               ],
-              "enemy_id": "finjer-r"
+              "enemy_id": "finjer_r"
             }
           ]
         },
@@ -1339,7 +1339,7 @@
                 0,
                 3
               ],
-              "enemy_id": "finjer-b"
+              "enemy_id": "finjer_b"
             },
             {
               "type": "enemy",
@@ -1348,7 +1348,7 @@
                 0,
                 -5
               ],
-              "enemy_id": "finjer-g"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -1396,7 +1396,7 @@
                 0,
                 0
               ],
-              "enemy_id": "blade-mother"
+              "enemy_id": "blade_mother"
             },
             {
               "type": "enemy",

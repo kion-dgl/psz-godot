@@ -11,6 +11,7 @@ var _saber_phase := ""
 var _saber_phase_left := 0.0
 
 const SaberPrototype := preload("res://scripts/3d/player/humar_saber_prototype.gd")
+const SlashTrail := preload("res://scripts/3d/combat/weapon_slash_trail.gd")
 
 # Movement settings
 const MOVE_SPEED: float = 6.0
@@ -217,8 +218,15 @@ var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
 var _attack_step_ended: bool = false  # Step-end fired (animation_finished vs length safety net — exactly one wins)
 var _attack_hit_done: bool = false  # Window closed, target cap consumed, or volley released.
 var _attack_hit_step: int = 0  # Index into the original timing's hit_fracs for this swing.
+var _attack_hit_window_opened: int = -1  # Sub-hit index whose active melee sweep has started.
 var _attack_hit_targets: Dictionary = {}  # Enemy instance IDs consumed across this swing.
+var _captured_melee_targets: Array = []  # PSO-style target snapshot at melee swing start.
 var _attack_damage_snapshot: Dictionary = {}  # One damage roll per swing, independent of scan rate.
+var _slash_trail: Node3D = null
+var _slash_trail_left: Node3D = null
+var _weapon_blade_endpoints: Dictionary = {}
+var _weapon_blade_endpoints_left: Dictionary = {}
+var _weapon_trail_tint: Color = Color(0.35, 0.85, 1.0)
 var _primary_target_info: Dictionary = {}  # {} = none; {kind, name, hp, max_hp} for the target-info HUD
 # Combo timing visual
 var _combo_ring: MeshInstance3D = null
@@ -605,6 +613,12 @@ func refresh_mag() -> void:
 
 
 func _clear_weapon() -> void:
+	if _slash_trail and is_instance_valid(_slash_trail):
+		_slash_trail.clear_trail()
+	if _slash_trail_left and is_instance_valid(_slash_trail_left):
+		_slash_trail_left.clear_trail()
+	_weapon_blade_endpoints.clear()
+	_weapon_blade_endpoints_left.clear()
 	if weapon_node and is_instance_valid(weapon_node):
 		var parent := weapon_node.get_parent()
 		if parent:
@@ -697,6 +711,8 @@ func _setup_weapon() -> void:
 
 	# Attach to right hand
 	weapon_node = _attach_weapon_to_bone(WEAPON_BONE_NAME, weapon_data)
+	_weapon_blade_endpoints = SlashTrail.compute_blade_endpoints(weapon_node)
+	_weapon_trail_tint = weapon_data.tint_color if weapon_data.tint_color != Color.WHITE else Color(0.35, 0.85, 1.0)
 
 	# Dual-wield: daggers and mechguns go in both hands
 	var is_dual_wield := weapon_data.weapon_type in [
@@ -706,6 +722,7 @@ func _setup_weapon() -> void:
 	if is_dual_wield:
 		print("[Player] Dual-wield weapon, attaching to left hand")
 		weapon_node_left = _attach_weapon_to_bone(LEFT_WEAPON_BONE_NAME, weapon_data, true)
+		_weapon_blade_endpoints_left = SlashTrail.compute_blade_endpoints(weapon_node_left)
 
 
 func _get_equipped_weapon_data() -> WeaponData:
@@ -1059,6 +1076,36 @@ func _process(delta: float) -> void:
 	# same reason the orbit camera smooths in _process (#538).
 	if model:
 		_smooth_model_y(delta)
+	_update_slash_trail(delta)
+
+
+func _update_slash_trail(delta: float) -> void:
+	if not is_inside_tree() or _is_in_city():
+		return
+	var active_melee := _is_melee_trail_active()
+	var tint := Color(1.0, 0.78, 0.32) if _is_special_attack else _weapon_trail_tint
+	_slash_trail = _step_hand_trail(_slash_trail, weapon_node, _weapon_blade_endpoints, active_melee, tint, delta)
+	_slash_trail_left = _step_hand_trail(_slash_trail_left, weapon_node_left, _weapon_blade_endpoints_left, active_melee, tint, delta)
+
+
+func _is_melee_trail_active() -> bool:
+	if current_state != PlayerState.ATTACKING or combo_state <= 0 or not _saber_phase.is_empty() or _attack_anim_length <= 0.0:
+		return false
+	if _is_ranged_swing(_get_equipped_weapon_type()):
+		return false
+	var frac := _attack_anim_elapsed / _attack_anim_length
+	return frac >= 0.12 and frac <= 0.68
+
+
+func _step_hand_trail(trail: Node3D, weapon: Node3D, endpoints: Dictionary, active: bool, tint: Color, delta: float) -> Node3D:
+	if is_instance_valid(weapon) and not endpoints.is_empty():
+		if trail == null or not is_instance_valid(trail):
+			trail = SlashTrail.new()
+			add_child(trail)
+		trail.step_trail(weapon, endpoints, active, tint, delta)
+	elif trail != null and is_instance_valid(trail):
+		trail.clear_trail()
+	return trail
 
 
 var _dodge_body_exceptions: Array[PhysicsBody3D] = []
@@ -1330,7 +1377,29 @@ func _held_movement_yaw() -> Variant:
 
 
 func _attack_input_yaw() -> Variant:
-	return combat_aim.facing() if combat_aim != null and combat_aim.active and combat_aim.allowed() else _held_movement_yaw()
+	if combat_aim != null and combat_aim.active and combat_aim.allowed():
+		return combat_aim.facing()
+	var held: Variant = _held_movement_yaw()
+	var soft: Variant = _soft_target_yaw()
+	if held != null:
+		if soft != null and absf(wrapf(float(soft) - float(held), -PI, PI)) <= PI * 0.25:
+			return soft
+		return held
+	return soft
+
+
+func _soft_target_yaw() -> Variant:
+	if _targeted_enemies.is_empty():
+		return null
+	var primary = _targeted_enemies[0]
+	if not is_instance_valid(primary) or not primary.get("is_alive"):
+		return null
+	var offset: Vector3 = primary.global_position - global_position
+	offset.y = 0.0
+	var max_reach: float = float(_weapon_combat_config(_get_equipped_weapon_type()).get("hit_h_dist", 3.0)) + 1.5
+	if offset.length_squared() < 0.0001 or offset.length() > max_reach:
+		return null
+	return atan2(offset.x, offset.z)
 
 
 func _handle_movement(delta: float) -> void:
@@ -2405,9 +2474,34 @@ func _handle_attack_state(delta: float) -> void:
 	_update_combo_ring(delta)
 	_update_charge_visual(delta)
 
-	# Stop horizontal movement during attacks
-	velocity.x = 0
-	velocity.z = 0
+	# Subtle melee step-in during the swing's opening windup closes mid-range
+	# spacing naturally while stopping cleanly outside enemy personal space.
+	var step_vel := _melee_step_velocity()
+	velocity.x = step_vel.x
+	velocity.z = step_vel.z
+
+
+func _is_ranged_swing(weapon_type: int) -> bool:
+	return weapon_type in RANGED_WEAPON_TYPES or SaberPrototype.gun_mode(self) or weapon_type == WeaponData.WeaponType.LASER_CANNON
+
+
+func _melee_step_velocity() -> Vector3:
+	if combo_state <= 0 or _attack_anim_length <= 0.0 or _is_ranged_swing(_get_equipped_weapon_type()):
+		return Vector3.ZERO
+	if _attack_anim_elapsed >= _attack_anim_length * 0.28:
+		return Vector3.ZERO
+	var forward := Vector3(sin(player_rotation), 0.0, cos(player_rotation))
+	if not is_inside_tree() or not _can_move_to(forward):
+		return Vector3.ZERO
+	if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+		var target = _targeted_enemies[0]
+		var to_t: Vector3 = target.global_position - global_position
+		to_t.y = 0.0
+		var edata = target.get("enemy_data")
+		var stop_dist: float = (float(edata.collision_radius) if edata else 0.5) + 0.85
+		if to_t.length() <= stop_dist:
+			return Vector3.ZERO
+	return forward * 2.4
 
 
 ## Melee retries until close/cap; ranged keeps one release. A skipped window
@@ -2601,7 +2695,7 @@ func _play_attack_animation(attack_num: int, prepared: bool = false) -> void:
 
 	if SaberPrototype.enabled(self):
 		var aiming_ready: bool = combat_aim != null and combat_aim.active and combat_aim.allowed()
-		if attack_num == 1 and not prepared and not aiming_ready:
+		if attack_num == 1 and not prepared and not aiming_ready and SaberPrototype.READY_PREP > 0.0:
 			_saber_phase = "prepare"
 			_saber_phase_left = SaberPrototype.READY_PREP
 			_attack_step_ended = true
@@ -2682,8 +2776,10 @@ func _play_and_track_attack(anim_name: String) -> void:
 	# Each new swing owns a fresh window and target budget.
 	_attack_hit_done = false
 	_attack_hit_step = 0
+	_attack_hit_window_opened = -1
 	_attack_hit_targets.clear()
 	_attack_damage_snapshot.clear()
+	_capture_melee_targets()
 	# Shared lookup covers swing start and delayed strong-attack release.
 	var sfx_path := _weapon_attack_sound(_get_equipped_weapon_type())
 	if not sfx_path.is_empty() and not (SaberPrototype.enabled(self) and (_is_special_attack or _get_equipped_weapon_type() == WeaponData.WeaponType.MECH_GUN)):
@@ -3162,18 +3258,29 @@ func _setup_attack_hitbox() -> void:
 
 func _weapon_combat_config(weapon_type: int) -> Dictionary:
 	if SaberPrototype.enabled(self) and _is_barehanded():
-		return {"combo_steps": 3, "hit_h_dist": 1.7, "hit_v_dist": 0.6, "hit_h_angle_deg": 35.0, "hit_v_angle_deg": 45.0, "max_targets": 1, "damaging_frac": [0.4, 0.4, 0.45], "damage_end_frac": [0.55, 0.55, 0.6]}
+		return {"combo_steps": 3, "hit_h_dist": 2.3, "hit_v_dist": 0.8, "hit_h_angle_deg": 45.0, "hit_v_angle_deg": 50.0, "max_targets": 1, "damaging_frac": [0.4, 0.4, 0.45], "damage_end_frac": [0.55, 0.55, 0.6]}
 	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.DAGGERS:
-		return config.merged({"hit_h_dist": 2.6, "hit_v_dist": 0.9, "hit_h_angle_deg": 38.0, "hit_v_angle_deg": 45.0}, true)
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.CLAW:
-		return config.merged({"hit_h_dist": 2.4, "hit_v_dist": 0.9, "hit_h_angle_deg": 36.0, "hit_v_angle_deg": 45.0}, true)
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.SPEAR:
-		return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 45.0, "max_targets": 3}, true)
-	if SaberPrototype.enabled(self) and weapon_type == WeaponData.WeaponType.GUN_BLADE:
-		return config.merged({"hit_h_dist": 8.0 if SaberPrototype.gun_mode(self) else 2.4, "hit_h_angle_deg": 15.0 if SaberPrototype.gun_mode(self) else 40.0, "hit_v_dist": 0.9, "max_targets": 1}, true)
-	if SaberPrototype.enabled(self) and weapon_type in [WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON]:
-		return CombatManager.get_weapon_type_config(WeaponData.WeaponType.BAZOOKA).merged({"combo_steps": 1, "max_targets": 5}, true)
+	if not SaberPrototype.enabled(self):
+		return config
+	match weapon_type:
+		WeaponData.WeaponType.SABER:
+			return config.merged({"hit_h_dist": 3.0, "hit_v_dist": 0.9, "hit_h_angle_deg": 45.0, "hit_v_angle_deg": 50.0}, true)
+		WeaponData.WeaponType.SWORD:
+			return config.merged({"hit_h_dist": 3.6, "hit_v_dist": 1.1, "hit_h_angle_deg": 55.0, "hit_v_angle_deg": 50.0}, true)
+		WeaponData.WeaponType.DAGGERS:
+			return config.merged({"hit_h_dist": 2.8, "hit_v_dist": 0.9, "hit_h_angle_deg": 45.0, "hit_v_angle_deg": 50.0}, true)
+		WeaponData.WeaponType.CLAW:
+			return config.merged({"hit_h_dist": 2.7, "hit_v_dist": 0.9, "hit_h_angle_deg": 45.0, "hit_v_angle_deg": 50.0}, true)
+		WeaponData.WeaponType.DOUBLE_SABER:
+			return config.merged({"hit_h_dist": 3.2, "hit_v_dist": 1.0, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 50.0}, true)
+		WeaponData.WeaponType.SPEAR:
+			return config.merged({"hit_h_dist": 4.0, "hit_v_dist": 0.9, "hit_h_angle_deg": 65.0, "hit_v_angle_deg": 50.0, "max_targets": 3}, true)
+		WeaponData.WeaponType.GUN_BLADE:
+			return config.merged({"hit_h_dist": 8.0 if SaberPrototype.gun_mode(self) else 3.0, "hit_h_angle_deg": 15.0 if SaberPrototype.gun_mode(self) else 45.0, "hit_v_dist": 0.9, "hit_v_angle_deg": 50.0, "max_targets": 1}, true)
+		WeaponData.WeaponType.ROD, WeaponData.WeaponType.WAND:
+			return config.merged({"hit_h_dist": 2.8, "hit_v_dist": 0.8, "hit_h_angle_deg": 42.0, "hit_v_angle_deg": 50.0}, true)
+		WeaponData.WeaponType.BAZOOKA, WeaponData.WeaponType.LASER_CANNON:
+			return CombatManager.get_weapon_type_config(WeaponData.WeaponType.BAZOOKA).merged({"combo_steps": 1, "max_targets": 5}, true)
 	return config
 
 
@@ -3221,12 +3328,12 @@ const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RI
 ## enemies in the weapon's hit cone — the same geometry targeting and the
 ## reticles use, applied directly through each enemy's Hurtbox (the old
 ## whole-swing Area3D box is retired for melee).
-func _execute_attack_hit(single_impact: bool = false) -> void:
+func _execute_attack_hit(single_impact: bool = false, keep_window_open: bool = false) -> void:
 	if _attack_damage_snapshot.is_empty():
 		_attack_damage_snapshot = _get_attack_damage()
 	var atk: Dictionary = _attack_damage_snapshot
-	if single_impact:
-		_attack_hit_targets.clear()
+	if single_impact or keep_window_open:
+		if single_impact: _attack_hit_targets.clear()
 		atk = atk.duplicate()
 		atk["hits"] = 1
 	var weapon_type: int = int(atk.get("weapon_type", 0))
@@ -3236,38 +3343,78 @@ func _execute_attack_hit(single_impact: bool = false) -> void:
 		return
 
 	var config: Dictionary = _weapon_combat_config(weapon_type)
-	var in_cone: Array = _enemies_in_hit_cone(config)
 	var element: String = _current_attack_element if _is_special_attack else ""
 	var element_level: int = _current_attack_element_level if _is_special_attack else 0
 	var target_cap := int(atk.get("max_targets", 1))
-	for enemy in in_cone:
+	for enemy in _collect_melee_candidates(config):
 		if _attack_hit_targets.size() >= target_cap:
 			break
 		var target_id: int = enemy.get_instance_id()
 		if _attack_hit_targets.has(target_id):
 			continue
-		var hb = enemy.get("hurtbox")
-		if enemy.has_method("hurtbox_in_cone"):
-			hb = enemy.hurtbox_in_cone(global_position+Vector3.UP,player_rotation,config).get("hurtbox")
+		var hb = _resolve_melee_hurtbox(enemy, config)
 		if hb == null or not is_instance_valid(hb):
 			continue
 		# Consume contact before callbacks: evasion/immunity cannot re-roll.
 		_attack_hit_targets[target_id] = true
-		var knock_dir: Vector3 = enemy.global_position - global_position
-		knock_dir.y = 0
-		knock_dir = knock_dir.normalized()
-		# hits_per_step hits each, mirroring the retired Hitbox semantics
-		for _h in range(int(atk.get("hits", 1))):
-			if hb is Hurtbox:
-				var packet := atk.duplicate(true)
-				packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
-				packet["element"] = element
-				packet["element_level"] = element_level
-				hb.take_attack(packet, knock_dir * float(atk.get("knockback", 5.0)), self)
-			else:
-				hb.take_hit(int(atk.get("damage", 10)), knock_dir * float(atk.get("knockback", 5.0)), int(atk.get("accuracy", 100)), element, element_level, true, "physical", self)
-	if _attack_hit_targets.size() >= target_cap:
+		_deliver_melee_contact(hb, enemy, atk, element, element_level)
+	if not keep_window_open and _attack_hit_targets.size() >= target_cap:
 		_attack_hit_done = true
+
+
+## PSO GC capture_lockon_targets pattern: snapshot melee targets inside the
+## weapon's true cone at swing start so a tiny enemy sidestep during windup
+## cannot turn a clean attack into a phantom whiff.
+func _capture_melee_targets() -> void:
+	_captured_melee_targets.clear()
+	var weapon_type := _get_equipped_weapon_type()
+	if combo_state <= 0 or _is_ranged_swing(weapon_type):
+		return
+	var config := _weapon_combat_config(weapon_type)
+	var cap: int = int(config.get("max_targets", 1))
+	for enemy in _enemies_in_hit_cone(config):
+		if _captured_melee_targets.size() >= cap:
+			break
+		_captured_melee_targets.append(enemy)
+
+
+func _collect_melee_candidates(config: Dictionary) -> Array:
+	var candidates: Array = _enemies_in_hit_cone(config)
+	var grace_reach: float = float(config.get("hit_h_dist", 2.4)) + float(config.get("hit_v_dist", 0.5)) + 1.25
+	for enemy in _captured_melee_targets:
+		if enemy in candidates or not is_instance_valid(enemy) or not enemy.get("is_alive"):
+			continue
+		if not enemy.is_visible_in_tree() or enemy.get("dormant") == true:
+			continue
+		var edata = enemy.get("enemy_data")
+		var radius: float = float(edata.collision_radius) if edata else 0.5
+		var delta_xz := Vector2(enemy.global_position.x - global_position.x, enemy.global_position.z - global_position.z)
+		if delta_xz.length() <= grace_reach + radius:
+			candidates.append(enemy)
+	return candidates
+
+
+func _resolve_melee_hurtbox(enemy: Node3D, config: Dictionary):
+	var hb = enemy.hurtbox_in_cone(global_position + Vector3.UP, player_rotation, config).get("hurtbox") if enemy.has_method("hurtbox_in_cone") else enemy.get("hurtbox")
+	if hb != null and is_instance_valid(hb):
+		return hb
+	return enemy.get("hurtbox")
+
+
+func _deliver_melee_contact(hb, enemy: Node3D, atk: Dictionary, element: String, element_level: int) -> void:
+	var knock_dir: Vector3 = enemy.global_position - global_position
+	knock_dir.y = 0
+	knock_dir = knock_dir.normalized()
+	var push: Vector3 = knock_dir * float(atk.get("knockback", 5.0))
+	for _h in range(int(atk.get("hits", 1))):
+		if hb is Hurtbox:
+			var packet := atk.duplicate(true)
+			packet["prototype_strong"] = SaberPrototype.enabled(self) and _is_special_attack
+			packet["element"] = element
+			packet["element_level"] = element_level
+			hb.take_attack(packet, push, self)
+		else:
+			hb.take_hit(int(atk.get("damage", 10)), push, int(atk.get("accuracy", 100)), element, element_level, true, "physical", self)
 
 
 ## Alive enemies passing the weapon's hit cone, sorted nearest-first.
@@ -3355,6 +3502,7 @@ func _projectile_release(weapon_type: int, config: Dictionary, aiming: bool) -> 
 func _deactivate_attack_hitbox() -> void:
 	_attack_hit_done = true
 	_attack_hit_targets.clear()
+	_captured_melee_targets.clear()
 	_attack_damage_snapshot.clear()
 	if attack_hitbox:
 		attack_hitbox.deactivate()
@@ -3460,11 +3608,20 @@ func _update_combat_targets() -> void:
 	if tech_range > 0:
 		effective_max = maxi(max_targets, 3)
 
-	# Show reticle on closest N enemies
+	var weapon_reach_ids: Dictionary = {}
+	if tech_range > 0.0:
+		for w_enemy in _enemies_in_hit_cone(config):
+			weapon_reach_ids[w_enemy.get_instance_id()] = true
+
+	# Show reticle on closest N enemies — bright red in weapon strike range,
+	# cool blue when only reachable by an equipped technique.
 	for i in range(mini(effective_max, in_cone.size())):
 		var enemy = in_cone[i]
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
+		if enemy.has_method("set_reticle_in_weapon_range"):
+			var in_weapon := tech_range <= 0.0 or weapon_reach_ids.has(enemy.get_instance_id())
+			enemy.set_reticle_in_weapon_range(in_weapon)
 		_targeted_enemies.append(enemy)
 
 	if SaberPrototype.enabled(self) and not _targeted_enemies.is_empty():
@@ -3704,24 +3861,41 @@ func _update_prototype_contacts(weapon_type: int) -> void:
 	var step := clampi(combo_state - 1, 0, 2)
 	var motion_length := _attack_anim_length - float(SaberPrototype.profile(self).get("recovery", SaberPrototype.RECOVERY)[step])
 	var authored_hits: Array = SaberPrototype.profile(self).get("hit_fracs", [])
-	if not authored_hits.is_empty():
-		var hits: Array = authored_hits[step]
+	var hits: Array = authored_hits[step] if not authored_hits.is_empty() else [float(SaberPrototype.profile(self).get("contact", SaberPrototype.CONTACT)[step])]
+	if _is_ranged_swing(weapon_type):
 		while _attack_hit_step < hits.size() and _attack_anim_elapsed >= float(hits[_attack_hit_step]) * motion_length:
-			if _is_special_attack and _attack_hit_step == 0:
-				_end_charge_visual()
-				if weapon_type != WeaponData.WeaponType.MECH_GUN: SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
-			if weapon_type == WeaponData.WeaponType.MECH_GUN: SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
+			_play_prototype_contact_sfx(weapon_type)
 			_execute_attack_hit(true)
 			_attack_hit_step += 1
 		_attack_hit_done = _attack_hit_step >= hits.size()
 		return
-	if _attack_anim_elapsed >= float(SaberPrototype.profile(self).get("contact", SaberPrototype.CONTACT)[step]) * motion_length:
-		if _is_special_attack:
-			_end_charge_visual()
+	var span := (0.10 if hits.size() > 1 else 0.16) * motion_length
+	while _attack_hit_step < hits.size():
+		var open_t := float(hits[_attack_hit_step]) * motion_length
+		if _attack_anim_elapsed < open_t:
+			return
+		if _attack_hit_window_opened != _attack_hit_step:
+			_attack_hit_window_opened = _attack_hit_step
+			_attack_hit_targets.clear()
+			_play_prototype_contact_sfx(weapon_type)
+		_execute_attack_hit(false, true)
+		var target_cap := int(_attack_damage_snapshot.get("max_targets", 1))
+		var next_t := float(hits[_attack_hit_step + 1]) * motion_length - 0.005 if _attack_hit_step + 1 < hits.size() else motion_length
+		var close_t := minf(open_t + span, next_t)
+		if _attack_hit_targets.size() >= target_cap or _attack_anim_elapsed >= close_t:
+			_attack_hit_step += 1
+		else:
+			return
+	_attack_hit_done = _attack_hit_step >= hits.size()
+
+
+func _play_prototype_contact_sfx(weapon_type: int) -> void:
+	if _is_special_attack and _attack_hit_step == 0:
+		_end_charge_visual()
+		if weapon_type != WeaponData.WeaponType.MECH_GUN:
 			SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
-		_execute_attack_hit(true)
-		_attack_hit_done = true
-	return
+	if weapon_type == WeaponData.WeaponType.MECH_GUN:
+		SfxManager.play_at(_weapon_attack_sound(weapon_type), global_position)
 
 
 func _add_scene_locomotion(lib: AnimationLibrary, anim_glb: String) -> void:

@@ -52,8 +52,15 @@ func take_attack(packet: Dictionary, knockback: Vector3, source: Node3D = null) 
 			fixture_contact = true
 			if OS.get_environment("PSZ_HUMAR_SABER") == "1":
 				accuracy = prototype.contact_accuracy(owner_node.current_evasion)
+	var is_heavy: bool = bool(packet.get("strong", false)) or bool(packet.get("prototype_strong", false)) or int(packet.get("combo_step", 1)) >= 3
+	if owner_node is EnemyBase:
+		owner_node._hit_is_heavy = is_heavy
 	take_hit(power, knockback, accuracy, str(packet.get("element", "")), int(packet.get("element_level", 0)), bool(packet.get("charge_pb", true)), str(packet.get("kind", "physical")), source)
+	if owner_node is EnemyBase:
+		owner_node._hit_is_heavy = false
 
 	if fixture_contact and is_instance_valid(owner_node) and owner_node.current_hp < before_hp:
 		var feedback = preload("res://scripts/3d/player/humar_saber_prototype.gd")
-		feedback.contact_feedback(owner_node, source, bool(packet.get("prototype_strong", false)))
+		var is_crit: bool = bool(owner_node.get("_last_hit_critical"))
+		var is_finisher: bool = int(packet.get("combo_step", 1)) >= 3 or (is_instance_valid(source) and int(source.get("combo_state")) >= 3)
+		feedback.contact_feedback(owner_node, source, bool(packet.get("strong", false)) or bool(packet.get("prototype_strong", false)), is_crit, is_finisher)

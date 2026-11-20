@@ -277,8 +277,7 @@ func _verify_mixed_combos(player) -> void:
 		player.transition_to(player.PlayerState.IDLE)
 		if pattern & 1: player._start_strong_attack()
 		else: player._start_attack()
-		_check(player._saber_phase == "prepare" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "fresh combo briefly readies weapon")
-		player._handle_attack_state(Rules.READY_PREP)
+		_check(player._saber_phase.is_empty() and player.animation_player.current_animation == (_native_prefix + "_atk1"), "fresh combo starts native step 1 immediately without prepare delay")
 		for step in range(1, 4):
 			var clip := (_native_prefix + "_atk") + str(step)
 			_check(player.combo_state == step and player.animation_player.current_animation == clip, "mixed combo %d starts native step %d without extra delay" % [pattern, step])
@@ -386,12 +385,10 @@ func _verify_ready_recovery(player, enemy) -> void:
 	player.player_rotation = 0.0
 	enemy.global_position = player.global_position + Vector3(0, 0, 1.5)
 	player._start_attack()
-	_check(not player.try_prototype_guard(enemy), "first-attack preparation is vulnerable")
-	player._handle_attack_state(0.05)
-	_check(player._saber_phase == "prepare" and player.animation_player.current_animation == (_pso_prefix + "_wait"), "ready stance persists beyond 50 ms")
+	_check(not player.try_prototype_guard(enemy), "committed first attack is vulnerable")
+	_check(player._saber_phase.is_empty() and player.animation_player.current_animation == (_native_prefix + "_atk1"), "first swing starts immediately without prepare delay")
 	_check(is_equal_approx(player.animation_player.get_blend_time((_native_prefix + "_wait"), (_pso_prefix + "_wait")), Rules.READY_BLEND), "idle blends into ready stance")
 	_check(is_equal_approx(player.animation_player.get_blend_time((_pso_prefix + "_wait"), (_native_prefix + "_atk1")), Rules.READY_BLEND), "ready blends into first swing")
-	player._handle_attack_state(Rules.READY_PREP)
 	player._attack_anim_elapsed = player._attack_anim_length * 0.1
 	player._try_queue_combo(false)
 	player._attack_step_finished()
@@ -433,8 +430,7 @@ func _verify_combo_outcomes(player, enemy) -> void:
 	_check(not player.try_prototype_guard(enemy), "stopped combo does not earn finisher guard")
 	player._tick_saber_attack_cooldown(Rules.STOPPED_ATTACK_COOLDOWN)
 	player._start_attack()
-	_check(player._saber_phase == "prepare", "attack becomes available after stopped cooldown")
-	player._handle_attack_state(Rules.READY_PREP)
+	_check(player.current_state == player.PlayerState.ATTACKING and player._saber_phase.is_empty(), "attack becomes available immediately after stopped cooldown")
 	player._attack_anim_elapsed = player._attack_anim_length * 0.99
 	player._try_queue_combo(true)
 	player._attack_step_finished()

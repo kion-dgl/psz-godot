@@ -17,6 +17,13 @@ import sys
 
 QUEST_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'quests')
 FIELD_QUEST_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'field_quests')
+ENEMIES_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'enemies')
+
+VALID_ENEMY_IDS = {
+    os.path.splitext(f)[0]
+    for f in os.listdir(ENEMIES_DIR)
+    if f.endswith('.tres')
+} if os.path.isdir(ENEMIES_DIR) else set()
 
 REQUIRED_QUEST_FIELDS = {'version', 'last_updated', 'id', 'name', 'description', 'area_id', 'sections'}
 REQUIRED_SECTION_FIELDS = {'type', 'area', 'start_pos', 'end_pos', 'cells'}
@@ -104,6 +111,14 @@ def validate_quest(filepath: str) -> list[str]:
             for dir_key, target_pos in connections.items():
                 if target_pos not in cell_positions:
                     errors.append(f'{cell_label}: connection "{dir_key}" -> "{target_pos}" not in section cells')
+
+            # Enemy IDs must match data/enemies/*.tres (unknown IDs silently fall back to 1-HP EnemySpawn)
+            if VALID_ENEMY_IDS:
+                for obj in cell.get('objects', []):
+                    if obj.get('type') == 'enemy':
+                        eid = str(obj.get('enemy_id', ''))
+                        if eid not in VALID_ENEMY_IDS:
+                            errors.append(f'{cell_label}: unknown enemy_id "{eid}" (not in data/enemies/*.tres)')
 
     # Key-gate routing: every gate needs enough keys pointed AT IT.
     #
