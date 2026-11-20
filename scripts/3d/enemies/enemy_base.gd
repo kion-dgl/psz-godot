@@ -53,7 +53,14 @@ var animation_player: AnimationPlayer
 ## Attack tracking
 var attack_cooldown_timer: float = 0.0
 var hurt_timer: float = 0.0
-const HURT_DURATION: float = 0.3
+const HURT_DURATION: float = 0.42
+const HEAVY_HURT_DURATION: float = 0.60
+const TURN_SPEED: float = 10.0  # Smooth yaw turn rate (rad/s) for locomotion
+var _last_hit_critical: bool = false
+var _hit_is_heavy: bool = false
+var _hit_recoil_vel: Vector3 = Vector3.ZERO
+var _hit_recoil_damp: float = 10.0
+var _hit_source: Node3D = null
 
 ## Animation state tracking
 var is_attacking: bool = false
@@ -422,13 +429,18 @@ func _cache_model_materials() -> void:
 	_cached_materials.clear()
 	if not model:
 		return
-	for child in model.get_children():
-		if child is MeshInstance3D:
-			var mi: MeshInstance3D = child as MeshInstance3D
-			for i in range(mi.get_surface_override_material_count()):
+	var stack: Array[Node] = [model]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is MeshInstance3D:
+			var mi: MeshInstance3D = node as MeshInstance3D
+			var count := mi.mesh.get_surface_count() if mi.mesh else mi.get_surface_override_material_count()
+			for i in range(count):
 				var mat := mi.get_active_material(i)
-				if mat is StandardMaterial3D:
+				if mat is StandardMaterial3D and mat not in _cached_materials:
 					_cached_materials.append(mat)
+		for child in node.get_children():
+			stack.append(child)
 
 
 func _setup_hurtbox() -> void:
@@ -647,7 +659,7 @@ func _process_idle(delta: float) -> void:
 			velocity.x = wander_direction.x * speed
 			velocity.z = wander_direction.z * speed
 			# Face movement direction
-			_face_direction(wander_direction)
+			_face_direction(wander_direction, true)
 		else:
 			# Hit an edge, pick new direction
 			_pick_new_wander_behavior()
@@ -775,7 +787,7 @@ func _process_chasing(delta: float) -> void:
 		var d := target.global_position - global_position
 		d.y = 0
 		if d.length() > 0.1:
-			_face_direction(d.normalized())
+			_face_direction(d.normalized(), true)
 		# Reveal-cancel (spec §box-mimic): the target backed off mid-reveal —
 		# tk2 retreats into the box and the disguise resumes.
 		if _archetype == "box_mimic" and dist > float(_fsm.get("reveal_range", 3.5)) * 1.5:
@@ -817,7 +829,7 @@ func _process_chasing(delta: float) -> void:
 		var df := target.global_position - global_position
 		df.y = 0
 		if df.length() > 0.1:
-			_face_direction(df.normalized())
+			_face_direction(df.normalized(), true)
 		_play_animation(_rooted_idle_clip())
 		return
 
@@ -878,7 +890,7 @@ func _chase_baseline(dist: float, attack_range: float) -> void:
 	if direction.length() > 0.1 and _can_move_to(direction):
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
-		_face_direction(direction)
+		_face_direction(direction, true)
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -955,7 +967,7 @@ func _apply_move(dir: Vector3, speed: float, face_dir: Vector3, clip: String) ->
 		velocity.x = 0.0
 		velocity.z = 0.0
 	if face_dir.length() > 0.1:
-		_face_direction(face_dir)
+		_face_direction(face_dir, true)
 	if not clip.is_empty():
 		_play_animation(clip, false, true)
 
@@ -1280,7 +1292,7 @@ func _process_loafing(delta: float) -> void:
 	if loaf_direction.length() > 0.1 and _can_move_to(loaf_direction):
 		velocity.x = loaf_direction.x * speed
 		velocity.z = loaf_direction.z * speed
-		_face_direction(loaf_direction)  # Face movement direction (away from player)
+		_face_direction(loaf_direction, true)  # Face movement direction (away from player)
 		_play_animation("wlk1" if _archetype == "box_mimic" else "wlk", false, true)
 	else:
 		# Can't move that way, try reversing curve direction
@@ -1325,10 +1337,23 @@ func _start_loafing() -> void:
 
 func _process_hurt(delta: float) -> void:
 	hurt_timer -= delta
-	velocity.x = 0
-	velocity.z = 0
+	if _hit_recoil_vel.length_squared() > 0.0025:
+		var dir := Vector3(_hit_recoil_vel.x, 0.0, _hit_recoil_vel.z)
+		if dir.length() > 0.01 and _can_move_to(dir.normalized()):
+			velocity.x = _hit_recoil_vel.x
+			velocity.z = _hit_recoil_vel.z
+		else:
+			velocity.x = 0.0
+			velocity.z = 0.0
+			_hit_recoil_vel = Vector3.ZERO
+		_hit_recoil_vel *= exp(-_hit_recoil_damp * delta)
+	else:
+		_hit_recoil_vel = Vector3.ZERO
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 	if hurt_timer <= 0:
+		_hit_recoil_vel = Vector3.ZERO
 		current_state = EnemyState.CHASING
 
 
@@ -1777,7 +1802,7 @@ func _apply_difficulty() -> void:
 	_detection_range = base_det * float(s["detection"])
 
 
-func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0, attack_kind: String = "physical") -> void:
 	if not is_alive or not _accepts_damage():
 		return
 
@@ -1794,6 +1819,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 	var effective_defense := int(current_defense * (1.0 - minf(0.9, preload("res://scripts/3d/combat/shifta_buff.gd").amount_for(self, "zalure"))))
 	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, effective_defense, current_evasion, accuracy, attack_kind)
 	if not result.get("hit", true):
+		_last_hit_critical = false
 		_spawn_damage_number("MISS", Color(1.0, 0.15, 0.15))
 		return
 
@@ -1801,6 +1827,7 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 	# hit lands inside one (recovery_vulnerable_mult — spec §roller).
 	var final_damage: int = int(int(result.get("damage", raw_damage)) * damage_mult * _vulnerable_mult)
 	var is_crit: bool = result.get("is_critical", false)
+	_last_hit_critical = is_crit
 	current_hp -= final_damage
 	_after_damage_applied(final_damage)
 	damaged.emit(self, final_damage)
@@ -1827,17 +1854,38 @@ func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100,
 			return
 		_restore_charge_model()
 		_lower_timer = 0.0
-		# Enter hurt state — play stagger animation, no physics knockback
+		# Enter hurt state — play stagger animation + brief damped horizontal recoil
 		is_attacking = false  # Cancel any attack
 		_telegraphing = false  # a hit during the wind-up cancels the telegraph too
 		_attack_anim = ""
 		_charge = {}            # a stagger interrupts a charge mid-phase
 		_vulnerable_mult = 1.0  # ...and closes any punish window
 		current_state = EnemyState.HURT
-		hurt_timer = HURT_DURATION
-		velocity = Vector3.ZERO  # Stop movement during stagger
+		var enemy_max_hp: int = enemy_data.hp_base if enemy_data else 100
+		var heavy_hit: bool = _hit_is_heavy or is_crit or (enemy_max_hp > 0 and float(final_damage) > float(enemy_max_hp) * 0.25)
+		hurt_timer = HEAVY_HURT_DURATION if heavy_hit else HURT_DURATION
+		velocity = Vector3.ZERO
+		_apply_hit_knockback(knockback, heavy_hit)
 
 		_play_animation("dmg", true)  # Force play damage animation
+
+
+func _apply_hit_knockback(knockback: Vector3, heavy_hit: bool) -> void:
+	var push := Vector3(knockback.x, 0.0, knockback.z)
+	if push.length_squared() <= 0.01 and is_instance_valid(_hit_source):
+		push = global_position - _hit_source.global_position
+		push.y = 0.0
+	var is_boss: bool = enemy_data != null and bool(enemy_data.is_boss)
+	if is_boss or _fsm.get("stationary", false) or push.length_squared() <= 0.01:
+		_hit_recoil_vel = Vector3.ZERO
+		return
+	var weight := maxf(float(enemy_data.collision_radius) / 0.5, 1.0) if enemy_data else 1.0
+	if heavy_hit:
+		_hit_recoil_vel = push.normalized() * clampf(7.5 / weight, 3.2, 8.0)
+		_hit_recoil_damp = 10.0
+	else:
+		_hit_recoil_vel = push.normalized() * clampf(1.1 / weight, 0.4, 1.2)
+		_hit_recoil_damp = 14.0
 
 
 ## Bosses can gate exposure and consume post-subtraction damage before death.
@@ -1886,12 +1934,18 @@ func _die() -> void:
 	tween.tween_callback(queue_free)
 
 
-## Face a direction (model faces -Z, so we look opposite way)
-func _face_direction(dir: Vector3) -> void:
-	if dir.length() < 0.1:
+## Face a direction (model faces -Z, so +Z points along `dir`).
+func _face_direction(dir: Vector3, smooth: bool = false) -> void:
+	var planar := Vector3(dir.x, 0.0, dir.z)
+	if planar.length() < 0.1:
+		return
+	if smooth:
+		var target_yaw := atan2(planar.x, planar.z)
+		var step := TURN_SPEED * maxf(get_physics_process_delta_time(), 0.001)
+		rotation.y += clampf(angle_difference(rotation.y, target_yaw), -step, step)
 		return
 	# Look at the opposite direction since model faces -Z
-	look_at(global_position - dir, Vector3.UP)
+	look_at(global_position - planar.normalized(), Vector3.UP)
 
 
 ## Check if enemy can move in direction (floor detection)
@@ -1997,6 +2051,7 @@ const ANIM_ALIASES := {
 	"run": ["fly"],       # run → fly
 	"atk": ["atk1", "atckwat"],  # attack → variant 1, or orangutan's misspelled attack-from-wait
 	"dmg": ["dam"],       # five rigs name the damage clip dam (booma/swordman/tank/orangutan/shrimp)
+	"ded": ["ded1"],      # rappy names death clips ded1/ded2
 	"spawn": ["app", "appearance"],  # stt semantics are per archetype, never a generic entrance
 }
 
@@ -2208,6 +2263,14 @@ func _setup_reticle() -> void:
 func show_reticle() -> void:
 	if _reticle:
 		_reticle.visible = true
+
+
+func set_reticle_in_weapon_range(in_weapon_range: bool) -> void:
+	if not _reticle:
+		return
+	var sprite := _reticle.get_node_or_null("ThreeTriangleReticle") as Sprite3D
+	if sprite:
+		sprite.modulate = Color(1.0, 0.15, 0.15, 0.92) if in_weapon_range else Color(0.35, 0.72, 1.0, 0.72)
 
 
 func hide_reticle() -> void:
@@ -2428,5 +2491,5 @@ func _set_model_tint(tint: Color) -> void:
 		mat.albedo_color = tint
 
 
-func _set_hit_context(_part: int, _source: Node3D) -> void:
-	pass
+func _set_hit_context(_part: int, source: Node3D) -> void:
+	_hit_source = source

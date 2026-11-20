@@ -86,7 +86,7 @@
           "objects": [
             {
               "type": "enemy",
-              "enemy_id": "frog",
+              "enemy_id": "porel",
               "position": [
                 3,
                 0,
@@ -95,7 +95,7 @@
             },
             {
               "type": "enemy",
-              "enemy_id": "frog",
+              "enemy_id": "porel",
               "position": [
                 -3,
                 0,
@@ -104,7 +104,7 @@
             },
             {
               "type": "enemy",
-              "enemy_id": "frog_bomb",
+              "enemy_id": "pobomma",
               "position": [
                 0,
                 0,
@@ -138,7 +138,7 @@
           "objects": [
             {
               "type": "enemy",
-              "enemy_id": "boss_octopus",
+              "enemy_id": "octo_diablo",
               "position": [
                 0,
                 0,

@@ -93,7 +93,9 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
           "id": "basic",
@@ -2359,7 +2361,9 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
           "id": "basic",
@@ -2384,7 +2388,9 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
           "id": "basic",
@@ -2742,7 +2748,9 @@
         "detection_range": 15.0,
         "attack_base": 15
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run"
+      },
       "attacks": [
         {
           "id": "basic",
@@ -2767,7 +2775,9 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "run"
+      },
       "attacks": [
         {
           "id": "basic",
@@ -2841,7 +2851,9 @@
         "detection_range": 15.0,
         "attack_base": 10
       },
-      "fsm": {},
+      "fsm": {
+        "move_clip": "wlk"
+      },
       "attacks": [
         {
           "id": "basic",

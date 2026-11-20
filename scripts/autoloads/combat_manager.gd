@@ -519,20 +519,25 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 	}
 
 
+## PSO GC combo-step accuracy multipliers (TObjPlayer_801C7430.cpp:7655).
+const COMBO_ACCURACY_MULT := [1.0, 1.3, 1.69]
+
 ## Calculate attack damage for the real-time combat system.
 ## Returns: {damage: int, hits: int, knockback: float, accuracy: int, is_innate: bool, weapon_type: int}
 func calculate_attack_damage(combo_step: int = 1, strong: bool = false) -> Dictionary:
 	var character = CharacterManager.get_active_character()
 	if character == null:
-		return {"damage": 10, "hits": 1, "knockback": 5.0, "accuracy": 100, "is_innate": false, "weapon_type": 0}
+		return {"damage": 10, "hits": 1, "knockback": 5.0, "accuracy": 100, "is_innate": false, "weapon_type": 0, "combo_step": combo_step, "strong": strong}
 
 	var stats: Dictionary = _get_player_stats(character)
 	var player_attack: int = int(stats.get("attack", 10))
 	var weapon_attack: int = int(stats.get("weapon_attack", 0))
 	var attributes: Dictionary = character.get("weapon_stats", {}).get(str(character.get("equipment", {}).get("weapon", "")), {}).duplicate()
-	var player_accuracy: int = int(stats.get("accuracy", 100)) + int(stats.get("weapon_accuracy", 0)) + int(attributes.get("hit_pct", 0))
-	if strong:
-		player_accuracy = int(player_accuracy * 0.7)
+	var acc_step_idx: int = clampi(combo_step - 1, 0, COMBO_ACCURACY_MULT.size() - 1)
+	var combo_acc_mult: float = float(COMBO_ACCURACY_MULT[acc_step_idx])
+	var type_acc_scale: float = 0.7 if strong else 1.0
+	var raw_accuracy: int = int(stats.get("accuracy", 100)) + int(stats.get("weapon_accuracy", 0)) + int(attributes.get("hit_pct", 0))
+	var player_accuracy: int = int(round(float(raw_accuracy) * type_acc_scale * combo_acc_mult))
 
 	# Get weapon type
 	var weapon_type: int = 0
@@ -589,6 +594,8 @@ func calculate_attack_damage(combo_step: int = 1, strong: bool = false) -> Dicti
 		"is_innate": is_innate,
 		"weapon_type": weapon_type,
 		"max_targets": max_targets,
+		"combo_step": combo_step,
+		"strong": strong,
 	}
 
 

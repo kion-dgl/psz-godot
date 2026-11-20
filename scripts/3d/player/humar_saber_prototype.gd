@@ -99,7 +99,7 @@ static func native_clip(player, role: String) -> String:
 const CHARGE_SOUND := "res://assets/sfx/common/common_060.wav" # SE_PL_BIGCHARGE
 const LOCK_SOUND := "res://assets/sfx/common/common_017.wav" # SE_PL_LOCKCURSOR
 const RETREAT_CAUTION_TIME := 0.5
-const READY_PREP := 0.25
+const READY_PREP := 0.0
 const READY_BLEND := 0.08
 const FINISHER_GUARD := 0.35
 const BROKEN_RECOVERY := 0.25
@@ -186,42 +186,10 @@ static func palette_cue(player) -> Dictionary:
 	if progress > CHAIN[1]: return {}
 	return {"progress": progress, "ready": progress >= CHAIN[0], "queued": player._queued_combo != player.ComboQueue.NONE}
 
-static func contact_feedback(enemy, source, strong: bool) -> void:
-	if strong and enemy.is_alive and enemy.current_state == enemy.EnemyState.HURT:
-		enemy.hurt_timer = maxf(enemy.hurt_timer, 0.45)
-	if source._get_equipped_weapon_type() in [WeaponData.WeaponType.DAGGERS, WeaponData.WeaponType.CLAW, WeaponData.WeaponType.DOUBLE_SABER]:
-		var now := Time.get_ticks_msec()
-		if now - int(enemy.get_meta("dagger_feedback_ms", -1000)) < 80: return
-		enemy.set_meta("dagger_feedback_ms", now)
-	# The caller verifies actual HP loss; no spark or sound on a whiff/immune hit.
-	SfxManager.play_at("res://assets/sfx/weapons/saber_hit.wav", enemy.global_position, 0.0 if strong else -7.0)
-	var burst := CPUParticles3D.new()
-	burst.name = "SaberContactSpark"
-	burst.add_to_group("saber_contact_feedback")
-	burst.one_shot = true
-	burst.amount = 7 if strong else 4
-	burst.lifetime = 0.18
-	burst.explosiveness = 1.0
-	burst.direction = Vector3.UP
-	burst.spread = 100.0
-	burst.initial_velocity_min = 0.5
-	burst.initial_velocity_max = 1.3 if strong else 0.8
-	burst.gravity = Vector3(0, -2, 0)
-	burst.scale_amount_min = 0.5
-	burst.scale_amount_max = 1.0
-	var mesh := SphereMesh.new()
-	mesh.radius = 0.025
-	mesh.height = 0.05
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = Color(1.0, 0.8, 0.35) if strong else Color(0.8, 1.0, 1.0)
-	mesh.material = material
-	burst.mesh = mesh
-	source.get_tree().current_scene.add_child(burst)
-	var toward: Vector3 = (source.global_position - enemy.global_position).normalized()
-	burst.global_position = enemy.global_position + Vector3.UP + toward * 0.35
-	burst.emitting = true
-	burst.finished.connect(burst.queue_free)
+static func contact_feedback(enemy, source, strong: bool, critical: bool = false, finisher: bool = false) -> void:
+	if (strong or critical or finisher) and enemy.is_alive and enemy.current_state == enemy.EnemyState.HURT:
+		enemy.hurt_timer = maxf(enemy.hurt_timer, 0.55)
+	preload("res://scripts/3d/combat/combat_impact.gd").play_hit(enemy, source, strong, critical, finisher)
 
 static func block_feedback(player, source: Node3D) -> void:
 	# A distinct blue-white flash at the guard, only after a hit is blocked.

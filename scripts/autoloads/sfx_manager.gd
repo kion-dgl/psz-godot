@@ -50,7 +50,7 @@ func play(path: String, volume_db: float = 0.0, soften_edges: bool = false) -> v
 
 
 ## Play a 3D positional sound effect at a world position.
-func play_at(path: String, position: Vector3, volume_db: float = 0.0, muffled: bool = false) -> void:
+func play_at(path: String, position: Vector3, volume_db: float = 0.0, muffled: bool = false, pitch_scale: float = 1.0) -> void:
 	var stream := _load(path)
 	if not stream:
 		return
@@ -58,6 +58,7 @@ func play_at(path: String, position: Vector3, volume_db: float = 0.0, muffled: b
 	_next_3d_idx = (_next_3d_idx + 1) % POOL_SIZE
 	player.stream = stream
 	player.volume_db = volume_db
+	player.pitch_scale = maxf(pitch_scale, 0.1)
 	player.global_position = position
 	player.bus = _muffled_steps_bus() if muffled else "SFX"
 	player.play()
